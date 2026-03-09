@@ -4,6 +4,7 @@ import { useNavigate } from "@builder.io/qwik-city";
 import { cheatLogsApi, examsApi } from "~/lib/api";
 import { getUserData, isAuthenticated, logout } from "~/lib/auth";
 import { getWsClient } from "~/lib/ws";
+import { Clock } from "~/components/ui/clock";
 
 interface Student {
   id: string;
@@ -87,24 +88,59 @@ export default component$(() => {
   return (
     <div class="min-h-screen bg-surface-900 bg-gradient-mesh">
       {/* Header */}
-      <header class="glass border-b border-surface-700/50 sticky top-0 z-40">
-        <div class="max-w-full mx-auto px-6 py-3 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
+      <header class="glass sticky top-0 z-40">
+        <div class="max-w-full mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-md shadow-primary-500/20">
+                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </div>
+              <span class="font-bold text-gradient text-lg tracking-tight">Proctor Dashboard</span>
+              
+              <div class={`ml-2 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${connected.value ? 'bg-success/10 text-success border border-success/20' : 'bg-danger/10 text-danger border border-danger/20'}`}>
+                <div class={`w-1.5 h-1.5 rounded-full ${connected.value ? 'bg-success animate-pulse' : 'bg-danger'}`} />
+                {connected.value ? "Live" : "Offline"}
+              </div>
             </div>
-            <span class="font-bold text-gradient text-sm">Proctor Dashboard</span>
+            
+            <div class="md:hidden">
+              <Clock />
+            </div>
           </div>
-          <div class="flex items-center gap-4">
-            <div class={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${connected.value ? 'bg-success/10 text-success border border-success/20' : 'bg-danger/10 text-danger border border-danger/20'}`}>
-              <div class={`w-2 h-2 rounded-full ${connected.value ? 'bg-success animate-pulse' : 'bg-danger'}`} />
-              {connected.value ? "Live" : "Offline"}
+          
+          <div class="flex items-center justify-between md:justify-end gap-6">
+            <div class="hidden md:block">
+              <Clock />
             </div>
-            <span class="text-sm text-surface-400">{user.value?.fullName}</span>
-            <button onClick$={() => logout()} class="text-sm text-surface-400 hover:text-danger transition-colors">Keluar</button>
+            
+            <div class="flex items-center gap-4 border-l border-surface-200 pl-4">
+              <button onClick$={() => nav("/admin/")} class="text-xs px-3 py-1.5 rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors font-medium border border-primary-200">
+                ← Admin Panel
+              </button>
+              
+              <div class="flex items-center gap-3 cursor-pointer group" onClick$={() => nav('/profile/')}>
+                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-primary-400 to-secondary-500 flex items-center justify-center text-white ring-2 ring-white shadow-sm transition-transform group-hover:scale-105">
+                  <span class="text-sm font-bold">{user.value?.fullName?.charAt(0) || "P"}</span>
+                </div>
+                <div class="hidden sm:block text-left">
+                  <div class="text-sm text-surface-800 font-semibold leading-tight">{user.value?.fullName}</div>
+                  <div class="text-xs text-surface-500 leading-tight capitalize">{user.value?.role.toLowerCase()}</div>
+                </div>
+              </div>
+              
+              <button
+                onClick$={() => { logout(); }}
+                class="p-2 rounded-lg text-surface-500 hover:text-danger hover:bg-danger/10 transition-colors"
+                title="Keluar"
+              >
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </header>

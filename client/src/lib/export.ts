@@ -7,11 +7,11 @@ export function exportToCSV(filename: string, rows: object[]) {
     '\n' +
     rows.map(row => {
       return keys.map(k => {
-        let cell = row[k as keyof typeof row] === null || row[k as keyof typeof row] === undefined ? '' : row[k as keyof typeof row];
-        cell = cell instanceof Date
+        let cell: any = row[k as keyof typeof row] === null || row[k as keyof typeof row] === undefined ? '' : row[k as keyof typeof row];
+        cell = Object.prototype.toString.call(cell) === '[object Date]'
           ? cell.toLocaleString()
           : cell.toString().replace(/"/g, '""');
-        if (cell.search(/("|,|\n)/g) >= 0) {
+        if (typeof cell === "string" && cell.search(/("|,|\n)/g) >= 0) {
           cell = `"${cell}"`;
         }
         return cell;
