@@ -1,0 +1,81 @@
+# Contribuyendo al proyecto Examinator
+
+Para empezar, ¡muchas gracias por considerar en contribuir a la excelencia global del proyecto principal **Examinator**! Son personas entusiastas y dispuestas al igual que tú las verdaderas protagonistas del sostenimiento, perfeccionamiento de plataformas modernas de resguardo tecnológico para ambientes de educación y examinación cibernética estructurada (CBT) con control de acceso anti-trampas de carácter preventivo o _Proctoring_ inquebrantable integral.
+
+Acatarse y proceder ordenadamente rigiendo sus impulsiones sobre los reglamentos descriptos y estipulados de antemano proveerá demostraciones irrefutables del máximo respeto valioso destinado hacia aquellos fundadores administradores del recinto de programación núcleo o repositorio Maestro _Open Source_ _Maintainers_; recibiendo estos dictámenes, responderemos su muestra con igual tesón respondiendo activamente reportes evaluando ágilmente las enmiendas pautadas concretadas a través de su generoso _Pull Request_.
+
+## 🧠 Glosario De Arquitectura Inicial Fundamentos (Tech Stack Primer)
+
+Resulta imprescindible para sumergirse adecuadamente pre-estudiando activamente cada vértice técnico elemental empleado integralmente con devoción antes de rebuscar o insertar nuevas variables arquitectónicas ajenas:
+
+- **Estructura Componentizada Frontal Clientes (Interfaz User-Web-UI Browser)**: Excepcionalmente sustentada sobre resiliencia teórica total del entorno base O(1) **Framework Qwik** (Híbrido SSR / SSG sin lastre de latencias por la paralización obligada _Rehidratante de carga JS overhead_) diseñado visual e íntegramente apelando los perfiles embellecedores utilitarios vanguardistas correspondientes al preprocesador superior **Tailwind CSS v4**.
+- **Motor Del Entramado Gestor Back-End (Núcleo Servidores Rest Api & Sockets Abiertos Síncronos Inter-Comunicación Multiplexaje Transparente Proctoring Central )**: Se descarta Runtime _milenario_ Node alojándonos bajo ecosistema **Bun JavaScript Runtime** sumamente superior optimizado ensamblando componentes y \*rutas middleware guardianes JSON WEB TOKEN JWT endpoints estructurados asimilando Elysia JS Router Library en conjunto inalterable inmersivo con las interrupciones socket WSS uWebsockets veloces escritas netamente con C++.
+- **Entidades Módulos Base de Datos Operacionales Y De Relación Restrictivas Permanentes (DB Base Persistencia SQL Relational Log)**: La encomienda recíproca al motor central Mysql Vsn > 8.0 manejando el mapeo inyector asimétrico relacional _object relational object wrapper Typescript Tooling Abstraction Type-Safety Control Guard: ORM PRISMA DATA ENGINE SCHEMAS MODEL_ a fin de mitigar fallos de codificación, transacciones asid crudas, garantizando persistencias asíncronas fiables a prueba de balas sin escapes no gestionados.
+
+Este proyecto opera intrínsecamente y restringe a unificar códigos bajo convención purista jerárquica topológica estandarizada referida a una arquitectura conocida como esquema monolítico **Monorepo**. Visite detenidamente las documentaciones profundas situadas prolijas orientadas de modo científico/técnico explicativo bajo la estructura matricial rotulada como carpeta de documentación principal `docs/` en búsqueda de respuestas técnicas extensivas del corazón de interacciones encriptadas interconectables de servidor local cliente-terminal.
+
+## 🛠 Manual Operativos Estándares Para El Equipo Despliegue Configurado (Metodología Práctica Estricta De _Desarrollo Contribuyente Programador - Procedimentales Workflow Pasos Previos Elementales_)
+
+### 1er Axioma De Preparación Repositorio En La Estación Personal: "Trifecta Fork & Re-Clone GitHub Sincronía Activa Interconexión"
+
+1. Materialización Desacoblada GitHub bifurcación o sub repositorio dependiente denominado clonaje derivado principal `FORK Proyecto/Repositorio Original Maestral Git`.
+2. Atraiga en descarga remota nube local al directorio privado de computación personal las líneas codificadas del referida derivación rama forkeada localmente.
+3. Afiance un cordón constante de retransmisiones actualizaciones remotas mediante asignación inyectora de dirección virtual raíz URL de destino madre al que rastreara continuamente mediante nomenclatura standard bautizado en sistema comúnmente alias _"UPSTREAM REMOTE MAIN"_.
+
+### 2do Regla Empírica Compilación Motor Base De Inicio De Variables Iniciales Locales Construcción Pruebas Moduladoras Desarrollo Terminales
+
+Acelere scripts y active el CLI emitiendo terminal:
+
+```bash
+npm install
+npm run db:push
+npm run dev
+```
+
+### 3era Dinámica Normativa Estructurante Divisionaria Lineamientos _Rama Paralela Aislada Modular (Pautas GitHub Branching Strategical Work Flow Limitadas)_
+
+Mantenimiento restrictivo inflexible modelado _Direct Push/Commit Branch_ a rama protectora operativa neurálgica y frágil núcleo del programa matriz maestro productiva central `Main Branch Core` está rigurosamente prohibida y será bloqueada por Guardian de Commits Automático. Para iniciar codigos: Genérese a sí mismo el desarrollador de turno un apéndice derivado particular _Rama Particular Exclusiva (Isolated Custom Feature Bug Branch Workspace Local)._
+
+- Implementación Novedosa Integrada Aportación Sistémica / Features Exclusivas Módulos Inéditos Incorporar: Aplique por defecto el acrónimo prefijo identificador reglamentario obligatorio estándar nomenclaturado GitHub convención `feat/mi-nueva-variable-característica` (Ejemplo estético comprensivo conceptual referenciado a un modelo real: `feat/facial-recognition`)
+- Inyección Inmendación Resolutoria Depuración Fugas Memoria Colgajos Códigos Obsoletos Anomalía Fallas Erróneas Bloqueantes Soluciones (Bugs Fixed Hotpatch / Error Trace Resolved) Ponga y anteponga prefijos correctores convenciones universales indicando sanado : `fix/nombre-razón-remediación-bug-issue` (Ejemplo veraz: `fix/websocket-reconnect`)
+- Actuaciones Modificaciones Leves Rutinarias (Archivos Estéticos O Tareas Ligeras O Documentos): Preferencias sufijos prefijos iniciales documentales `chore/dependency-updates` y análogas reescrituras al igual y como la edición textual léxico gramatical refactor conceptual re-letras `docs/update-api-spec`
+
+### 4ta Práctica Ortodoxa Imperativa De Históricos Descriptivos Al Commitear Versiones Finales De Aportaciones Histórico Convenciones (Commits Standards / _Las Escrituras Semánticas Historial Convencional Automático_)
+
+Nuestro software gestiona de forma hermética el registro automatizado cronológico del sistema actualizador o lanzamientos revisionistas integrales generacionales de las versiones a entregar y publicarse en las etiquetas productivas por ende **"Todos Sus Reportes Entregadores Deben Adecuarse y Encasillarse Acatando Sin Titubeos El Formato Conventional Commits"\* ** para sincronizar las utilidades bot encargados de confeccionarnos auto generadores de `CHANGELOG`.
+
+Molde Base Compositivo de Reporte de Consola String: `<acrónimotipode-contribucion>(<modulo/foco-subjetiva-escrito-código>): <breve-descripción-subjetiva-causante-cambio-aportativo-en-idioma-inglés>`
+
+Ejemplos Representativos Aplicativos Reales Guías Conceptuales Trazabilidad Analítica Correctivas Descriptivas Del Reporte Comitente:
+
+- `feat(proctor): add audio detection to anti-cheat hooks`
+- `fix(auth): resolve JWT expiration timezone mismatch`
+- `style(ui): update glassmorphism backdrop filter blur`
+- `refactor(db): optimize exam querying throughput`
+
+### 5to Protocolo Restringido Aseguramiento Del Rango Perfil Nivel Perfección Lenguaje Módulo Código Componentes Sintáctico (Quality Assurance Source Codes Standards Guidelines Ruleset)
+
+- Limitación Restrictiva Modelos Patrones _TypeScript Language Guarding Safety Rules Protocol Enforcement_: Abrazar y encausar sus tipos declarativos o Interfaces tipadas estricto restrictivas tipológicas evitando a todo riesgo inyectar en líneas codificadoras variables amorfas ambiguas tipificación catalogada sinónimo elusivo escape comodín escape bypass inseguro comodín de la sintaxis declarativa léxica en typescript _"ANY" type variable parameter syntax keyword bypasses_. Abogue reutilización importación inferidas estáticamente las interfaces modelo generadas y dispuestas centralmente exportadas pre creadas de manera magistral abstracta referidas hacia sus bases de entidades del catálogo de base de datos _ORMPRISMA-Types Entity Data Map Typescript Declarative Import Helpers Component Model Bindings Integrations_ .
+- Capa Diseñadora CSS Presentacional UI Frontend Interfaz Regla Maestra Provisoria Estilística: Aquellos ensambles de la vistas componentes renderizados reactivos FrontEnd-QWIK del lado del presentador local cliente UI Web en navegadores Browser están confinados y limitadas taxativamente acoplar sus estéticas adornativas gráficas meramente exclusivamente combinando las mini-clausulas clases de nombres de extensiones declarativas utilitarias embebidos referidas de las utilidades configurables de compilador en las referencias modulares _Atomic Utilities Tailwind CSS Clases Inline_. Total interdicción aplicar estilo anidado de referencias locales manuales tradicionales nativo estándar estilos inyección componentes internos estilo `Inline Native CSS STYLING Declarations Rules`.
+- Auto-Limpiezas Formateos Identaciones Automatizados Comprobantes Inspección Validaciones Reglas Preestablecidas Código Saneado Herramienta Auditoria Analítica Eslint Pre-Commiters Pre-Pushes Scripts CLI Linter Run `ESLint Pre-Commit Hook Triggers & Pre-Checks Tests Pre Run Linters / Analizadores Linter Formatter Previa Compilación Inclusión Nube Linter Test Runner Checker Validator Preflight Guard`: Suprima de manera concluyente fallas menores alertas "Warnig Flags" sintácticas que ensucian polulando el código final; verifique validos procesos emitiendo el veredicto localmente sin piedad ordenándole a CLI : `npm run lint` al final remoción pulcritud garantizada impecable calidad máxima para subir sus ediciones .
+- Verificación Validaciones Asertivas Pruebas Aceptación Integridad APIs y Modos Integración (Testing Modules Evaluaciones Automatizada Estrés Integrador APIS Rutas Evaluatorias Funciones Test Unitarios End to End Framework Run Pruebas Aislamiento Mock): Incursionara sumando módulos o nuevas avenidas Rutas Direccionales en Servidores Endpoints para Backend API Rest o WebSockets ? ; por deducción anexe indefectiblemente su rutina validación prueba unitaria componente unitario y validaciones acople estrés simultánea concurrencias de manera inseparable adheridas paralelamente con su PR Pull request. Todo o En Nada. Testear Antes Aprobación Maestro Módulos Componente.
+
+## 🚀 Desafío Exitoso: Procedimiento Paso a Pasito Lanzando Aportación Y Entregando Código Sub-Secciones A Servidor Maestro Original Para Adherencia Oficial Publica Aportación Aceptatoria Aprobada Revisión Panel (Workflow Proposing Solicitud PR - Pull Request Submission Flow Submittal Process Integration Final)
+
+Metodológicamente hablando y ordenado para no trabar procesos inter-fusionadores conflictos choques de versionado des-sincronía temporales ramas temporales:
+
+1. Activar Herramienta Consolidación Niveladora Asimilación Cambios Maestros Originarios `Git Rebase / Origin Main Upstream Fetch Origin Main  Re-Base Branch Sync Main Master Update Resoluciones Rebase PULL/REBASE Conflict Mitigation Fixes First` : Póngase a la par temporal de base de dato maestro integrando líneas novedosas oficiales generadas en tu intertanto ausencia en repositorio temporal asimilando conflictos o trabas _Merge File Conflicts Solitions Tooling Editors Resolución VScode git merge files fix resolver manual files_.
+2. Elevar Despegue Novedad Empuje `Git Push Origin Head Local branch a Fork Remote Branch Origin Remote Push For Github PR Preparations PR`: Subir a red rama y código revisado libre conflictos .
+3. Tramitología Ventanilla Única Apertura Virtual Botón GitHub Original "Crer Solicitar Nuevo Pull Request" Abrir Tramite Enlace Plataforma (PR En Línea Requesting GitHub Browser)
+4. Justificación Racional Redacción Argumentos Descriptores Bitácora Respaldos Comprobante Justificativos Resúmenes Plantilla Documento Cuestionarios Completar Pull Request (Descriptive Justifications and Explanation PR Review Board Templating Explanations Reference Tracking Numbers Tags Pointers Issue Trackers): Desglose minucioso explicando motivo necesidad arreglo y vincular ticket soporte si existe falla vinculada ref (`Fixes #NúmeroFalla123`).
+5. Panel De Revisiones Escrupuloso Peritaje Dictámenes Múltiples Revisores Mantenedores Autorizados Jerárquicos Aprobadores Vistos Buenos Comités Resolutivos Maestros Code Reviewers Peer Evaluators Boards Maintainers Core Developers Approvers Discusores Ojetodores Feedback Retro-Alimentadores Peticiones Enmiendas Rechazos Confirmadores Aceptadores Y Fusionadores Combinación Combinar Archivos Commit Squasheadores Combinados Fusion a Servidor Productivo Maestro (Review / Code Reviews Process Iterations PR Feedback Cycle Review Resolvers): Agudeza crítica en la revisión no tómensela a mal en esferas o terrenos profesionales elitista no se contemplan ego, el objetivo sublime último se rige bajo alcanzar y cimentar magnánimamente solida robustas seguras excelencias tecno-informáticas sin tregua. Emite prontas reacciones resoluciones arreglos que exigen o dictaran nuestros revisores sobre tus envíos propuestas.
+
+## 🐛 Canales Especializados Protocolo Exposición Detección Anomalías Averías Defectos Sistema Fallo De Funcionamientos Anormalidades Reportes Vulnerabilidades Casuísticas Errores Bugs Informes Replicaciones Casos Uso Issue Tracker Reportes Bugs GitHub Issues Tracker Hub Bug Hunter
+
+Cualquier anomalía fallas fallos averías o roturas crasheos o deficiencias detectadas fallas componentes defectuosos en funciones o problemas rendimiento serán tratadas estrictas exclusivamente administradas y encausadas centralizadas abriendo formalmente y oficialmente emitiendo un respectivo Boleto Soporte o Entradas _TiKets Issues Log_ del plataforma central rastreador _GitHub Proyecto Principal General Issues Log Tab Tracker System_. Formato mandatorio y obligatorio riguroso :
+
+- Molde Patrones Pre-Armados Respuestas Claves Informativas de Bug Formulario Sistematizado Obligaciones Generales Cuestionarios Predefinidos Plantillas Guías Reportes Error Templates Uso Estricto Oportuno (The Bug Reproduce BoilerPlate System Log Environment Variables Hardware Report Form Templates Required Rules): Citar referencial información sistema operativo versiones herramientas y describir detalladamente con orden cronológico y pasitos exactos de clonación paso x paso recreación situación del ambiente desencadenante del fallo, "como lograste que se cayera/crashé la pc app / o pasos lógicos para provocar avería intencional y reproducible por un tercero evaluador técnico soporte tester analista QA técnico".
+- Nombres Claves Informativas Resumen Resoluto Directo Expresivo Conceptual Claro Preciso Titulaciones Issues Titles Header Identifiers (Clear Titles & Informative Headings Rules of Thumbs Titles Guidelines Descriptiveness Concept Identifications Subtitles Subject Summarized Pointers Titles).
+- Evidencias Periciales Investigativas Archivos Multimedia Pruebas Gráficas Capturas Visualización Logs Consolas Volcados Memorias Pantallazos Imágenes Grabación Audio Visuales Documentaciones Videos Registros Historiales Comprobantes Adjuntar Anexos Testigos Documentos Excepcionales Cargas Soporte Validadores Evidencia Informáticos Reales Irrefutables Tangibles Visibles Transparentes Comprobables Empíricos Veraces (Attach logs / Visual Screenshots UI / Console Err Errors Devtools Networking Inspector Logs / Visual Proof Of Work Gifs Mpeg Evidence Files Validations References Resources).
+
+Gracias Miles Inmensurables Honores por su contribución patriótica heroica defendiendo las honras académicas del mundo virtual remoto. El Resguardo De la honestidad Intelectual Exámenes y Evaluaciones Virtuales Académicas Es Causa De Todos Nosotros Comunidades De Innovadores Y Vanguardistas Tecnólogos Y Contribuyentes !

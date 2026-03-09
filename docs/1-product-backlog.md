@@ -1,61 +1,66 @@
-# 1. Product & Sprint Backlog
+<p align="center">
+  <img src="https://placehold.co/1200x250/0f172a/38bdf8?text=Examinator\nProduct+Backlog+%26+Sprint+Planning&font=Montserrat" alt="Product Backlog Banner" />
+</p>
 
-Dokumen ini mendefinisikan visi produk, target pengguna, dan daftar fitur (User Stories) yang disusun menggunakan metodologi Agile (Scrum).
+# 1. Product & Sprint Backlog 📋
+
+Dokumen ini mendefinisikan visi produk, target pengguna, dan daftar fitur (_User Stories_) yang disusun menggunakan metodologi Agile (Scrum).
 
 ## 🎯 Visi Produk (Product Vision)
 
-Menciptakan platform Computer-Based Test (CBT) yang sangat cepat, ringan, dan aman untuk mencegah kecurangan, didesain khusus untuk memenuhi kebutuhan SMK di Indonesia yang menerapkan Kurikulum Merdeka.
+Menciptakan platform _Computer-Based Test_ (CBT) terdesentralisasi, aman, dan supercepat di Indonesia dengan mekanisme _Proctoring_ canggih, menggunakan teknologi terkini (Qwik + Bun) untuk memastikan efisiensi biaya infrastruktur sekolah, namun dengan fitur pengawasan (_Anti-Cheat_) tingkat dewa.
 
-## 👥 Target Pengguna (User Personas)
+## 👤 Target Pengguna (User Personas)
 
-1. **Admin Sekolah**: Mengelola data utama (Siswa, Mata Pelajaran, Ujian, Soal).
-2. **Operator (Proctor/Pengawas)**: Memantau jalannya ujian secara langsung (realtime), menindaklanjuti peringatan kecurangan.
-3. **Siswa**: Menjalani ujian dengan antarmuka yang responsif, stabil, dan minim distraksi.
+- **Ahmad (Guru / Pengawas Ujian)**: Menginginkan pembuatan soal, pemantauan peserta ujian secara _real-time_, dan pelaporan indikasi kecurangan dengan akurat.
+- **Budi (Siswa SMK & Peserta Ujian)**: Menginginkan akses ujian tanpa lag (_zero-latency_), tidak memberatkan gawai, dan transparan.
+- **Siti (Administrator TI / Proktor Pusat)**: Butuh pengerahan server massal yang irit (_low footprint_) serta pemantauan log peladen mutakhir.
 
----
+## 📦 Daftar Tunggu Produk (Product Backlog Items - PBI)
 
-## 📋 Product Backlog & Sprints
+_Prioritas diurutkan dari yang tertinggi (Epic -> Story -> Task)._
 
-Pembangunan Examinator dibagi menjadi **3 Sprint Utama** (masing-masing 1 minggu).
+### Epic 1: Manajemen Ujian Inti (Core Exam Management) 📝
 
-### Sprint 1: Core Engine & Basic Detection (MVP)
+- **As a Teacher**, I want to create a new exam with multiple-choice questions, so that I can evaluate my students.
+- **As a Teacher**, I want to set the start and end time of an exam, to enforce strict deadlines.
+- **As a Teacher**, I want to randomly shuffle questions per student, to prevent mass cheating in classrooms.
 
-**Fokus:** Membangun fondasi utama CBT dan deteksi dasar.
+### Epic 2: Pengawasan Kelas Gahar (Advanced Proctoring) 👁️
 
-| ID  | User Story                                                                                            | Role    | Priority | Status  |
-| :-: | :---------------------------------------------------------------------------------------------------- | :------ | :------- | :------ |
-| US1 | Sebagai **Admin**, saya ingin mengatur daftar ujian dan soal (CRUD).                                  | Admin   | P0       | ✅ Done |
-| US2 | Sebagai **Siswa**, saya ingin login dan melihat daftar ujian saya.                                    | Siswa   | P0       | ✅ Done |
-| US3 | Sebagai **Siswa**, saya ingin mengerjakan ujian dengan timer dan auto-save.                           | Siswa   | P0       | ✅ Done |
-| US4 | Sebagai **Proktor**, saya ingin sistem mendeteksi perpindahan tab (Page Visibility).                  | Proktor | P0       | ✅ Done |
-| US5 | Sebagai **Proktor**, saya ingin sistem mendeteksi apabila siswa keluar dari layar penuh (Fullscreen). | Proktor | P0       | ✅ Done |
+- **As an Admin**, I want the system to alert me _real-time_ via WebSockets when a student opens a new tab.
+- **As an Admin**, I want the system to require webcam access and take a 3-second snapshot/video context when a blur/unfocus event happens.
+- **As an Admin**, I want to force students into fullscreen mode and flag them when they exit.
 
-### Sprint 2: Realtime Proctoring & Camera
+### Epic 3: Ujian Tingkat Murid (Student Exam Interface) 🎓
 
-**Fokus:** Pemantauan langsung dan pencegahan kecurangan berbasis perangkat keras.
-
-| ID  | User Story                                                                                                       | Role    | Priority | Status  |
-| :-: | :--------------------------------------------------------------------------------------------------------------- | :------ | :------- | :------ |
-| US6 | Sebagai **Siswa**, saya harus memberikan izin kamera untuk memulai ujian.                                        | Siswa   | P0       | ✅ Done |
-| US7 | Sebagai **Proktor**, saya ingin melihat dashboard dengan Websocket untuk memantau ratusan siswa secara langsung. | Proktor | P0       | ✅ Done |
-| US8 | Sebagai **Proktor**, sistem harus menghentikan (_Force Submit_) ujian secara otomatis jika waktu habis.          | Proktor | P1       | ✅ Done |
-| US9 | Sebagai **Admin**, saya dapat melihat ringkasan status semua ujian (aktif/nonaktif).                             | Admin   | P1       | ✅ Done |
-
-### Sprint 3: Analytics & Polish
-
-**Fokus:** Rekapitulasi, UX micro-animations, dan optimalisasi.
-
-|  ID  | User Story                                                                                                            | Role    | Priority | Status  |
-| :--: | :-------------------------------------------------------------------------------------------------------------------- | :------ | :------- | :------ |
-| US10 | Sebagai **Admin**, saya dapat memonitor total pelanggaran/cheat lewat ringkasan statistik.                            | Admin   | P1       | ✅ Done |
-| US11 | Sebagai **Proktor**, saya ingin sidebar _Live Alerts_ yang menampilkan notifikasi pelanggaran secara _ticker_.        | Proktor | P2       | ✅ Done |
-| US12 | Sebagai **Pengguna**, saya ingin mendapatkan pengalaman UI yang premium dengan Glassmorphism dan transisi yang halus. | All     | P2       | ✅ Done |
+- **As a Student**, I want an interactive quiz interface that loads instantly (Resumable Qwik components).
+- **As a Student**, I want progress auto-saving so I don't lose data if my connection drops.
+- **As a Student**, I want a clear warning if the system detects I've minimized the browser window.
 
 ---
 
-## 📈 Kriteria Penerimaan (Definition of Done)
+## 🏃 Sprint Planning (Refined Estimates)
 
-1. **Fungsional**: Fitur berjalan sesuai User Story tanpa _fatal bugs_.
-2. **Kinerja**: Waktu loading UI < 1 detik (berkat Qwik).
-3. **Keamanan**: Endpoint dilindungi oleh JWT Middleware.
-4. **Desain**: Sesuai dengan spesifikasi Tailwind v4 (Dark Theme & Glassmorphism).
+### Sprint 1: Penyiapan Infrastruktur & UI Kerangka (Foundation) 🏗️
+
+- **S1-01**: Setup Monorepo (Bun, Qwik, Elysia, Prisma, Tailwind).
+- **S1-02**: Konfigurasi Database Schema untuk `User`, `Exam`, `Question`.
+- **S1-03**: Bangun Login/Registrasi API + JWT Authentication.
+- **S1-04**: Buat komponen UI Auth (Login & Sign Up) dengan TailwindCSS.
+
+### Sprint 2: Implementasi Mesin CBT Inti (Core CBT) 🚀
+
+- **S2-01**: Bangun API CRUD Ujian dan Soal.
+- **S2-02**: Integrasikan _Dashboard_ Siswa (Daftar ujian aktif).
+- **S2-03**: Bangun UI Halaman Mengerjakan Soal.
+- **S2-04**: Integrasi fungsi Simpan Jawaban secara _real-time_.
+
+### Sprint 3: Mekanisme Proctoring & Websockets (Anti-Cheat & Validation) 🛡️
+
+- **S3-01**: Integrasi Elysia WebSockets (`/ws/proctor`).
+- **S3-02**: Implementasi _Hooks Browser_ (Visibility API, Blur/Focus, Fullscreen API) di Qwik _Client_.
+- **S3-03**: Mekanisme Tangkapan Webcam (MediaRecorder) dan pengunggahan file bukti.
+- **S3-04**: Bangun Dashboard Admin dengan _Live Stream Data_ / WS Events log atas kecurangan.
+
+> **Status Saat Ini**: Sprint 1, 2, dan 3 telah diimplementasikan sepenuhnya dengan sukses _(100% Selesai)_.

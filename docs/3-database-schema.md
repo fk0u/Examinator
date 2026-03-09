@@ -1,117 +1,103 @@
-# 3. Database Schema
+<p align="center">
+  <img src="https://placehold.co/1200x250/0f172a/38bdf8?text=Examinator\nDatabase+Schema+%26+ERD&font=Montserrat" alt="Database Schema Banner" />
+</p>
 
-Dokumen ini memuat skema database yang dikelola oleh Prisma ORM (`server/prisma/schema.prisma`). Database menggunakan MySQL secara relasional untuk mempertahankan integritas data ujian.
+# 3. Database Schema 🗄️
 
-## 🗄️ Relasi Entitas (ERD)
+Dokumen ini memuat skema database yang dikelola oleh Prisma ORM (`server/prisma/schema.prisma`). Database menggunakan MySQL secara relasional untuk mempertahankan integritas data ujian dengan jaminan keamanan ACID.
+
+## 🗺️ Relasi Entitas (ERD)
 
 ```mermaid
 erDiagram
-    User ||--o{ Attempt : "melakukan"
-    User ||--o{ Exam : "dibuatOleh"
-
-    Exam ||--o{ Question : "memiliki"
-    Exam ||--o{ Attempt : "memiliki"
-
-    Question ||--o{ Option : "mempunyai Pilihan"
-    Question ||--o{ Answer : "dijawabPada"
-
-    Attempt ||--o{ Answer : "menghasilkan"
-    Attempt ||--o{ CheatLog : "mencatatkan"
-
-    Option ||--o{ Answer : "dipilihSebagai"
+    User ||--o{ Exam : creates
+    User ||--o{ UserExamSession : attempts
+    Exam ||--o{ Question : contains
+    Exam ||--o{ UserExamSession : logs
+    UserExamSession ||--o{ ProctorLog : monitors
 
     User {
-        String id PK
-        String username UK
-        String password
-        String fullName
-        Role role
-        String kelas
-        Boolean active
+        string id PK
+        string email
+        string name
+        string password
+        enum role "ADMIN | STUDENT"
+        datetime createdAt
     }
 
     Exam {
-        String id PK
-        String title
-        String subject
-        String description
-        Int duration
-        Int passingScore
-        Boolean active
+        string id PK
+        string title
+        string description
+        datetime startTime
+        datetime endTime
+        int duration
+        string authorId FK
+        datetime createdAt
     }
 
     Question {
-        String id PK
-        String text
-        String imageUrl
-        Int points
+        string id PK
+        string examId FK
+        string content
+        json options
+        string correctAnswer
+        int points
     }
 
-    Option {
-        String id PK
-        String text
-        Boolean isCorrect
+    UserExamSession {
+        string id PK
+        string userId FK
+        string examId FK
+        enum status "IN_PROGRESS | COMPLETED | FLAGGED"
+        int score
+        datetime startedAt
+        datetime completedAt
     }
 
-    Attempt {
-        String id PK
-        Status status
-        Float score
-        Boolean passed
-        DateTime startTime
-        DateTime endTime
-    }
-
-    Answer {
-        String id PK
-    }
-
-    CheatLog {
-        String id PK
-        String cheatType
-        String description
-        String captureUrl
+    ProctorLog {
+        string id PK
+        string sessionId FK
+        string eventType "TAB_SWITCH | BLUR | FULLSCREEN_EXIT"
+        string details "JSON Metadata/Warning metrics"
+        string evidenceUrl "Lokal /uploads/path"
+        datetime createdAt
     }
 ```
 
-## 📝 Tabel Utama
+## 📖 Deskripsi Model Lanjut (Advanced Dict)
 
-### 1. User
+### 1. `User` (Identitas Hak Akses)
 
-Menyimpan data pengguna (Siswa, Operator/Proktor, Admin).
+Menampung entitas profil dengan batasan izin:
 
-- `role`: Enum `[ADMIN, OPERATOR, STUDENT]` digunakan untuk _Role-Based Access Control_ (RBAC) dalam manajemen menu dan akses.
-- `kelas`: (Opsional) Mengelompokkan berdasarkan kelas untuk siswa.
+- **`role`**: Mengindikasi izin. Hanya pengguna ber-tipe `ADMIN` yang diizinkan memanipulasi baris data `Exam` dan mengakses papan dasbor `/admin` monitor.
 
-### 2. Exam
+### 2. `Exam` (Struktur Paket Ujian)
 
-Mengatur identitas dan parameter tes.
+Induk kerangka soal:
 
-- `duration`: Memegang peran dalam waktu hitung mundur ujian (dalam menit).
-- `passingScore`: Menentukan batas kelulusan siswa _(KKM)_.
-- Secara relasional menyimpan siapa `Admin` yang membuat ujiannya.
+- **`startTime`** / **`endTime`**: Penetapan kronometri pembatasan jadwal di dalam rentang waktu yang direstui oleh server.
+- **`duration`**: Kuota menit efektif. Digunakan di klien oleh timer _Count-down_.
 
-### 3. Question & Option
+### 3. `Question` (Distribusi Soal)
 
-Sistem saat ini menganut skema **Pilihan Ganda (Multiple Choice)**.
+- **`options`**: Tipe `JSON` yang menaungi larik variasi opsi `A, B, C, D`.
+- **`correctAnswer`**: Dikunci dan hanya diobservasi tatkala `UserExamSession` dikirim untuk kalkulasi skoring parsial server.
 
-- Setiap _Question_ dapat memegang lebih dari 2 opsi pilihan dalam entitas `Option`.
-- Hanya satu kombinasi opsi yang diset bernilai `isCorrect = true`.
+### 4. `UserExamSession` (Tiket Masuk Ujian)
 
-### 4. Attempt
+- **`status`**: State Machine penentu kelangsungan status sesi ujian (`IN_PROGRESS` -> `COMPLETED`, atau dipaksa diskualifikasi secara sejuk oleh Pendidik `FLAGGED`).
+- **`score`**: Kalkulasi perolehan poin mutlak akhir yang tertulis secara independen sesaat sesudah pengumpulan `POST /api/exams/submit`.
 
-Tabel transaksi sesi ujian per siswa. Kunci utama untuk mendata riwayat pengerjaan siswa.
+### 5. `ProctorLog` (Ledakan Tsunami Audit Forensik)
 
-- Berisi rekam status: `[IN_PROGRESS, SUBMITTED, TIMED_OUT]`.
-- Merekam skor perhitungan akhir.
+Arsip penggelaran interupsi pelanggaran. Menyimpan historis kejahatan proctoring:
 
-### 5. Answer
+- **`eventType`**: Jenis penyelewengan (_Tab, Blur, Focus, Fullscreen_).
+- **`details`**: Konteks anomali (Deskripsi metadata, kronometri).
+- **`evidenceUrl`**: Tautan mutlak media barang bukti (`/uploads/{video_id}.webm` atau `.jpg`). Diambil dari tangkapan pelapor kamera sisipan klien ketika peringatan dilesatkan.
 
-Mencatat detail jawaban yang diberikan untuk entitas `Attempt` spesifik. Relasi tersambung ke `Question` dan `Option` mana yang dipilih.
+---
 
-### 6. CheatLog
-
-Tabel logikal khusus proctoring. Menyimpan data peringatan.
-
-- `cheatType`: Misal `"TAB_SWITCH"`, `"FULLSCREEN_EXIT"`, `"CAMERA_OFF"`.
-- `captureUrl`: URL menuju gambar `.jpg` / video lokal `.webm` yang difoto diam-diam (jika kamera menyala) sebagai barang bukti audit laporan akhir.
+> _**Catatan Keselamatan**: Data rahasia kandidat seperti `password` telah diasimilasikan algoritma asimetrik kuat (Bcrypt) pra-insersi lewat lapisan konfig DB prisma middleware (bun `password.hash`)._

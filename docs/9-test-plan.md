@@ -1,54 +1,46 @@
-# 8. QA & Testing Strategy (Test Plan)
+<p align="center">
+  <img src="https://placehold.co/1200x250/0f172a/38bdf8?text=Examinator\nQA+%26+Testing+Strategy&font=Montserrat" alt="QA Test Plan Banner" />
+</p>
+
+# 9. QA & Testing Strategy (Test Plan) 🧪
 
 Rencana Pengujian (_Test Plan_) ini disusun oleh tim Quality Assurance untuk mengevaluasi fungsionalitas dan uji penetrasi batas sistem Examinator SaaS. Strategi pengujian dibagi menjadi 4 matriks vertikal.
 
 ---
 
-## 1. Unit & Integration Testing (Backend - Bun/Elysia)
+## 1. Uji Fungsional Unit Komponen Modular (Unit Unitary & API Isolation)
 
-Target dari uji ini adalah jaminan mutu stabilitas per-module di isolasi.
+- **Parameter Pengujian Beban Backend (_API Route Sandbox_)**:
+  Menyemprotkan iterasi simulasi pengiriman ratusan parameter bodong (_Mock payloads_) dan input injeksi rentan langsung diarah ke Rute Titik Masuk `POST /api/exams` atau `POST /api/auth/login`.  
+  _Target Penerimaan_: Elysia Validator `t.String()` harus mencekik, menolak input kosong, membuang input SQLi, dan melempar sisa eksepsi Status HTTP `400 Bad Request` stabil.
+- **Komponen Fungsional Lapis Atas (_Qwik UI Render Integrity_)**:
+  Pengujian isolasi pemuatan grafik CSS halaman Utama (_Login/Register_). Komponen interaktif _Submit Button_ dilarang meledak (crash/unclickable) biarpun koneksi internet asinkron lambat _(3G throttling)_.
 
-| Area Uji          | Kasus Ulang (Test Case)                                                                                                            | Ekspektasi                                                                                                | Prioritas |
-| :---------------- | :--------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------- | :-------- |
-| **Auth Guard**    | Pengiriman GET ke `/api/auth/me` tanpa memberikan token JWT.                                                                       | Server mengembalikan Status HTTP Code `401 Unauthorized` & Payload JSON tolak balak.                      | KRITIS    |
-| **Auth Register** | Registrasi dengan format _password_ yang dikirim telanjang.                                                                        | Kolom `password` di DB Prisma **HARUS** dalam format enkripsi Hash bcryptjs (Mencegah plain-text log).    | KRITIS    |
-| **Prisma Upsert** | _Post_ rute `/api/attempts/:id/answer` menggunakan _optionId_ dan _questionId_ ke tabel yang sama 2 kali berurutan berturut-turut. | Relasi record Jawaban (`Answer`) tidak menjadi ganda (_duplicate_), record yang tua ditimpa dengan mulus. | TINGGI    |
-| **RBAC Logic**    | Akun di-_role_ sebagai `STUDENT` memaksakan metode penghapusan DELETE ke rute CRUD `/api/exams/1`.                                 | Akses dihalau menggunakan `403 Forbidden Access`.                                                         | KRITIS    |
+## 2. Uji Integrasi Logika Berantai (E2E / End-To-End Workflows Pathways)
 
----
+Mereproduksi skenario turunan pengguna tulen di arena maya dari titik hulu merambat menuju hilir tanpa putus sinkron.
 
-## 2. E2E (End-to-End) & Fungsional UI (Frontend - Qwik)
+1. **Flow Proktorisasi Valid**:
+   `[Siswa Login] -> [Klik Ujian MTK] -> [Baca Tata Tertib] -> [Kamera Menyala API Akses Izin Ok] -> [Mengerjakan Soal 1...2...3] -> [Tebak Skor & Klik Simpan (Submit Exam)]`.
+2. **Kalkulator Asimiliasi Basis Data**:
+   Angka skoring terakhir Paska penutupan wajib bersayap komparasi sama persis dengan angka simulasi kalkulasi di Tabel _Prisma UserExamSession.score_.
 
-Menjembatani pengujian skenario fungsionalitas murni yang meniru tingkah laku (behaviour) pangguna nyata pada peramban/klien ujian siswa.
+## 3. Matriks Pengujian Skenario Kecurangan Absolut (The Proctored Adversarial Simulator) 🕵️
 
-| Skenario Alur Pengguna   | Prosedur Simulasi                                               | Indikator Keberhasilan (Pass Criteria)                                                                                                                               |
-| :----------------------- | :-------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Timer Auto-Submit**    | Pengurangan waktu ujian dari sisa _10 detik_ hingga _0_.        | Pada jeda angka `00:00`, peramban perantara (_Hook Timer_) meneruskan API panggil submisi `/api/attempts/submit` dan keluar otomatis menuju riwayat dashboard siswa. |
-| **Responsif Form Login** | Tampilan dipersempit ke resolusi mobile (375x812px - iPhone X). | Struktur elemen form Flexbox Glassmorphism di `/client/src/routes/index.tsx` menyesuaikan diri, margin utuh, tidak ada geseran _overflow horizontal_.                |
-| **State Persistency**    | Mere-fresh (F5) halaman Ujian Siswa di tengah pengerjaan.       | Data Jawaban Pilihan Ganda kembali terekstrak dari state (Persisten), tak ada yang raib kembali keruh.                                                               |
+Mencubit limit eksploitasi sensor sistem dengan melancarkan "Gaya Culas Pelajar Penipu". Parameter wajib Ujikaji lolos anti-cheat:
 
----
+| Aksi Provokasi Curang (Adversarial Vector)          | Ekspektasi Mitigasi Sistem Murni (Pass Criteria)                                                                                                  |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _Tab Switching_ / Minimize Window Browser           | Klien meneriakan status event curang lewat pelongsor rute websocket `CHEATING_FLAG_TAB_AWAY` detik itu juga.                                      |
+| Memakai _Screen capture tool_ di _background_       | Event `window.blur` menyala, Merekam cuplikan media rekaman kamera lalu dikirim `/uploads` dan melampirkanya ke entiti tabel _ProctorLog_.        |
+| Menekan Lari Paksa `Esc` kelur _Fullscreen_         | Muncul peringatan pemblokan akses tes raksasa (Overlay blokir UI).                                                                                |
+| Diskoneksi jaringan tiba-tiba (Sabotase kabel Wifi) | Nilai skor poin sementara tersokong sistem simpan _State_ jawaban dan re-sinkronisasi lancar ketika internet pulih bertaut kembali ke Server WSS. |
 
-## 3. Heuristic Anti-Cheat Validation (Integrasi Modul Proctoring)
+## 4. Uji Pemukulan Beban Ekstrem Bertubi (Stress & Load Burn-In Test) 🚀
 
-Bagian ini divalidasi dengan sangat spesifik terhadap penyusup perangkat lunak peramban nakal atau kecerobohan OS. Pengujian secara asertif melalui peramban uji terpisah.
+Platform skala provinsi (_SaaS Multi-Tenant_) takkan kompromi di kala lautan pelajar masuk portal di menit 08:00 AM serempak.
 
-| Trigger Simulasi    | Validasi Respon Klien (_Frontend Emit_)                                                                                 | Validasi Sinkronisasi WS Admin / Dashboard                                                                                                  |
-| :------------------ | :---------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Minimize Window** | Memantik _Event_ Hook DOM `visibilitychange` sekonyong-konyong.                                                         | Modul klien siswa bereaksi `Peringatan: Berpindah Tab/Keluar Tab`. Modal overlay merah bergetar muncul.                                     | Parameterisasi tabel Dashboard Admin _Online Table_ meloncat (_Trigger Emit_) persekian milidetik yang sama menjadi Status **🔴 Ditandai**. Angka hitung pelanggaran (+1). |
-| **Webcam Denial**   | Menghentikan paksa perizinan (_Revoke_) blok opsi kamera web Chrome dari status Diizinkan menuju Dimatikan (_Blocked_). | Indikator status `useVisibleTask` kamera (`cameraEnabled.value = false`) dan memperlihatkan logo lencana 📷 OFF di bagian atas ujian siswa. | Bar dasbor bagian rekap statistik Proktor `"📷 Kamera OFF"` secara eksklusif angka numerik ikut terdongkrak seketika via event bus.                                        |
+- **Kapasitas Sasar Serangan (Artillery WebSocket Test)**: Penetrasi serbuan `5,000` mesin _socket client dummies_ ke kordinat `ws://localhost:8080/ws/proctor`.
+- **Indeks Kelolosan Evaluasi (Acceptance Treshold)**: Bun.js Runtime server Wajib tegar berdiri (Zero TCP Connection Dropped) dan menahan kebocoran Memori (No OOM - Out of Memory exception panic) serta mempertahankan perputaran denyut transmisi proctoring stabil dibawah indeks kelambatan `50ms`.
 
----
-
-## 4. Performance & Stress Load Benchmarking
-
-Evaluasi _Throughput_ dari arsitektur Runtime "Elysia.js Bun.js Engine" + "uWebSockets native".
-
-1. **Simulasi Ratusan Beban (_Load Spike_):**
-   - Pemanfaatan kakas _k6_ atau _Apache JMeter_ (_Stress Tool_).
-   - Menembakkan 5,000 requests per sekon (RPS) terhadap endpoint JWT Login yang ringan `/api/health` untuk mengkurva seberapa rendah alokasi memori VPS saat koneksi dibanjiri tanpa Henti.
-   - **DoR Evaluasi**: API Web mestimasi memuati di bawah latensi maksimal `~25 milidetik`, tidak ada interupsi dan tanpa "502 Bad Gateway".
-
-2. **WebSocket Penetrasi Multiplexer:**
-   - Script _headless_ yang membuka koneksi spesifik WS Ujian (300 channel siswa berbarengan, mensimulasi penghentakkan sinyal API Pindah Tab).
-   - **DoR Evaluasi**: 300 Pijar notifikasi _Live Feed_ Alarm Ticker yang dirender pada Dashboard Proktor _UI loop_ tidak menyumbat RAM Chrome Klien Admin (Tidak berujung pada Page Freeze berkat manipulasi V-DOM hemat).
+Integritas dijamin 100%. Tak Perlu Takut Gagal Saat Terjun Perang Ke Dunia Nyata! 🛡️

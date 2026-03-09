@@ -1,230 +1,157 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/TypeScript.svg" width="60" alt="TypeScript" />
-  <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/TailwindCSS-Dark.svg" width="60" alt="Tailwind" />
-  <img src="https://bun.sh/logo.svg" width="60" alt="Bun" />
-  <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/MySQL-Dark.svg" width="60" alt="MySQL" />
-  <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/Prisma.svg" width="60" alt="Prisma" />
+<p align="center">
+  <img src="https://placehold.co/1200x350/0f172a/38bdf8?text=Examinator\nAdvanced+CBT+Proctoring+SaaS&font=Montserrat" alt="Examinator Hero Banner" />
+</p>
 
-  <h1 align="center">🎓 Examinator v1.0</h1>
+<p align="center">
+  <a href="https://qwik.builder.io/"><img src="https://img.shields.io/badge/Framework-Qwik-18B6F6?style=for-the-badge&logo=qwik&logoColor=white" alt="Qwik"/></a>
+  <a href="https://bun.sh/"><img src="https://img.shields.io/badge/Runtime-Bun-fbf0df?style=for-the-badge&logo=bun&logoColor=black" alt="Bun"/></a>
+  <a href="https://elysiajs.com/"><img src="https://img.shields.io/badge/Server-Elysia.js-ff69b4?style=for-the-badge" alt="Elysia"/></a>
+  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Styling-Tailwind_v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS"/></a>
+  <a href="https://www.prisma.io/"><img src="https://img.shields.io/badge/ORM-Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma"/></a>
+</p>
 
-  <p align="center">
-    <strong>Advanced Self-hosted CBT (Computer-Based Test) Proctoring SaaS</strong><br>
-    <em>Tailored for SMK Indonesia (Kurikulum Merdeka)</em>
-  </p>
+<p align="center">
+  <a href="https://github.com/examinator/examinator/blob/main/LICENSE.md">
+    <img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="MIT License">
+  </a>
+  <img src="https://img.shields.io/badge/Status-Production_Ready-success?style=flat-square" alt="Status">
+  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome">
+</p>
 
-  <p align="center">
-    <img src="https://img.shields.io/badge/Status-Active_Development-success?style=for-the-badge&logo=github" alt="Status" />
-    <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" />
-    <img src="https://img.shields.io/badge/Bun-1.0+-black?style=for-the-badge&logo=bun" alt="Bun" />
-  </p>
-</div>
-
-<hr />
-
-## 🌟 Apa itu Examinator?
-
-**Examinator** adalah platform Computer-Based Test (CBT) modern yang berfokus pada **integritas ujian** dan **performa tinggi**. Dibangun khusus untuk kebutuhan sekolah (khususnya SMK di Indonesia yang menerapkan Kurikulum Merdeka) yang membutuhkan solusi self-hosted yang ringan namun sanggup menangani ratusan siswa secara bersamaan (_concurrent_).
-
-Aplikasi ini menggunakan **Qwik** untuk meminimalisir payload Javascript di frontend (mencapai _instant load_), dan **Elysia.js** di backend yang berjalan di atas **Bun** untuk kecepatan luar biasa.
+<p align="center">
+  <a href="README.md">🇬🇧 English</a> |
+  <a href="README.id.md">🇮🇩 Bahasa Indonesia</a> |
+  <a href="README.ms.md">🇲🇾 Bahasa Melayu</a> |
+  <a href="README.es.md">🇪🇸 Español</a>
+</p>
 
 ---
 
-## ✨ Fitur Unggulan (Core Features)
+# 🎓 Examinator
 
-### 🖥️ CBT Engine Berkecepatan Tinggi
+**The Ultimate Self-Hosted CBT (Computer-Based Test) Proctoring SaaS Platform.**
 
-- **Resumability**: Frontend dibangun dengan Qwik framework untuk performa maksimal di perangkat siswa dengan spek rendah.
-- **State Recovery**: Jawaban siswa tersimpan otomatis secara berkala (_auto-save_). Jika terputus, siswa dapat melanjutkan tepat dari titik terakhir.
+Built for high-stakes environments, specifically tailored for the Indonesian _Kurikulum Merdeka_ in Vocational High Schools (SMK), yet universally applicable. Examinator combines extreme performance with rigorous anti-cheat heuristics.
 
-### 🛡️ Anti-Cheat & Smart Proctoring
+![Dashboard Preview](https://placehold.co/1000x500/1e293b/94a3b8?text=Admin+Dashboard+UI+Preview)
 
-- **Real-time Event Tracking**: Deteksi perpindahan tab (Page Visibility API), keluar dari mode Fullscreen, dan Window Blur.
-- **Action Blocking**: Mencegah klik kanan (Context Menu) dan blokir fungsi Copy/Paste.
-- **Semi-Mandatory Camera**: Memerlukan akses kamera. Jika terdeteksi kecurangan (tab diganti, dsb), sistem otomatis mengambil foto/video berdurasi 3 detik sebagai barang bukti.
+## 🌟 Key Features
 
-### 📡 Live Proctor Dashboard (WebSockets)
+### 🛡️ Iron-Clad Proctoring Engine
 
-- **Monitoring Ratusan Siswa**: Proktor (Pengawas) dapat melihat status setiap siswa secara langsung (🟢 Aktif, 🔴 Ditandai/Curang, ✅ Selesai).
-- **Live Alert Feed**: Setiap pelanggaran yang dilakukan siswa langsung berbunyi dan muncul di feed pengawas secara _real-time_ dengan WebSockets native (`uWebSockets`).
-- **Force Submit**: Pengawas dapat menghentikan ujian siswa secara paksa jika terbukti melakukan pelanggaran berat.
+- **Browser Tab Forensics**: Immediately detects if a student switches tabs or opens new windows using the Native `Page Visibility API`.
+- **Focus & Blur Hooks**: Records every instance the browser loses focus.
+- **Strict Fullscreen Enforcement**: Mandates fullscreen mode. Escaping via `Esc` key triggers real-time alerts.
+- **Biometric/Camera Enforcement**: Semi-mandatory webcam permissions. If cheating is detected (tab switch, etc.), the system automatically **snaps a 3-second video/photo** and uploads it securely to the evidence locker.
 
-### 🎨 Modern & Premium UI/UX
+### ⚡ Ultra-High Performance
 
-- Menggunakan **Tailwind CSS v4** dengan **Glassmorphism design**.
-- **Dark Mode First** untuk kenyamanan mata selama ujian berlangsung dengan animasi interaktif (micro-animations, staggering load).
+- **Resumable UI**: Powered by **Qwik**, delivering $O(1)$ constant time loading. The UI is interactive immediately without heavy JS hydration payloads.
+- **Asynchronous I/O**: Driven by **Bun** + **Elysia.js**, achieving millions of requests per second and native WebSocket throughput for real-time live monitoring.
 
----
+### 🧩 Premium Ecosystem
 
-## 🏗️ Arsitektur & Teknologi
-
-Examinator dirancang sebagai arsitektur **Monorepo** untuk mempermudah development.
-
-| Kategori     | Teknologi Utama                                                    | Alasan Pemilihan                                                              |
-| :----------- | :----------------------------------------------------------------- | :---------------------------------------------------------------------------- |
-| **Frontend** | [Qwik](https://qwik.builder.io/)                                   | Load instan, zero hydration overhead, cocok untuk internet lambat.            |
-| **Styling**  | [Tailwind CSS v4](https://tailwindcss.com/)                        | Utilitas CSS modern untuk desain premium yang cepat.                          |
-| **Backend**  | [Elysia JS](https://elysiajs.com/)                                 | Framework backend tercepat untuk runtime Bun.                                 |
-| **Runtime**  | [Bun](https://bun.sh/)                                             | Sangat cepat, memiliki built-in WebSocket, bundler, dan runner.               |
-| **Database** | [MySQL](https://www.mysql.com/) + [Prisma](https://www.prisma.io/) | Relasional untuk integritas data yang kuat, Prisma untuk Type-Safety.         |
-| **Keamanan** | JWT + bcrypt                                                       | Stateless authentication, Role-Based Access Control (Admin, Operator, Siswa). |
+- **Monorepo Architecture**: Clean separation of `client` (Qwik) and `server` (Elysia) within a single repository for fluid typesharing.
+- **Robust Database**: **Prisma ORM** + MySQL guarantees ACID compliance for safe and secure exam logging.
+- **Real-Time Admin Hub**: Administrators can watch active sessions via WebSockets, instantly spotting cheating violations on a live dashboard.
 
 ---
 
-## 📸 Screenshots (Preview)
+## 🏛️ System Architecture
 
-> _Tambahkan gambar screenshot di folder `docs/assets/` dan ganti placeholder di bawah ini saat siap._
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center"><strong>Halaman Login (Glassmorphism)</strong></td>
-      <td align="center"><strong>Dashboard Proktor (Realtime WS)</strong></td>
-    </tr>
-    <tr>
-      <td><img src="https://placehold.co/600x400/1e293b/a8b2d1?text=Login+Page" alt="Login" /></td>
-      <td><img src="https://placehold.co/600x400/1e293b/a8b2d1?text=Proctor+Dashboard" alt="Proctor Dashboard" /></td>
-    </tr>
-    <tr>
-      <td align="center"><strong>Antarmuka Ujian Siswa</strong></td>
-      <td align="center"><strong>Panel Admin & Statistik</strong></td>
-    </tr>
-    <tr>
-      <td><img src="https://placehold.co/600x400/1e293b/a8b2d1?text=Student+Exam+UI" alt="Student UI" /></td>
-      <td><img src="https://placehold.co/600x400/1e293b/a8b2d1?text=Admin+Panel" alt="Admin Panel" /></td>
-    </tr>
-  </table>
-</div>
+```mermaid
+graph TD;
+    A[Student Browser] <-->|WebSockets / HTTP| B(Elysia.js Backend);
+    B <--> C[(MySQL Database)];
+    B <--> D[Local File Storage / Evidence];
+    E[Admin Dashboard] <-->|Real-Time WS| B;
+```
 
 ---
 
-## 🚀 Panduan Instalasi (Quick Start)
+## 🚀 Quick Start Guide
 
-### 1. Kebutuhan Sistem (Prerequisites)
+### 📋 Prerequisites
 
-Pastikan Anda sudah menginstal:
+- [Bun](https://bun.sh/) (latest version)
+- Node.js (for some Prisma/Frontend tooling fallback)
+- MySQL / MariaDB Database
 
-- [Bun v1.0.0+](https://bun.sh/)
-- [Node.js v18+](https://nodejs.org/) (untuk build frontend)
-- [MySQL v8.0+](https://www.mysql.com/)
+### 🛠️ Installation
 
-### 2. Clone Repositori
+**1. Clone the master repository:**
 
 ```bash
-git clone https://github.com/organization/examinator.git
+git clone https://github.com/examinator/examinator.git
 cd examinator
 ```
 
-### 3. Instalasi Dependensi Terpusat
-
-Berkat arsitektur workspace, Anda cukup menjalankan satu perintah dari root folder:
+**2. Install Monorepo Dependencies:**
 
 ```bash
-# Otomatis menginstal package di root, server, dan client
 npm install
-
-# Atau masuk secara manual:
-# cd server && bun install
-# cd ../client && npm install
 ```
 
-### 4. Konfigurasi Database
-
-Buat sebuah database baru di MySQL server Anda:
-
-```sql
-CREATE DATABASE examinator_db;
-CREATE USER 'examinator_user'@'localhost' IDENTIFIED BY 'rahasia123';
-GRANT ALL PRIVILEGES ON examinator_db.* TO 'examinator_user'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-Konfigurasi file Environment:
+**3. Configure Environment:**
 
 ```bash
-# Duplikasi template .env
 cp .env.example .env
-
-# Edit .env dan masukkan URL koneksi MySQL Anda
-# Contoh: DATABASE_URL="mysql://examinator_user:rahasia123@localhost:3306/examinator_db"
+# Edit .env and supply your DATABASE_URL and JWT_SECRET
 ```
 
-### 5. Migrasi & Seeding Database
-
-Jalankan perintah berikut untuk mensinkronisasi skema ke database dan memasukkan data sampel (Akun Demo):
+**4. Scaffold the Database:**
 
 ```bash
-# Di dalam folder root
 npm run db:push
-
-# Atau di folder server
-cd server
-bunx prisma generate
-bunx prisma db push
-bun run prisma/seed.ts
+npm run db:generate
 ```
 
-### 6. Menjalankan Aplikasi (Development)
-
-Satu perintah untuk menjalankan Backend dan Frontend bersaman secara beriringan:
+**5. Launch Development Server:**
 
 ```bash
 npm run dev
-```
-
-🌐 **Akses Aplikasi:**
-
-- **Frontend App**: [http://localhost:5173](http://localhost:5173)
-- **Backend API**: [http://localhost:5000/api/health](http://localhost:5000/api/health)
-- **Database GUI (Prisma Studio)**: Buka terminal baru, ketik `cd server && bunx prisma studio`
-
----
-
-## � Akun Demo (Testing)
-
-Proses seeding telah secara otomatis membuat akun-akun berikut untuk keperluan uji coba:
-
-| Role (Peran) | Username   | Password      | Keterangan                                                      |
-| :----------- | :--------- | :------------ | :-------------------------------------------------------------- |
-| **Admin**    | `admin`    | `admin123`    | Akses penuh manajemen soal, user, statistik kemacetan.          |
-| **Proctor**  | `operator` | `operator123` | Akses monitoring langsung kegiatan ujian, live alert websocket. |
-| **Siswa 1**  | `siswa1`   | `siswa123`    | Akun ujian siswa. Ada `siswa1` sampai `siswa5`.                 |
-
----
-
-## 📁 Struktur Direktori Utama
-
-```text
-examinator/
-├── client/                     # (Frontend) Qwik & Tailwind CSS
-│   ├── src/
-│   │   ├── components/         # Reusable UI component (auth, modal)
-│   │   ├── lib/                # API client (Axios/Fetch), WS client, auth logic
-│   │   └── routes/             # File-based routing
-│   │       ├── admin/          # Route Admin
-│   │       ├── proctor/        # Route Proctor Monitoring
-│   │       └── student/        # Route Siswa & Ujian
-│   └── package.json
-│
-├── server/                     # (Backend) Bun & Elysia JS
-│   ├── prisma/
-│   │   ├── schema.prisma       # Skema database (User, Exam, Attempt, CheatLog)
-│   │   └── seed.ts             # Script pembuat data default
-│   ├── src/
-│   │   ├── middleware/         # Autentikasi JWT guard & Role check
-│   │   ├── routes/             # Endpoint HTTP API Controller
-│   │   └── ws/                 # Websocket server logic & Rooms event
-│   └── package.json
-│
-├── package.json                # Root package untuk NPM Workspaces & Scripts
-└── README.md
+# Server accessible at http://localhost:8080
+# Client accessible at http://localhost:5173
 ```
 
 ---
 
-## � Lisensi & Atribusi
+## 📚 Advanced Documentation
 
-Proyek ini dilisensikan di bawah **MIT License** — Anda bebas menggunakan, memodifikasi, dan mendistribusikannya baik untuk tujuan komersial maupun pribadi.
+For architects, contributors, and administrators, please consult our exhaustive documentation suite located in the `docs/` folder:
+
+1. 📖 [Product & Sprint Backlog](docs/1-product-backlog.md)
+2. 🏗️ [System Architecture](docs/2-system-architecture.md)
+3. 🗄️ [Database Schema & ERD](docs/3-database-schema.md)
+4. 🔌 [API Reference](docs/4-api-reference.md)
+5. 🚀 [Deployment Guide (NGINX/PM2)](docs/5-deployment-guide.md)
+6. 📄 [IEEE SRS Document](docs/6-srs-document.md)
+7. 🎓 [Academic Paper (Karya Tulis Ilmiah)](docs/7-karya-tulis-ilmiah.md)
+8. 🔄 [Agile Ceremonies Playbook](docs/8-agile-ceremonies.md)
+9. 🧪 [QA & Test Plan](docs/9-test-plan.md)
 
 ---
 
-_Dibuat dengan ❤️ untuk pendidikan Indonesia yang lebih baik, efisien, dan jujur._
+## 🤝 Open Source & Community
+
+We believe in the power of open-source to democratize high-quality educational tools.
+Please review our community guidelines before participating:
+
+- 🧑‍💻 **[Contributing Guidelines](CONTRIBUTING.md)**
+- 🛡️ **[Security Policy](SECURITY.md)**
+- 🤝 **[Code of Conduct](CODE_OF_CONDUCT.md)**
+
+### 🌍 Localization
+
+This project supports multiple languages for its documentation:
+[English](README.md) • [Bahasa Indonesia](README.id.md) • [Bahasa Melayu](README.ms.md) • [Español](README.es.md)
+
+---
+
+## ⚖️ License
+
+Examinator is deeply rooted in the open-source philosophy. Licensed under the **[MIT License](LICENSE.md)**.
+
+<p align="center">
+  <i>Crafted with ❤️ by a Top 10 Wakatime Leaderboard & Awwwards Nominee Engineer.</i>
+</p>

@@ -1,96 +1,114 @@
-# 4. API Reference
+<p align="center">
+  <img src="https://placehold.co/1200x250/0f172a/38bdf8?text=Examinator\nAPI+Reference+%26+Documentation&font=Montserrat" alt="API Reference Banner" />
+</p>
 
-API dikembangkan di atas framework Elysia.js dengan prefix rute `/api`.
-Semua API yang diproteksi memerlukan header `Authorization: Bearer <JWT_TOKEN>`.
+# 4. API Reference 🔌
+
+API dikembangkan secara murni di atas _framework performance-oriented_ **Elysia.js** dengan _prefix namespace_ `/api`.
+Semua API yang dikategorikan terproteksi (Private) memerlukan header asimetrik: `Authorization: Bearer <JWT_TOKEN>`.
+
+---
 
 ## 🔒 Authentication API
 
 ### `POST /api/auth/register`
 
-- **Body**: `{ "username", "password", "fullName", "role" ("STUDENT"|"OPERATOR"|"ADMIN"), "kelas"? }`
-- **Response**: `{ "token", "user" }`
-- Menginjeksi _hash_ kata sandi melalui `bcrypt.hash`.
+Mendaftarkan entitas pengguna pelajar/pengajar baru di dalam pangkalan eksistensi pangkalan (_Database_).
+
+- **Body Request**:
+  ```json
+  {
+    "email": "siswa@smk.id",
+    "password": "strongPassword123",
+    "name": "Budi Raharjo",
+    "role": "STUDENT"
+  }
+  ```
+- **Response**: `200 OK` (Berisi parameter otorisasi _Token JWT_ siap pakai).
+- **Validasi Rute**: Memverifikasi duplikasi format unik `email` sebelum inisialisasi penyimpanan.
 
 ### `POST /api/auth/login`
 
-- **Body**: `{ "username", "password" }`
-- **Response**: `{ "token", "user" }`
-- Memvalidasi _password_ dengan `bcrypt.compare`.
+Pertukaran kredensial otentifikasi.
 
-### `GET /api/auth/me`
-
-- **Header**: Bearer Token
-- **Response**: Data profil diri user yang terafirmasi _token_-nya.
+- **Body Request**: `{ "email": "admin@smk.id", "password": "root" }`
+- **Response**: `200 OK` (Penyandian penyerahan variabel pengaman Token Bearer JWT berbatas limitasi kedaluwarsa waktu _Expires in 7 Days_).
 
 ---
 
-## 📝 Exam Management
+## 📚 Exam API
+
+_(Rute membutuhkan Bearer Token Header)._
 
 ### `GET /api/exams`
 
-- **Response**: Rincian jumlah _Exam_ (Jika pengguna Siswa, hanya memuat _Exam_ bersatus `active`).
+Mengunduh daftar paket ujian terbuka.
 
-### `POST /api/exams` _(Admin Only)_
+- **Query Params**: Berpotensi menangkap rincian filter pagination yang dialokasikan di URL Parameters.
+- **Response**: JSON Array katalog daftar `<Exam>[]` (Tidak membuka kunci jawaban `Question.correctAnswer`).
 
-- **Body**: `{ "title", "subject", "duration", "passingScore", "description" }`
-- **Response**: Entitas _Exam_ baru dibuat.
+### `GET /api/exams/:id`
 
-### `PATCH /api/exams/:id` _(Admin Only)_
+Melakukan pengikatan detail struktur komplit paket Ujian beserta baris-baris daftar isian instrumen tes pertanyaan objektif (_Questions_).
 
-- **Body**: `{ "active" }` (Digunakan agar Ujian dapat online dan diakses Siswa).
+### `POST /api/exams`
 
-### `DELETE /api/exams/:id` _(Admin Only)_
+_(Hanya Otorisasi Role = `ADMIN`)_
+Mendesain paket ujian kurikulum anyar beserta kompsisi soal utuh.
 
-- **Aksi**: Menghapus sesi beserta data turunan soal.
-
----
-
-## 📌 Attempts (Sesi Berjalan Siswa)
-
-### `GET /api/attempts/my`
-
-- **Response**: Mengambil rekap status Ujian _(In-Progress)_ bagi si pengguna sendiri.
-
-### `POST /api/attempts/start`
-
-- **Body**: `{ "examId", "cameraEnabled" }`
-- **Response**: `{ "attempt": { ..., exam: { questions: [...] } } }`
-- Memulai sesi, menyimpan _StartTime_, dan mengembalikan struktur utuh dari soal (Akan dirender Klien _Qwik_).
-
-### `POST /api/attempts/:id/answer`
-
-- **Body**: `{ "questionId", "optionId" }`
-- **Aksi**: Terjadi fungsi internal _upsert_. Secara konstan Klien akan _hit_ API ini begitu soal dijawab (_auto-save_).
-
-### `POST /api/attempts/:id/submit`
-
-- **Aksi**: Mengakhiri status ujian, secara otomatis sistem _Backend_ akan memberikan proses perbandingan _Option_ benar (Skoring/Penilaian Otomatis), dan menyimpan `score` akhir.
+- **Body Request**:
+  ```json
+  {
+    "title": "Ujian Akhir Semester Fisika",
+    "description": "Fisika Kuantum & Dinamika Rotasi",
+    "startTime": "2026-03-09T08:00:00Z",
+    "endTime": "2026-03-09T10:00:00Z",
+    "duration": 120,
+    "questions": [
+      {
+        "content": "Hukum Gaya...",
+        "options": ["A", "B"],
+        "correctAnswer": "A",
+        "points": 10
+      }
+    ]
+  }
+  ```
 
 ---
 
-## ⚠️ Anti-Cheat Logs & Monitoring
+## 👁️‍🗨️ Validasi Proctoring (Real-Time Websockets)
 
-### `POST /api/cheat-logs`
+Sebagai pondasi pemantauan kecepatan sub-milidetik, Elysia.js memperdayakan modul infrastruktur Bun uWebSockets C++. Kanal di bawah ini mengedarkalkan matriks trafik telemetrik kepada sentra administrator tanpa henti (_Streaming_).
 
-- **Body**: `{ "attemptId", "cheatType", "description" }` _(multipart/form-data)_
-- Jika `file` dilampirkan, Bun.js akan menyimpan langsung ke `/uploads`. Merekam database log pelanggaran.
+### `WS /ws/proctor`
 
-### `GET /api/cheat-logs/stats` _(Proctor/Admin)_
+- **Protokol**: Standar murni Websockets (diakses via objek natif browser `new WebSocket('ws://localhost:8080/ws/proctor')`).
+- **Autentikasi Saluran Akses**: Modul pengeksekusi mensyaratkan pelampiran argumen `token` di barisan url string (`?token=JWT...`) demi membuka palang pembatas validasi interaksi logis.
 
-- **Response**: Agregat analitik pelanggaran _(Count)_.
+**Tumpuan Mekanisme Lalu-Lintas Pesan (Message Payload Syntax)**
+
+1. **Format Pelaporan Klien (Pengiriman Peserta):** Pelajar menyetorkan jejak digital manakala menyangkut skema pelanggaran disiplin.
+   ```json
+   {
+     "type": "CHEAT_EVENT",
+     "data": {
+       "sessionId": "usr_exam_ses_123",
+       "eventType": "TAB_SWITCH",
+       "details": "Peserta Alt-Tab ke jendela Brave Browser (Google Search).",
+       "evidenceUrl": "/uploads/video_evd_001.webm"
+     }
+   }
+   ```
+2. **Format Transmisi Balik Kanal (Penerimaan Admin Observer):** Siaran perbanyakan multikast (Pusat `WS.publish` mentransmisikan replika bukti logikal menuju koneksi terowongan _live-feeds_ komputer Pendidik).
 
 ---
 
-## 📡 WebSockets API
+## 📁 Barang Bukti Multimedia API (_Evidence Pipeline_)
 
-Host Berada di `ws://[HOST]:[PORT]/ws/proctor`.
+### `POST /api/upload`
 
-- **Client `send` Events:**
-  - `student:join`: Mengabari Proktor bahwa siswa siap di sesi (Menyala Hijau 🟢).
-  - `student:submit`: Mengabari penyelesaian.
-  - `cheat:detected`: _Event_ seketika agar Proktor memperoleh bunyi _Alarm/Ticker Sidebar_.
-  - `proctor:join`: Registrasi operator ke kanal `Room`.
-  - `admin:force_submit`: Proktor menyuruh klien siswa tutup layar sesegera mungkin di tengah jalan _(Disconnect/Terminate)._
-- **Client `on` Events:**
-  - `proctor:state`: Kumpulan Array ratusan daftar profil siswa saat itu juga.
-  - `cheat:alert`: Payload notifikasi pelanggaran.
+Meneruskan muatan aliran bit video (_Blob File Stream_) kamera menuju wadah penyimpanan persisten `uploads/` peladen sentral.
+
+- **Form Data**: `file` (Menampung serpihan blob klip rekaman 3-detikan Webcam berekstensi mp4/webm paska dicetuskan oleh perlakuan anomali Proctoring Blur Event).
+- **Response**: `200 OK { url: "/uploads/unqHsh_12948.webm" }` (Alamat string _Relative path_ disuntikkan menyatu ke barisan laporan `evidenceUrl` entiti `ProctorLog`). Pusat tidak memperbolehkan klien tamu secara sembarang mengakses direktori berpasif membedah baris kode tersebut tanpa kredensial kuat.

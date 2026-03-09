@@ -1,66 +1,57 @@
-# 7. Advanced Agile Ceremonies Guide
+<p align="center">
+  <img src="https://placehold.co/1200x250/0f172a/38bdf8?text=Examinator\nAgile+Ceremonies&font=Montserrat" alt="Agile Ceremonies Banner" />
+</p>
 
-Sebagai penerapan kerangka kerja yang mumpuni, panduan metodologi ini diformulasikan menyesuaikan skenario pengembangan "Examinator" SaaS. Dokumentasi ini bukan teori usang, melainkan praktek _Applied Agile_ berspesifikasi atas arsitektur peranti lunak iteratif yang intens.
+# 8. Advanced Agile Ceremonies Guide 🔄
 
-## 🧭 Siklus Epik & Sprint Rilis
-
-Satu Sprint pengembang di tim inti (Engineer Utama, UI/UX, dan DevOps) dikalendarisasi sepanjang **1 Minggu (7 Hari)** guna menghasilkan iterasi kompilasi modul yang _Deployable_.
-
-Proyek ini telah melalui 3 ekuivalensi Sprint:
-
-1. **Sprint 1**: MVP API & Komponen Statis Klien.
-2. **Sprint 2**: Modul Pelanggaran Klien (Anti-Cheat Hook) & Transmisi WS.
-3. **Sprint 3**: Polishing Integrasi Antarmuka CSS, Rilis Dokumen, dan Infrastruktur Database.
+Sebagai penerapan kerangka kerja yang mumpuni, panduan metodologi ini diformulasikan menyesuaikan skenario pengembangan "Examinator" SaaS. Dokumentasi ini bukan teori usang, melainkan praktek _Applied Agile_ berspesialisasi dalam rekayasa perangkat lunak pengembangan proctoring CBT.
 
 ---
 
-## 📅 Seremoni Agile Tingkat Lanjut (Advanced Ceremonies)
+## 🏛️ Fondasi Konseptual (The Agile Paradigm)
 
-### 1. Sprint Planning (Perancangan Taktis Sprint)
+Tim _Examinator_ meyakini siklus Iteratif (Sprint) bertenaga-turbo. Pengiriman purwarupa fitur Ujian dan Dasbor Pimpinan mesti merapat pada siklus rotasi ringkas dua mingguan (Sprint Cadence = 2 Minggu). Kelincahan menanggapi kelemahan anti-cheat _zero-day vulnerabilities_ harus super-cepat di luar kerangka iterasi biasa jika _Critical Bug_ ditemui.
 
-- **Partisipan**: Product Owner, Lead Engineer.
-- **Fokus**: Alokasi poin (_Story Points_) menggunakan _Fibonacci sequence_ (1, 2, 3, 5, 8). Cerita pengguna (User Stories) dari Kebutuhan Siswa & Proktor (misal: "Sebagai proktor saya minta deteksi fullsceen") dievaluasi kompleksitas asinkronusnya.
-- **Output Strategis**: Penetapan Sprint Goal (Misal: "Sprint 2 Goal: Implementasi CCTV berbasis MediaRecorder dan WebSocket Proxy terselesaikan penuh tanpa _memory leak_").
+## 🔄 Pemetaan Upacara Inti (Ceremonies)
 
-### 2. Daily Stand-up (Penyelarasan Rutin Harian)
+### 1. Perencanaan Lari Cepat (_Sprint Planning_) ⏱️
 
-- **Partisipan**: Engineer, DevOps.
-- **Fokus Tingkat Lanjut**: Melampaui "Apa yang saya lakukan kemarin", setiap anggota menyingkapkan "_Technical Blockers_" sedini mungkin.
-- **Skenario Nyata**: _“Kemarin saya menyatukan Page Visibility API klien (Qwik hook) The blocker is: Mobile Safari menjeda eksekusi script WebSockets saat dilatarbelakang, kita butuh fallback beacon API. Solusi hari ini: Saya akan mengimplementasi navigator.sendBeacon() sebagai pengganti putusnya WS.”_
+**Durasi Optimal:** 2 Jam  
+**Fokus Misi:**
 
-### 3. Sprint Review (Tinjauan Demonstratif Iterasi)
+- Pemilihan setugas tiket keluh (_Product Backlog / PBI_) guna dibawa menyusuri gerbong putaran Sprint saat ini mempertimbangkan Kalkulasi _Velocity Point_ (Kecepatan tempuh produksi tim mingguan).
+- Pendaftaran janji (Ikrar Sprint _Goal_): Seperti "Menuntaskan Algoritma _Proctor Blur Recording_ berakurasi 99% integrasi Uploads".
 
-- **Partisipan**: Seluruh Tim & Representatif Stakeholder (Pihak Sekolah).
-- **Fokus Tingkat Lanjut**: Mengharamkan demonstrasi lewat "Kumpulan Slide/Presentasi". Yang ditunjukkan murni lingkungan UAT (_User Acceptance Testing_) produk rilis di browser (Show, Don't Tell).
-- **Agenda**: Mendemonstrasikan secara _Live_ jika siswa melakukan klik layar di luar tab untuk dieksesusi layaknya proktor sejati dalam pengujian stres lokal multi-browser.
+### 2. Penyelarasan Nadi Harian (_Daily Stand-Up Barricade_) 📢
 
-### 4. Sprint Retrospective (Retrospeksi Forensik Teknis)
+**Durasi Optimal:** Maks 15 Menit Berdiri
+**Mekanisme Fokus Ritus:**
+Tiga poros laporan beruntun wajib diartikulasikan spesifik tiap insinyur di depan papan harian _Scrum Board_:
 
-- **Partisipan**: Internal Tim Teknis Saja.
-- **Kerangka Lanjut (Start, Stop, Continue - Blameless Postmortems)**:
-  - _Start_: Mulai mengonfigurasikan Prisma Migrations untuk _deployment_ skema agar tidak bertabrakan (Menerapkan Prisma `db push` khusus untuk Dev).
-  - _Stop_: Berhenti mengerjakan utilitas kode repetitif CSS di berbagai rute; fokus pada satu komponen `/client/src/global.css` (Design system Tailwind v4 tunggal).
-  - _Continue_: Meneruskan isolasi JWT Guard dalam fungsi internal perantara (Middleware layer) untuk setiap rute `/api` guna efisiensi barisan kode auth.
+- Hal progresif cemerlang apa yang dijajaki sejak perjumpaan kemarin sore (Contohnya: "Sudah menyatukan konektor Elysia Endpoints dengan DB").
+- Target hantaman sasaran kerja di 12 jam hari ini ("Meresmikan Uji Coba beban Qwik Form Submissions").
+- Menyuarakan bendera penderitaan sumbatan (Blockers): (Misal: "API akses kamera MediaDevices di _Safari Browser klien_ menolak merespon injeksi _Blob audio_, butuh rekan analis iOS!").
+
+### 3. Penikmatan Hasil Jerih Payah (_Sprint Review & Demonstation_) 🎉
+
+**Durasi Optimal:** 1.5 Jam
+**Aktor Diundang:** Programmer Insinyur, Kepala Pendidik/Tim Sekolah Pemakai CBT, Sponsor Pemangku.
+
+- Memamerkan hasil kerja nyata tak terbantahkan (Live Demo). Menunjukkan aksi mendeteksi "Murid yang coba membuka aplikasi Kalkulator via Alt-Tab di layar Papan Guru _Real-Time_".
+
+### 4. Renungan Kilas Balik Analitis (_Sprint Retrospective_) 🔍
+
+**Durasi Optimal:** 1 Jam
+_(Awas, Dilarang Caci-Maki! Kritik Fokus ke Proses/Prosedur Kerja, Jangan Siksa Individu)_
+
+- **STOP (Mari Hentikan)**: "Kurangi push kode jam 3 pagi pada malam perilisan, hindari typo syntax".
+- **START (Mari Praktekkan)**: "Setiap Rute `/api` baru WAJIB dideklarasikan integrasi pengaman validasi ekstensi tipe `t.Object()` di skema _type-safety_ model Elysia!".
+- **CONTINUE (Perkuat Adat Baik)**: "Gaya koding komponen Qwik terisolasi (_Tailwind Modular design_) wajib diwariskan diteruskan buat modul dasbor admin baru".
 
 ---
 
-## ⚓ Pilar Standarisasi Kesuksesan Agile
+## 🛠️ Modifikasi Kustom: 'Agile Swarm for Zero-Day Proctor Cheats'
 
-### Atribut 1: Definition of Ready (DoR) - (Kesanggupan Pengerjaan Tugas)
+Ketika komunitas siswa nakal (Hacker Ujian) membongkar kelemahan ekstensi anti-kecurangan baru (_Bypass Vector_ misal dari peretasan modifikasi Web-Extention). Tata ibadah Agile kami berhenti diputar sesaat; status tanggap beringsut merangsek menuju "Swarm Protocol" (Menyerbu Target):
 
-Tugas (_User Story_) dilarang keras dimasukkan dari _Backlog_ ke fase _In-Progress/Execution_ Papan Sprint kecuali ia lolos syarat DoR:
-
-1. Deskripsi alur logika sudah bersih.
-2. Desain/Sketsa (_Mock/Blueprint API_) struktur relasional tabel JSON untuk basis data per rute sudah ditentukan.
-3. (Tugas Frontend) Prasyarat ketersediaan `Endpoint` REST atau WebSocket Server lokal sudah disimulasasikan / di-mockup.
-
-### Atribut 2: Definition of Done (DoD) - (Kualifikasi Selesai Suatu Pekerjaan)
-
-"Selesai" di lingkungan "Examinator" berarti:
-
-1. **Code Compiles**: Perintah `npm run build` merakit Klien tanpa kesalahan TypeScript (Strict Mode terpenuhi).
-2. **Linting Valid**: Kode di _server/src_ sudah tidak mengadu benturan deklarasi atau penempatan modul Prisma _import_.
-3. **Peer Reviewed**: Semua logika perantara dan validasi JWT yang baru tak sengaja mengekspos kata sandi ter-hash _user_ di _payload_ API respons JSON.
-4. **Deployable Asset**: Panduan NGINX siap (Didokumentasikan secara paralel saat membangun arsitektur WebSockets untuk production).
-
-Dengan penegakan ritme seremonial yang ketat, aliran kompilasi SaaS Ujian tidak akan menjebak rekayasawan proyek dalam labirin kompleksitas tumpang-tindih, melainkan mempertahankan rilis fungsional tangguh per minggunya.
+- Segenap tim insinyur melontar semua komitmen backlog sprint sementara dan melebur bahu-membahu berkumpul mengepal perisai tambalan (_Hotfix patch_) pada peladen Websocket Backend pada hari/jam yang sama demi melestarikan pilar integritas platform SaaS Akademik ini.

@@ -1,86 +1,113 @@
-# 2. System Architecture
+<p align="center">
+  <img src="https://placehold.co/1200x250/0f172a/38bdf8?text=Examinator\nSystem+Architecture&font=Montserrat" alt="System Architecture Banner" />
+</p>
+
+# 2. System Architecture 🏗️
 
 Examinator mengadopsi arsitektur **Monorepo** untuk menyatukan _frontend_ dan _backend_ dalam satu repositori, memfasilitasi integrasi dan _deployment_ yang lebih kohesif.
 
-## 🏗️ Gambaran Arsitektur
+## 🌉 Gambaran Arsitektur
 
-Arsitektur aplikasi ini berbasis pada model **Client-Server** dengan komunikasi data melalui REST API dan WebSockets (Pub/Sub).
+Arsitektur aplikasi dipisahkan menjadi tiga lapisan (layer) logis utama berarsitektur hibrida _Client-Server_:
+
+1. **Presentation Layer (Frontend)**: Digerakkan oleh _Qwik Framework_ di peladen asinkronus (memanfaatkan Vite bundler).
+   - Berjalan dengan strategi SSR (Server-Side Rendering) dan pemulihan status instan (Resumability/$O(1)$) untuk menghindarkan transfer muatan _JavaScript Hydration_ yang menumpuk.
+   - Mewadahi sensor-sensor proctoring terpusat langsung dari sisi klien melalui _hooks_ kustom _Native Web Browser API_ (Visibility, Fullscreen, MediaDevices).
+2. **Logic & API Layer (Backend)**: Diusung di atas **Elysia.js** yang dieksekusi melalui **Bun Runtime**.
+   - Melayani REST API standar (Autentikasi, Sinkronisasi Exam, CRUD Manajerial).
+   - Memiliki modul _Real-Time Multiplexing Websockets (`/ws/proctor`)_ yang ditulis di atas instansi native performa elit milik Bun.
+3. **Data Persistence Layer (Database)**: Dikelola oleh **Prisma ORM** yang diintegrasikan secara Type-Safe ke skema **MySQL** (Relational Database). Semuanya tercatat memanami integritas ACID (_Atomicity, Consistency, Isolation, Durability_).
+
+---
+
+## 📐 Topologi Server & Komponen
 
 ```mermaid
-graph TD
-    subgraph "Client Side (Frontend)"
-        Q[Qwik App]
-        T[Tailwind CSS]
-        ws_client[Native WebSocket]
-        Q --> T
-        Q --> ws_client
+graph TD;
+    subgraph Client [Browser End-Users]
+        Q[Qwik Frontend App]
+        V[Video MediaRecorder API]
+        E[Events: Focus, Visibility]
     end
 
-    subgraph "Server Side (Backend)"
-        subgraph "Elysia JS App"
-            API[REST API Handlers]
-            WS[WebSocket Handlers]
-            Auth[JWT Middleware]
-        end
-        B[Bun Runtime]
-        API --> B
-        WS --> B
+    subgraph CDN / Load Balancer
+        N[NGINX Reverse Proxy]
     end
 
-    subgraph "Data Layer"
-        P[Prisma ORM]
+    subgraph Backend Server (Bun Runtime)
+        H[REST API: Elysia Router]
+        W[WebSockets: /ws/proctor]
+        Auth[JWT Authentication]
+        Up[Upload Storage Middleware]
+    end
+
+    subgraph Persistence Layer
         DB[(MySQL Database)]
-        FS[File System: uploads/]
+        P{Prisma ORM Gateway}
     end
 
-    Q -- "HTTP (JSON/JWT)" --> API
-    ws_client -- "WS Connection" --> WS
-    API -- "CRUD" --> P
-    WS -- "Status Update" --> P
-    API -- "File I/O" --> FS
-    P --> DB
+    Q -->|HTTPS/REST| N
+    Q -->|WSS Realtime| N
+    V -->|HTTPS POST| N
+    E -->|WSS Event| N
+
+    N -->|Proxy Pass 8080| H
+    N -->|Proxy Pass 8080| W
+
+    W --> Auth
+    H --> Auth
+    H --> Up
+
+    Auth --> P
+    Up --> LocalFS[Local File System]
+
+    P <--> DB
 ```
 
-## 🛠️ Pemilihan Teknologi Dasar
+## 📂 Struktur Direktori Monorepo (Tree)
 
-1. **Frontend: Qwik Framework**
-   - **Alasan**: _Resumability_. Qwik tidak memerlukan proses _hydration_ yang berat di perangkat. Aplikasi Exam sering memuat banyak soal sekaligus yang pada framework React biasa (SPA) akan menyebabkan "freeze" atau _bottleneck_ RAM di perangkat HP/Laptop berspek rendah.
-   - **Styling**: Menggunakan Tailwind CSS v4 dengan ekstensi animasi agar desain terlihat premium.
-
-2. **Backend: Elysia JS + Bun**
-   - **Alasan**: Bun sangat _performant_ dibanding Node.js standar. Elysia JS adalah _web framework_ yang didesain secara spesifik untuk Bun, memberikan performa sekelas Go/Rust namun dengan bahasa TypeScript.
-   - **WebSocket**: Elysia menggunakan _uWebSockets_ secara _native_ di balik layar, memampukan fitur pemantauan 300+ pengguna _concurrent_ di dashboard Proktor tanpa lag berarti.
-
-3. **Database: MySQL + Prisma ORM**
-   - **Alasan MySQL**: Sistem Ujian Nasional dan CBT lokal sangat bergantung pada _ACID compliance_ (integritas transaksional) relasional.
-   - **Alasan Prisma**: Prisma menjembatani _query_ rumit dengan tipe data (_Type-Safety_), menyambung dari database ke _interface_ TypeScript di backend dengan sempurna.
-
-## 📁 Lapisan Folder / Directory Tree
-
-```
-examinator/
-├── client/
-│   ├── src/
-│   │   ├── components/  # Komponen GUI (Auth, Modals, Cards)
-│   │   ├── hooks/       # Custom hooks (Kamera, Deteksi Kecurangan)
-│   │   ├── lib/         # API Fetcher (Axios wrapper), WS Singleton
-│   │   └── routes/      # File-based routing (Admin, Siswa, Proktor)
+```bash
+my-cbt-app/
 │
-├── server/
-│   ├── prisma/          # Konfigurasi Schema MySQL & Seed Data
+├── client/                     # Qwik Frontend (Vite)
 │   ├── src/
-│   │   ├── middleware/  # Filter akses (Auth JWT)
-│   │   ├── routes/      # Rute REST API Endpoints
-│   │   └── ws/          # Router Websockets (Pub/Sub)
-│   └── uploads/         # Storage media bukti kecurangan (foto/video)
+│   │   ├── components/         # Komponen UI (Buttons, Cards, Navbar)
+│   │   ├── routes/             # Routing Qwik City (Pages)
+│   │   │   ├── /login
+│   │   │   ├── /student
+│   │   │   └── /admin
+│   │   ├── lib/                # Modular utilities (Hooks Anti-Cheat, Store WS)
+│   │   └── root.tsx            # Akar presentasi Qwik
+│   └── package.json            # Dependensi lokal client (Tailwind v4)
 │
-└── package.json         # Master NPM/Bun workspace script
+├── server/                     # Elysia Backend (Bun)
+│   ├── prisma/
+│   │   └── schema.prisma       # Skema Database & Relasi ORM
+│   ├── src/
+│   │   ├── routes/             # Rute HTTP RESTful
+│   │   ├── ws/                 # Rute WebSocket untuk Live Proctoring
+│   │   ├── lib/                # Konfigurasi Konektor db.ts, hashing, dll.
+│   │   ├── config/             # Pengenalan variabel ENV
+│   │   └── index.ts            # Titik masuk utama Peladen Bun/Elysia
+│   ├── uploads/                # Brankas penampungan bukti foto/video (Cheat logs)
+│   └── package.json            # Dependensi server Elysia (JWT, Swagger)
+│
+├── docs/                       # Dokumentasi Agile
+├── package.json                # Akar Monorepo
+├── concurrently              # Skrip eksekusi sinkron (npm run dev)
+└── ...
 ```
 
-## 🔐 Alur Autentikasi (Auth Flow)
+## 🔒 Konsep Arsitektur Anti-Mencontek (_Proctoring Engine_)
 
-1. Klien mengirim _Username_ dan _Password_ ke `/api/auth/login`.
-2. Backend menggunakan `bcrypt` untuk membandingkan.
-3. Backend merespons menggunakan **JWT (JSON Web Token)**.
-4. Token disimpan di `localStorage` Klien.
-5. Klien mengirimkan `Authorization: Bearer <token>` di header setiap _request_ yang diproteksi.
+Sistem Pengawasan Bertingkat didesain sedemikian rupa mematuhi Standar Kerancu-an Ekosistem Web (_Web Standardization Sandbox Restrictions_):
+
+1. **Media Penyadapan Antarmuka (Front-Line Heuristics)**:
+   Modul `useProctoring` memegang kendali atas interupsi DOM.
+   - `document.addEventListener('visibilitychange')`: Pemantauan navigasi tab.
+   - `window.addEventListener('blur')`: Pemantauan interaksi peramban ketika tidak aktif (_Alt+Tab_ atau Notifikasi OS Pop-up).
+   - `document.addEventListener('fullscreenchange')`: Menjebak siswa kembali ke mode penuh (_Fullscreen enforced_).
+2. **Pengambilan Bukti Visual (Zero-Trust Snapshot)**:
+   Saat limit batas teguran toleransi terlewati, fungsi perekaman sekunder terpicu: Klien `MediaRecorder` merakam 3 detik video asinkronus dan diunggah (POST /api/upload) lalu nama file di-pautkan (_Binded_) ke notifikasi WebSocket ke pihak pelayan (server) pusat.
+3. **Admin Monitoring Papan Kontrol (_Live Dashboard_)**:
+   Dasbor _Admin (/admin/monitor)_ menginkubasi koneksi statis (`new WebSocket(...)`). Data aliran diproses tanpa intervensi HTTP _Polling_, menghasilkan matriks aktivitas siswa murni secara _real-time_.
