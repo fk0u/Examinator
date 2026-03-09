@@ -1,0 +1,20 @@
+{
+  "name": "examinator",
+  "version": "1.0.0",
+  "description": "Self-hosted CBT Proctoring SaaS for SMK Indonesia",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && bun run --watch src/index.ts",
+    "dev:client": "cd client && npm run dev",
+    "db:generate": "cd server && bunx prisma generate",
+    "db:push": "cd server && bunx prisma db push",
+    "db:seed": "cd server && bun run prisma/seed.ts",
+    "db:studio": "cd server && bunx prisma studio",
+    "build:client": "cd client && npm run build",
+    "start:server": "cd server && bun run src/index.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

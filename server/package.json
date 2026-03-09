@@ -1,0 +1,27 @@
+{
+  "name": "examinator-server",
+  "version": "1.0.0",
+  "description": "Examinator Backend - Elysia JS + Prisma + MySQL",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "db:generate": "bunx prisma generate",
+    "db:push": "bunx prisma db push",
+    "db:seed": "bun run prisma/seed.ts",
+    "db:studio": "bunx prisma studio"
+  },
+  "dependencies": {
+    "elysia": "^1.2.25",
+    "@elysiajs/cors": "^1.2.0",
+    "@elysiajs/jwt": "^1.2.0",
+    "@elysiajs/bearer": "^1.2.0",
+    "@elysiajs/static": "^1.2.0",
+    "@prisma/client": "^6.4.1",
+    "bcryptjs": "^3.0.2"
+  },
+  "devDependencies": {
+    "prisma": "^6.4.1",
+    "@types/bcryptjs": "^2.4.6",
+    "bun-types": "latest"
+  }
+}
