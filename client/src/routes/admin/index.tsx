@@ -3,6 +3,7 @@ import type { DocumentHead } from "@builder.io/qwik-city";
 import { useNavigate } from "@builder.io/qwik-city";
 import { examsApi, usersApi, cheatLogsApi } from "~/lib/api";
 import { getUserData, isAuthenticated, logout } from "~/lib/auth";
+import { exportToCSV } from "~/lib/export";
 
 export default component$(() => {
   const nav = useNavigate();
@@ -55,6 +56,34 @@ export default component$(() => {
       await examsApi.delete(id);
       exams.value = exams.value.filter(e => e.id !== id);
     } catch { /* silently */ }
+  });
+
+  const handleExportUsers = $(() => {
+    if (!users.value.length) return;
+    const exportData = users.value.map(u => ({
+      ID: u.id,
+      "Nama Lengkap": u.fullName,
+      Username: u.username,
+      Role: u.role,
+      "Kelas/Jurusan": u.kelas || "-",
+      "Status Aktif": u.active ? "Aktif" : "Nonaktif"
+    }));
+    exportToCSV("examinator_users.csv", exportData);
+  });
+
+  const handleExportExams = $(() => {
+    if (!exams.value.length) return;
+    const exportData = exams.value.map(e => ({
+      ID: e.id,
+      "Judul Ujian": e.title,
+      "Mata Pelajaran": e.subject,
+      "Durasi (Menit)": e.duration,
+      "Jumlah Soal": e._count?.questions || 0,
+      "Nilai KKM": e.passingScore,
+      "Status": e.active ? "Aktif" : "Nonaktif",
+      "Dibuat Pada": new Date(e.createdAt).toLocaleString("id-ID")
+    }));
+    exportToCSV("examinator_exams.csv", exportData);
   });
 
   return (
@@ -136,10 +165,18 @@ export default component$(() => {
               <div class="animate-fade-in">
                 <div class="flex items-center justify-between mb-4">
                   <h2 class="text-lg font-semibold text-surface-200">Kelola Ujian</h2>
-                  <button onClick$={() => { showCreateExam.value = !showCreateExam.value; }}
-                    class="px-4 py-2 rounded-xl bg-gradient-primary text-white text-sm font-medium hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary-500/20">
-                    + Buat Ujian
-                  </button>
+                  <div class="flex items-center gap-2">
+                    <button onClick$={handleExportExams} class="px-3 py-1.5 rounded-lg bg-surface-700 text-surface-300 text-sm hover:bg-surface-600 transition-colors flex items-center gap-2">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Export CSV
+                    </button>
+                    <button onClick$={() => { showCreateExam.value = !showCreateExam.value; }}
+                      class="px-4 py-2 rounded-xl bg-gradient-primary text-white text-sm font-medium hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary-500/20">
+                      + Buat Ujian
+                    </button>
+                  </div>
                 </div>
 
                 {showCreateExam.value && (
@@ -200,7 +237,15 @@ export default component$(() => {
             {/* Users Tab */}
             {activeTab.value === "users" && (
               <div class="animate-fade-in">
-                <h2 class="text-lg font-semibold text-surface-200 mb-4">Kelola Pengguna ({users.value.length})</h2>
+                <div class="flex items-center justify-between mb-4">
+                  <h2 class="text-lg font-semibold text-surface-200">Kelola Pengguna ({users.value.length})</h2>
+                  <button onClick$={handleExportUsers} class="px-3 py-1.5 rounded-lg bg-surface-700 text-surface-300 text-sm hover:bg-surface-600 transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Export CSV
+                  </button>
+                </div>
                 <div class="glass rounded-xl overflow-hidden">
                   <table class="w-full">
                     <thead class="bg-surface-800/50">

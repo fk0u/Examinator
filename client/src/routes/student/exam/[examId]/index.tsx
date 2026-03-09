@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "@builder.io/qwik-city";
 import { attemptsApi, cheatLogsApi } from "~/lib/api";
 import { getUserData, isAuthenticated } from "~/lib/auth";
 import { getWsClient } from "~/lib/ws";
+import { useCamera } from "~/hooks/use-camera";
 
 // ─── Exam Taking Page ───────────────────────────────────
 
@@ -18,7 +19,7 @@ export default component$(() => {
   const currentQuestion = useSignal(0);
   const answers = useSignal<Record<string, string>>({});
   const timeLeft = useSignal(0);
-  const cameraEnabled = useSignal(false);
+  const { cameraEnabled, capturePhoto } = useCamera(attempt);
   const loading = useSignal(true);
   const submitting = useSignal(false);
   const cheatCount = useSignal(0);
@@ -34,13 +35,7 @@ export default component$(() => {
     user.value = getUserData();
 
     try {
-      // Request camera permission
-      try {
-        await navigator.mediaDevices.getUserMedia({ video: true });
-        cameraEnabled.value = true;
-      } catch {
-        cameraEnabled.value = false;
-      }
+      // Request camera permission handled by useCamera
 
       // Start attempt
       const data = await attemptsApi.start(examId, cameraEnabled.value);
@@ -137,6 +132,9 @@ export default component$(() => {
         cheatType: type,
         description,
       });
+
+      // Capture photo if camera is enabled
+      capturePhoto(type, description);
     } catch {
       // silently fail
     }

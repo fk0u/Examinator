@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "start": "npm run dev",
     "dev:server": "cd server && bun run --watch src/index.ts",
     "dev:client": "cd client && npm run dev",
     "db:generate": "cd server && bunx prisma generate",

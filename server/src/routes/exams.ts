@@ -25,12 +25,12 @@ export const examRoutes = new Elysia({ prefix: "/api/exams" })
     return { exams };
   })
 
-  // ── GET /api/exams/:id ────────────────────────────────
-  .get("/:id", async ({ params, userId, userRole, set }) => {
+  // ── GET /api/exams/:examId ────────────────────────────────
+  .get("/:examId", async ({ params, userId, userRole, set }) => {
     requireAuth(userId);
 
     const exam = await db.exam.findUnique({
-      where: { id: params.id },
+      where: { id: params.examId },
       include: {
         questions: {
           include: {
@@ -84,15 +84,15 @@ export const examRoutes = new Elysia({ prefix: "/api/exams" })
     }
   )
 
-  // ── PUT /api/exams/:id ────────────────────────────────
+  // ── PUT /api/exams/:examId ────────────────────────────────
   .put(
-    "/:id",
+    "/:examId",
     async ({ params, body, userId, userRole, set }) => {
       requireAuth(userId);
       requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
       const exam = await db.exam.update({
-        where: { id: params.id },
+        where: { id: params.examId },
         data: body,
       });
 
@@ -113,11 +113,11 @@ export const examRoutes = new Elysia({ prefix: "/api/exams" })
     }
   )
 
-  // ── DELETE /api/exams/:id ─────────────────────────────
-  .delete("/:id", async ({ params, userId, userRole }) => {
+  // ── DELETE /api/exams/:examId ─────────────────────────────
+  .delete("/:examId", async ({ params, userId, userRole }) => {
     requireAuth(userId);
     requireRole(userRole, ["ADMIN"]);
 
-    await db.exam.delete({ where: { id: params.id } });
+    await db.exam.delete({ where: { id: params.examId } });
     return { success: true };
   });
