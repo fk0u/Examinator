@@ -1,172 +1,230 @@
-# 🎓 Examinator
+<div align="center">
+  <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/TypeScript.svg" width="60" alt="TypeScript" />
+  <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/TailwindCSS-Dark.svg" width="60" alt="Tailwind" />
+  <img src="https://bun.sh/logo.svg" width="60" alt="Bun" />
+  <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/MySQL-Dark.svg" width="60" alt="MySQL" />
+  <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/Prisma.svg" width="60" alt="Prisma" />
 
-> Self-hosted CBT (Computer-Based Test) Proctoring SaaS for SMK Indonesia — Kurikulum Merdeka
+  <h1 align="center">🎓 Examinator v1.0</h1>
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Stack](https://img.shields.io/badge/stack-Qwik%20%2B%20Elysia%20%2B%20MySQL-orange)
+  <p align="center">
+    <strong>Advanced Self-hosted CBT (Computer-Based Test) Proctoring SaaS</strong><br>
+    <em>Tailored for SMK Indonesia (Kurikulum Merdeka)</em>
+  </p>
 
-## ✨ Features
+  <p align="center">
+    <img src="https://img.shields.io/badge/Status-Active_Development-success?style=for-the-badge&logo=github" alt="Status" />
+    <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" />
+    <img src="https://img.shields.io/badge/Bun-1.0+-black?style=for-the-badge&logo=bun" alt="Bun" />
+  </p>
+</div>
 
-- **🖥️ CBT Engine** — Full exam-taking interface with timer, question navigation, auto-submit
-- **🛡️ Anti-Cheat Detection** — Tab switch (Page Visibility API), fullscreen exit, window blur, right-click blocking
-- **📸 Camera Proctoring** — Semi-mandatory camera with 3-sec photo/video capture on cheat detection
-- **📡 Realtime Dashboard** — WebSocket-powered proctor dashboard for 300+ concurrent students
-- **👥 Role Management** — Admin, Operator/Proctor, Student with full RBAC
-- **🎨 Modern UI** — Dark theme, glassmorphism, smooth animations, responsive design
+<hr />
 
-## 🏗️ Tech Stack
+## 🌟 Apa itu Examinator?
 
-| Layer        | Technology                                                            |
-| ------------ | --------------------------------------------------------------------- |
-| **Frontend** | [Qwik](https://qwik.dev) + [Tailwind CSS v4](https://tailwindcss.com) |
-| **Backend**  | [Elysia.js](https://elysiajs.com) (Bun runtime)                       |
-| **Database** | MySQL + [Prisma ORM](https://prisma.io)                               |
-| **Realtime** | Native WebSocket (via uWebSockets)                                    |
-| **Auth**     | JWT (7-day expiry) + bcrypt                                           |
+**Examinator** adalah platform Computer-Based Test (CBT) modern yang berfokus pada **integritas ujian** dan **performa tinggi**. Dibangun khusus untuk kebutuhan sekolah (khususnya SMK di Indonesia yang menerapkan Kurikulum Merdeka) yang membutuhkan solusi self-hosted yang ringan namun sanggup menangani ratusan siswa secara bersamaan (_concurrent_).
 
-## 📋 Prerequisites
+Aplikasi ini menggunakan **Qwik** untuk meminimalisir payload Javascript di frontend (mencapai _instant load_), dan **Elysia.js** di backend yang berjalan di atas **Bun** untuk kecepatan luar biasa.
 
-- [Bun](https://bun.sh) v1.0+ (backend runtime)
-- [Node.js](https://nodejs.org) v18+ (frontend build)
-- [MySQL](https://mysql.com) 8.0+ (database)
+---
 
-## 🚀 Quick Start
+## ✨ Fitur Unggulan (Core Features)
 
-### 1. Clone & Install
+### 🖥️ CBT Engine Berkecepatan Tinggi
+
+- **Resumability**: Frontend dibangun dengan Qwik framework untuk performa maksimal di perangkat siswa dengan spek rendah.
+- **State Recovery**: Jawaban siswa tersimpan otomatis secara berkala (_auto-save_). Jika terputus, siswa dapat melanjutkan tepat dari titik terakhir.
+
+### 🛡️ Anti-Cheat & Smart Proctoring
+
+- **Real-time Event Tracking**: Deteksi perpindahan tab (Page Visibility API), keluar dari mode Fullscreen, dan Window Blur.
+- **Action Blocking**: Mencegah klik kanan (Context Menu) dan blokir fungsi Copy/Paste.
+- **Semi-Mandatory Camera**: Memerlukan akses kamera. Jika terdeteksi kecurangan (tab diganti, dsb), sistem otomatis mengambil foto/video berdurasi 3 detik sebagai barang bukti.
+
+### 📡 Live Proctor Dashboard (WebSockets)
+
+- **Monitoring Ratusan Siswa**: Proktor (Pengawas) dapat melihat status setiap siswa secara langsung (🟢 Aktif, 🔴 Ditandai/Curang, ✅ Selesai).
+- **Live Alert Feed**: Setiap pelanggaran yang dilakukan siswa langsung berbunyi dan muncul di feed pengawas secara _real-time_ dengan WebSockets native (`uWebSockets`).
+- **Force Submit**: Pengawas dapat menghentikan ujian siswa secara paksa jika terbukti melakukan pelanggaran berat.
+
+### 🎨 Modern & Premium UI/UX
+
+- Menggunakan **Tailwind CSS v4** dengan **Glassmorphism design**.
+- **Dark Mode First** untuk kenyamanan mata selama ujian berlangsung dengan animasi interaktif (micro-animations, staggering load).
+
+---
+
+## 🏗️ Arsitektur & Teknologi
+
+Examinator dirancang sebagai arsitektur **Monorepo** untuk mempermudah development.
+
+| Kategori     | Teknologi Utama                                                    | Alasan Pemilihan                                                              |
+| :----------- | :----------------------------------------------------------------- | :---------------------------------------------------------------------------- |
+| **Frontend** | [Qwik](https://qwik.builder.io/)                                   | Load instan, zero hydration overhead, cocok untuk internet lambat.            |
+| **Styling**  | [Tailwind CSS v4](https://tailwindcss.com/)                        | Utilitas CSS modern untuk desain premium yang cepat.                          |
+| **Backend**  | [Elysia JS](https://elysiajs.com/)                                 | Framework backend tercepat untuk runtime Bun.                                 |
+| **Runtime**  | [Bun](https://bun.sh/)                                             | Sangat cepat, memiliki built-in WebSocket, bundler, dan runner.               |
+| **Database** | [MySQL](https://www.mysql.com/) + [Prisma](https://www.prisma.io/) | Relasional untuk integritas data yang kuat, Prisma untuk Type-Safety.         |
+| **Keamanan** | JWT + bcrypt                                                       | Stateless authentication, Role-Based Access Control (Admin, Operator, Siswa). |
+
+---
+
+## 📸 Screenshots (Preview)
+
+> _Tambahkan gambar screenshot di folder `docs/assets/` dan ganti placeholder di bawah ini saat siap._
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><strong>Halaman Login (Glassmorphism)</strong></td>
+      <td align="center"><strong>Dashboard Proktor (Realtime WS)</strong></td>
+    </tr>
+    <tr>
+      <td><img src="https://placehold.co/600x400/1e293b/a8b2d1?text=Login+Page" alt="Login" /></td>
+      <td><img src="https://placehold.co/600x400/1e293b/a8b2d1?text=Proctor+Dashboard" alt="Proctor Dashboard" /></td>
+    </tr>
+    <tr>
+      <td align="center"><strong>Antarmuka Ujian Siswa</strong></td>
+      <td align="center"><strong>Panel Admin & Statistik</strong></td>
+    </tr>
+    <tr>
+      <td><img src="https://placehold.co/600x400/1e293b/a8b2d1?text=Student+Exam+UI" alt="Student UI" /></td>
+      <td><img src="https://placehold.co/600x400/1e293b/a8b2d1?text=Admin+Panel" alt="Admin Panel" /></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## 🚀 Panduan Instalasi (Quick Start)
+
+### 1. Kebutuhan Sistem (Prerequisites)
+
+Pastikan Anda sudah menginstal:
+
+- [Bun v1.0.0+](https://bun.sh/)
+- [Node.js v18+](https://nodejs.org/) (untuk build frontend)
+- [MySQL v8.0+](https://www.mysql.com/)
+
+### 2. Clone Repositori
 
 ```bash
-git clone https://github.com/your-org/examinator.git
+git clone https://github.com/organization/examinator.git
 cd examinator
+```
 
-# Install root deps
+### 3. Instalasi Dependensi Terpusat
+
+Berkat arsitektur workspace, Anda cukup menjalankan satu perintah dari root folder:
+
+```bash
+# Otomatis menginstal package di root, server, dan client
 npm install
 
-# Install server deps
-cd server && bun install && cd ..
-
-# Install client deps
-cd client && npm install && cd ..
+# Atau masuk secara manual:
+# cd server && bun install
+# cd ../client && npm install
 ```
 
-### 2. Setup MySQL Database
+### 4. Konfigurasi Database
+
+Buat sebuah database baru di MySQL server Anda:
 
 ```sql
--- Connect to MySQL
-mysql -u root -p
-
--- Create database and user
 CREATE DATABASE examinator_db;
-CREATE USER 'examinator_user'@'localhost' IDENTIFIED BY 'your_password';
+CREATE USER 'examinator_user'@'localhost' IDENTIFIED BY 'rahasia123';
 GRANT ALL PRIVILEGES ON examinator_db.* TO 'examinator_user'@'localhost';
 FLUSH PRIVILEGES;
-EXIT;
 ```
 
-### 3. Configure Environment
+Konfigurasi file Environment:
 
 ```bash
-# Copy env template
+# Duplikasi template .env
 cp .env.example .env
 
-# Edit .env with your MySQL credentials
-# DATABASE_URL="mysql://examinator_user:your_password@localhost:3306/examinator_db"
-# JWT_SECRET=your-random-secret-key-here
+# Edit .env dan masukkan URL koneksi MySQL Anda
+# Contoh: DATABASE_URL="mysql://examinator_user:rahasia123@localhost:3306/examinator_db"
 ```
 
-### 4. Initialize Database
+### 5. Migrasi & Seeding Database
+
+Jalankan perintah berikut untuk mensinkronisasi skema ke database dan memasukkan data sampel (Akun Demo):
 
 ```bash
-# Generate Prisma client
-cd server && bunx prisma generate
+# Di dalam folder root
+npm run db:push
 
-# Push schema to database
+# Atau di folder server
+cd server
+bunx prisma generate
 bunx prisma db push
-
-# Seed with sample data
 bun run prisma/seed.ts
-cd ..
 ```
 
-### 5. Run Development
+### 6. Menjalankan Aplikasi (Development)
+
+Satu perintah untuk menjalankan Backend dan Frontend bersaman secara beriringan:
 
 ```bash
-# Run both server and client
 npm run dev
-
-# Or separately:
-npm run dev:server  # http://localhost:5000
-npm run dev:client  # http://localhost:5173
 ```
 
-### 6. Open in Browser
+🌐 **Akses Aplikasi:**
 
-- **Login Page**: http://localhost:5173
-- **API Health**: http://localhost:5000/api/health
-- **Prisma Studio**: `cd server && bunx prisma studio`
+- **Frontend App**: [http://localhost:5173](http://localhost:5173)
+- **Backend API**: [http://localhost:5000/api/health](http://localhost:5000/api/health)
+- **Database GUI (Prisma Studio)**: Buka terminal baru, ketik `cd server && bunx prisma studio`
 
-## 🔑 Demo Accounts
+---
 
-| Role     | Username            | Password      |
-| -------- | ------------------- | ------------- |
-| Admin    | `admin`             | `admin123`    |
-| Operator | `operator`          | `operator123` |
-| Student  | `siswa1` – `siswa5` | `siswa123`    |
+## � Akun Demo (Testing)
 
-## 📁 Project Structure
+Proses seeding telah secara otomatis membuat akun-akun berikut untuk keperluan uji coba:
 
-```
+| Role (Peran) | Username   | Password      | Keterangan                                                      |
+| :----------- | :--------- | :------------ | :-------------------------------------------------------------- |
+| **Admin**    | `admin`    | `admin123`    | Akses penuh manajemen soal, user, statistik kemacetan.          |
+| **Proctor**  | `operator` | `operator123` | Akses monitoring langsung kegiatan ujian, live alert websocket. |
+| **Siswa 1**  | `siswa1`   | `siswa123`    | Akun ujian siswa. Ada `siswa1` sampai `siswa5`.                 |
+
+---
+
+## 📁 Struktur Direktori Utama
+
+```text
 examinator/
-├── client/                 # Qwik Frontend
-│   └── src/
-│       ├── routes/         # File-based routing
-│       │   ├── student/    # Student dashboard + exam
-│       │   ├── proctor/    # Realtime monitoring
-│       │   └── admin/      # Admin panel
-│       ├── components/     # Reusable UI components
-│       └── lib/            # API client, WS, auth helpers
+├── client/                     # (Frontend) Qwik & Tailwind CSS
+│   ├── src/
+│   │   ├── components/         # Reusable UI component (auth, modal)
+│   │   ├── lib/                # API client (Axios/Fetch), WS client, auth logic
+│   │   └── routes/             # File-based routing
+│   │       ├── admin/          # Route Admin
+│   │       ├── proctor/        # Route Proctor Monitoring
+│   │       └── student/        # Route Siswa & Ujian
+│   └── package.json
 │
-├── server/                 # Elysia.js Backend
-│   ├── prisma/             # Schema + seed
-│   └── src/
-│       ├── routes/         # API endpoints
-│       ├── ws/             # WebSocket handlers
-│       ├── middleware/      # Auth JWT
-│       └── lib/            # DB + upload helpers
+├── server/                     # (Backend) Bun & Elysia JS
+│   ├── prisma/
+│   │   ├── schema.prisma       # Skema database (User, Exam, Attempt, CheatLog)
+│   │   └── seed.ts             # Script pembuat data default
+│   ├── src/
+│   │   ├── middleware/         # Autentikasi JWT guard & Role check
+│   │   ├── routes/             # Endpoint HTTP API Controller
+│   │   └── ws/                 # Websocket server logic & Rooms event
+│   └── package.json
 │
-├── .env.example            # Environment template
-└── package.json            # Root workspace scripts
+├── package.json                # Root package untuk NPM Workspaces & Scripts
+└── README.md
 ```
 
-## 🔌 API Endpoints
+---
 
-| Method | Endpoint                   | Description         |
-| ------ | -------------------------- | ------------------- |
-| POST   | `/api/auth/login`          | Login, returns JWT  |
-| POST   | `/api/auth/register`       | Register new user   |
-| GET    | `/api/auth/me`             | Get current user    |
-| GET    | `/api/exams`               | List exams          |
-| POST   | `/api/exams`               | Create exam (admin) |
-| POST   | `/api/attempts/start`      | Start exam attempt  |
-| POST   | `/api/attempts/:id/answer` | Save answer         |
-| POST   | `/api/attempts/:id/submit` | Submit exam         |
-| POST   | `/api/cheat-logs`          | Log cheat event     |
-| GET    | `/api/cheat-logs/stats`    | Cheat statistics    |
-| WS     | `/ws/proctor`              | Realtime proctoring |
+## � Lisensi & Atribusi
 
-## 🚢 Production Deployment
+Proyek ini dilisensikan di bawah **MIT License** — Anda bebas menggunakan, memodifikasi, dan mendistribusikannya baik untuk tujuan komersial maupun pribadi.
 
-```bash
-# Build client
-npm run build:client
+---
 
-# Run with PM2
-pm2 start server/src/index.ts --interpreter bun --name examinator
-
-# Or with Nginx reverse proxy
-# See docs/nginx.conf for sample config
-```
-
-## 📜 License
-
-MIT — Free for personal and commercial use.
+_Dibuat dengan ❤️ untuk pendidikan Indonesia yang lebih baik, efisien, dan jujur._
