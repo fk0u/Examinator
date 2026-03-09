@@ -1,112 +1,46 @@
 import { component$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
+import { LoginForm } from "~/components/auth/login-form";
 
-import Counter from "../components/starter/counter/counter";
-import Hero from "../components/starter/hero/hero";
-import Infobox from "../components/starter/infobox/infobox";
-import Starter from "../components/starter/next-steps/next-steps";
+// ─── Landing / Login Page ───────────────────────────────
 
 export default component$(() => {
   return (
-    <>
-      <Hero />
-      <Starter />
+    <div class="min-h-screen bg-gradient-mesh flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Blobs */}
+      <div class="absolute top-[-10%] left-[-5%] w-72 h-72 bg-primary-500/20 rounded-full blur-3xl animate-blob" />
+      <div class="absolute bottom-[-10%] right-[-5%] w-96 h-96 bg-info/15 rounded-full blur-3xl animate-blob" style="animation-delay: 2s" />
+      <div class="absolute top-[50%] left-[60%] w-64 h-64 bg-success/10 rounded-full blur-3xl animate-blob" style="animation-delay: 4s" />
 
-      <div role="presentation" class="ellipsis"></div>
-      <div role="presentation" class="ellipsis ellipsis-purple"></div>
-
-      <div class="container container-center container-spacing-xl">
-        <h3>
-          You can <span class="highlight">count</span>
-          <br /> on me
-        </h3>
-        <Counter />
-      </div>
-
-      <div class="container container-flex">
-        <Infobox>
-          <div q:slot="title" class="icon icon-cli">
-            CLI Commands
+      <div class="relative z-10 w-full max-w-md animate-fade-in">
+        {/* Logo & Title */}
+        <div class="text-center mb-8">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-primary mb-4 shadow-lg shadow-primary-500/25">
+            <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
           </div>
-          <>
-            <p>
-              <code>npm run dev</code>
-              <br />
-              Starts the development server and watches for changes
-            </p>
-            <p>
-              <code>npm run preview</code>
-              <br />
-              Creates production build and starts a server to preview it
-            </p>
-            <p>
-              <code>npm run build</code>
-              <br />
-              Creates production build
-            </p>
-            <p>
-              <code>npm run qwik add</code>
-              <br />
-              Runs the qwik CLI to add integrations
-            </p>
-          </>
-        </Infobox>
-
-        <div>
-          <Infobox>
-            <div q:slot="title" class="icon icon-apps">
-              Example Apps
-            </div>
-            <p>
-              Have a look at the <a href="/demo/flower">Flower App</a> or the{" "}
-              <a href="/demo/todolist">Todo App</a>.
-            </p>
-          </Infobox>
-
-          <Infobox>
-            <div q:slot="title" class="icon icon-community">
-              Community
-            </div>
-            <ul>
-              <li>
-                <span>Questions or just want to say hi? </span>
-                <a href="https://qwik.dev/chat" target="_blank">
-                  Chat on discord!
-                </a>
-              </li>
-              <li>
-                <span>Follow </span>
-                <a href="https://twitter.com/QwikDev" target="_blank">
-                  @QwikDev
-                </a>
-                <span> on Twitter</span>
-              </li>
-              <li>
-                <span>Open issues and contribute on </span>
-                <a href="https://github.com/QwikDev/qwik" target="_blank">
-                  GitHub
-                </a>
-              </li>
-              <li>
-                <span>Watch </span>
-                <a href="https://qwik.dev/media/" target="_blank">
-                  Presentations, Podcasts, Videos, etc.
-                </a>
-              </li>
-            </ul>
-          </Infobox>
+          <h1 class="text-3xl font-bold text-gradient mb-2">Examinator</h1>
+          <p class="text-surface-400 text-sm">CBT Proctoring System — Kurikulum Merdeka</p>
         </div>
+
+        {/* Login Card */}
+        <div class="glass rounded-2xl p-8 shadow-2xl">
+          <LoginForm />
+        </div>
+
+        {/* Footer */}
+        <p class="text-center text-surface-500 text-xs mt-6">
+          © 2026 Examinator — Self-hosted CBT Platform
+        </p>
       </div>
-    </>
+    </div>
   );
 });
 
 export const head: DocumentHead = {
-  title: "Welcome to Qwik",
+  title: "Examinator — CBT Proctoring System",
   meta: [
-    {
-      name: "description",
-      content: "Qwik site description",
-    },
+    { name: "description", content: "Self-hosted Computer-Based Test proctoring platform for SMK Indonesia" },
   ],
 };
