@@ -49,7 +49,7 @@ export default component$(() => {
     <div class="font-sans h-[100dvh] w-full flex bg-[#fafcff] overflow-hidden selection:bg-primary/20 selection:text-primary">
       
       {/* ─── LEFT PANEL (Vibrant IRA Design Illustration) ─── */}
-      <div class="relative hidden lg:flex w-[55%] xl:w-[60%] flex-col justify-between overflow-hidden p-8 lg:p-12 border-r border-slate-100/50 bg-[#f8fbff]">
+      <div class="relative hidden lg:flex w-[55%] xl:w-[60%] flex-col justify-between overflow-hidden p-6 lg:p-10 xl:p-12 border-r border-slate-100/50 bg-[#f8fbff]">
         
         {/* Massive Animated SVG Blobs (IRA Style) */}
         <div class="absolute inset-0 z-0 pointer-events-none flex items-center justify-center -translate-x-[10%] translate-y-[10%]">
@@ -65,23 +65,23 @@ export default component$(() => {
         <div class="pointer-events-none fixed inset-0 z-10 opacity-[0.02] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
 
         {/* Top Header & Copy */}
-        <div class="relative z-20 mt-8">
-          <div class="fade-in-up inline-flex items-center justify-center p-3.5 bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 mb-8 group transition-transform duration-500 hover:-translate-y-1">
-            <span class="material-symbols-outlined text-[32px] text-primary transition-transform duration-500 group-hover:scale-110">schema</span>
+        <div class="relative z-20 mt-4 xl:mt-8">
+          <div class="fade-in-up inline-flex items-center justify-center p-3 bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 mb-6 group transition-transform duration-500 hover:-translate-y-1">
+            <span class="material-symbols-outlined text-[28px] text-primary transition-transform duration-500 group-hover:scale-110">schema</span>
           </div>
-          <h1 class="fade-in-up text-[4rem] xl:text-[4.5rem] leading-[1.05] font-[900] text-slate-900 tracking-tight">
-            Elevating the <br /> standard of <br />
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-500">digital assessments.</span>
+          <h1 class="fade-in-up text-[3rem] lg:text-[3.5rem] xl:text-[4rem] leading-[1.1] font-[900] text-slate-900 tracking-tight">
+            Meningkatkan <br /> standar <br />
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-500">penilaian digital</span>
             <span class="text-secondary">.</span>
           </h1>
-          <p class="fade-in-up mt-8 text-slate-500 font-medium text-[1.1rem] xl:text-lg max-w-lg leading-relaxed mix-blend-darken">
-            A state-of-the-art Computer-Based Test platform integrating powerful proctoring, seamless performance, and awe-inspiring aesthetic design.
+          <p class="fade-in-up mt-6 text-slate-500 font-medium text-[1rem] xl:text-[1.1rem] max-w-lg leading-relaxed mix-blend-darken">
+            Platform Ujian Berbasis Komputer mutakhir yang mengintegrasikan pengawasan ketat, performa mulus, dan desain estetika yang imersif.
           </p>
         </div>
 
         {/* 3D Abstract UI Composition */}
-        <div class="relative z-20 flex-1 w-full flex items-center justify-end mt-12 mb-12 pr-10">
-           <div class="relative w-full max-w-[550px] aspect-square">
+        <div class="relative z-20 flex-1 w-full flex items-center justify-end mt-6 mb-6 pr-6 xl:pr-10">
+           <div class="relative w-full max-w-[450px] xl:max-w-[550px] aspect-square">
               
               {/* Back Element: Code/Data Representation */}
               <div class="float-obj-2 absolute top-[15%] right-[0%] w-[65%] h-[60%] rounded-[2rem] bg-gradient-to-br from-blue-500 to-indigo-600 shadow-[0_30px_60px_-15px_rgba(59,130,246,0.4)] border border-white/20 flex flex-col p-6 overflow-hidden">
