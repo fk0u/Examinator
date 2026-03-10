@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
+import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 import { useNavigate } from "@builder.io/qwik-city";
 import { getUserData, isAuthenticated, logout } from "~/lib/auth";
@@ -24,11 +24,11 @@ export default component$(() => {
     );
   }
 
-  const handleBack = () => {
+  const handleBack = $(() => {
     if (user.value?.role === "ADMIN") nav("/admin/");
     else if (user.value?.role === "OPERATOR") nav("/proctor/");
     else nav("/student/");
-  };
+  });
 
   return (
     <div class="min-h-screen bg-surface-900 bg-gradient-mesh">
