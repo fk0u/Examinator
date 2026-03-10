@@ -1,55 +1,8 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* ─── Examinator Light UI Design System ─────────────────────────── */
-
-@theme {
-  /* Blue Palette (Primary) */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
-
-  /* Blue/Indigo Palette (Secondary) */
-  --color-secondary-50: #eef2ff;
-  --color-secondary-100: #e0e7ff;
-  --color-secondary-200: #c7d2fe;
-  --color-secondary-300: #a5b4fc;
-  --color-secondary-400: #818cf8;
-  --color-secondary-500: #6366f1;
-  --color-secondary-600: #4f46e5;
-
-  /* Yellow/Amber Palette (Accent) */
-  --color-accent-100: #fef3c7;
-  --color-accent-300: #fcd34d;
-  --color-accent-500: #f59e0b;
-  --color-accent-600: #d97706;
-
-  /* Light Surface Palette */
-  --color-surface-900: #0f172a;
-  --color-surface-800: #1e293b;
-  --color-surface-700: #334155;
-  --color-surface-600: #475569;
-  --color-surface-500: #64748b;
-  --color-surface-400: #94a3b8;
-  --color-surface-300: #cbd5e1;
-  --color-surface-200: #e2e8f0;
-  --color-surface-100: #f8fafc;
-  --color-surface-50: #ffffff;
-
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-info: #0ea5e9;
-
-  /* Fonts */
-  --font-sans: "Inter", "Outfit", system-ui, -apple-system, sans-serif;
-}
 
 /* ─── Base Styles ──────────────────────────────────────── */
 
