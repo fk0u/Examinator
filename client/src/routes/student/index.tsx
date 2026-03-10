@@ -77,7 +77,7 @@ export default component$(() => {
             <div class="hidden md:flex items-center gap-6">
               <span class="text-blue-500 font-semibold text-sm cursor-pointer border-b-2 border-blue-500 py-4">Dashboard</span>
               <span class="text-slate-500 hover:text-blue-500 transition-colors font-medium text-sm cursor-pointer py-4">Ujian Saya</span>
-              <span class="text-slate-500 hover:text-blue-500 transition-colors font-medium text-sm cursor-pointer py-4">Hasil</span>
+              <Link href="/student/results/" class="text-slate-500 hover:text-blue-500 transition-colors font-medium text-sm cursor-pointer py-4">Hasil</Link>
             </div>
           </div>
           
@@ -265,9 +265,9 @@ export default component$(() => {
               )}
             </div>
             {historyExams.length > 3 && (
-              <button class="w-full mt-4 py-2 text-blue-500 font-bold text-sm hover:underline transition-colors">
+              <Link href="/student/results/" class="w-full mt-4 py-2 block text-center text-blue-500 font-bold text-sm hover:underline transition-colors">
                 Lihat Semua Nilai
-              </button>
+              </Link>
             )}
           </div>
           
