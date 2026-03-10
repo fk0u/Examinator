@@ -48,8 +48,14 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
 
       if (existing) {
         if (existing.status === "IN_PROGRESS") {
-          // Return existing attempt
-          return { attempt: existing, resumed: true };
+          const fullAttempt = await getAttemptWithRelations(existing.id);
+
+          if (!fullAttempt) {
+            set.status = 404;
+            return { error: "Attempt not found" };
+          }
+
+          return buildAttemptPayload(fullAttempt, true);
         }
         set.status = 409;
         return { error: "Exam already submitted" };
@@ -64,25 +70,21 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
           ipAddress: request.headers.get("x-forwarded-for") || "unknown",
           userAgent: request.headers.get("user-agent") || "unknown",
         },
-        include: {
-          exam: {
-            include: {
-              questions: {
-                include: { options: { select: { id: true, text: true, order: true } } },
-                orderBy: { order: "asc" },
-              },
-            },
-          },
-        },
       });
 
-      // Shuffle questions if enabled
-      if (exam.shuffle && attempt.exam.questions) {
-        attempt.exam.questions.sort(() => Math.random() - 0.5);
+      const fullAttempt = await getAttemptWithRelations(attempt.id);
+
+      if (!fullAttempt) {
+        set.status = 500;
+        return { error: "Failed to load attempt" };
+      }
+
+      if (exam.shuffle && fullAttempt.exam.questions) {
+        fullAttempt.exam.questions.sort(() => Math.random() - 0.5);
       }
 
       set.status = 201;
-      return { attempt };
+      return buildAttemptPayload(fullAttempt, false);
     },
     {
       body: t.Object({
@@ -266,3 +268,78 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
 
     return { attempts };
   });
+
+  function calculateRemainingSeconds(startedAt: Date, durationMinutes: number) {
+    const durationSeconds = durationMinutes * 60;
+    const elapsedSeconds = Math.floor((Date.now() - startedAt.getTime()) / 1000);
+    return Math.max(durationSeconds - elapsedSeconds, 0);
+  }
+
+async function getAttemptWithRelations(attemptId: string) {
+  return db.attempt.findUnique({
+    where: { id: attemptId },
+    include: {
+      answers: {
+        select: {
+          questionId: true,
+          optionId: true,
+          textAnswer: true,
+          isCorrect: true,
+          points: true,
+        },
+      },
+      exam: {
+        include: {
+          questions: {
+            include: {
+              options: {
+                select: {
+                  id: true,
+                  text: true,
+                  order: true,
+                },
+              },
+            },
+            orderBy: { order: "asc" },
+          },
+        },
+      },
+    },
+  });
+}
+
+function buildAttemptPayload(attempt: any, resumed: boolean) {
+  const remainingSeconds = calculateRemainingSeconds(
+    attempt.startedAt,
+    attempt.exam.duration
+  );
+
+  const answers = attempt.answers ?? [];
+  const answeredCount = answers.length;
+  const totalQuestions = attempt.exam.questions.length;
+
+  return {
+    attempt: {
+      id: attempt.id,
+      status: attempt.status,
+      startedAt: attempt.startedAt,
+      submittedAt: attempt.submittedAt,
+      cameraEnabled: attempt.cameraEnabled,
+    },
+    exam: {
+      id: attempt.exam.id,
+      title: attempt.exam.title,
+      subject: attempt.exam.subject,
+      duration: attempt.exam.duration,
+      questions: attempt.exam.questions,
+    },
+    answers,
+    progress: {
+      answeredCount,
+      totalQuestions,
+    },
+    remainingSeconds,
+    resumed,
+  };
+} 
+
