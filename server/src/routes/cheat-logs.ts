@@ -5,7 +5,12 @@ import { saveCapture } from "../lib/upload";
 
 // ─── Cheat Log Routes ───────────────────────────────────
 
-export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs" })
+export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs",
+  detail: {
+    tags: ["Cheat Logs"],
+    description: "Endpoints for logging and viewing cheating incidents during exams",
+  }
+ })
   .use(authPlugin)
 
   // ── POST /api/cheat-logs ──────────────────────────────

@@ -6,7 +6,12 @@ import { hash, compare } from "bcryptjs";
 
 // ─── Auth Routes ────────────────────────────────────────
 
-export const authRoutes = new Elysia({ prefix: "/api/auth" })
+export const authRoutes = new Elysia({ prefix: "/api/auth", 
+  detail: {
+    tags: ["Authentication"],
+    description: "Endpoints for user registration, login, and profile retrieval",
+  }
+ })
   .use(
     jwt({
       name: "jwt",

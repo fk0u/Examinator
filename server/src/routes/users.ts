@@ -5,11 +5,16 @@ import { hash } from "bcryptjs";
 
 // ─── User Management Routes ────────────────────────────
 
-export const userRoutes = new Elysia({ prefix: "/api/users" })
+export const userRoutes = new Elysia({ prefix: "/api/users", detail: {
+  tags: ["Users"],
+  description: "Endpoints for managing users (Admin/Operator only)",
+  }})
   .use(authPlugin)
 
+
   // ── GET /api/users ────────────────────────────────────
-  .get("/", async ({ userId, userRole, query }) => {
+  .get("/", async (context) => {
+    const { userId, userRole, query } = context as any;
     requireAuth(userId);
     requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
@@ -60,7 +65,8 @@ export const userRoutes = new Elysia({ prefix: "/api/users" })
   })
 
   // ── GET /api/users/:id ────────────────────────────────
-  .get("/:id", async ({ params, userId, userRole, set }) => {
+  .get("/:id", async (context) => {
+    const { params, userId, userRole, set } = context as any;
     requireAuth(userId);
     requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
@@ -91,7 +97,8 @@ export const userRoutes = new Elysia({ prefix: "/api/users" })
   // ── POST /api/users (batch create) ────────────────────
   .post(
     "/",
-    async ({ body, userId, userRole, set }) => {
+    async (context) => {
+      const { body, userId, userRole, set } = context as any;
       requireAuth(userId);
       requireRole(userRole, ["ADMIN"]);
 
@@ -134,7 +141,8 @@ export const userRoutes = new Elysia({ prefix: "/api/users" })
   // ── PUT /api/users/:id ────────────────────────────────
   .put(
     "/:id",
-    async ({ params, body, userId, userRole }) => {
+    async (context) => {
+      const { params, body, userId, userRole } = context as any;
       requireAuth(userId);
       requireRole(userRole, ["ADMIN"]);
 
@@ -177,7 +185,8 @@ export const userRoutes = new Elysia({ prefix: "/api/users" })
   )
 
   // ── DELETE /api/users/:id ─────────────────────────────
-  .delete("/:id", async ({ params, userId, userRole }) => {
+  .delete("/:id", async (context) => {
+    const { params, userId, userRole } = context as any;
     requireAuth(userId);
     requireRole(userRole, ["ADMIN"]);
 
