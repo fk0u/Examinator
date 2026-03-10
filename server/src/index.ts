@@ -105,6 +105,7 @@ const app = new Elysia()
 console.log(banner);
 console.log(`\n  🚀 Server running at http://${app.server?.hostname}:${app.server?.port}`);
 console.log(`  📡 WebSocket at ws://${app.server?.hostname}:${app.server?.port}/ws/proctor`);
+console.log(`  📚 API docs at http://${app.server?.hostname}:${app.server?.port}/swagger`);
 console.log(`  🏥 Health check at http://${app.server?.hostname}:${app.server?.port}/api/health`);
 console.log(`  📁 Uploads served from ${env.UPLOAD_DIR}`);
 console.log(`  🌍 CORS origin: ${env.CLIENT_URL}`);
