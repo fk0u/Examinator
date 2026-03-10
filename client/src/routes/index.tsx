@@ -46,10 +46,10 @@ export default component$(() => {
   });
 
   return (
-    <div class="font-sans min-h-screen w-full flex bg-[#fafcff] overflow-hidden selection:bg-primary/20 selection:text-primary">
+    <div class="font-sans h-[100dvh] w-full flex bg-[#fafcff] overflow-hidden selection:bg-primary/20 selection:text-primary">
       
       {/* ─── LEFT PANEL (Vibrant IRA Design Illustration) ─── */}
-      <div class="relative hidden lg:flex w-[55%] xl:w-[60%] flex-col justify-between overflow-hidden p-12 lg:p-16 border-r border-slate-100/50 bg-[#f8fbff]">
+      <div class="relative hidden lg:flex w-[55%] xl:w-[60%] flex-col justify-between overflow-hidden p-8 lg:p-12 border-r border-slate-100/50 bg-[#f8fbff]">
         
         {/* Massive Animated SVG Blobs (IRA Style) */}
         <div class="absolute inset-0 z-0 pointer-events-none flex items-center justify-center -translate-x-[10%] translate-y-[10%]">
@@ -152,7 +152,7 @@ export default component$(() => {
       </div>
 
       {/* ─── RIGHT PANEL (Login Form) ─── */}
-      <div class="relative w-full lg:w-[45%] xl:w-[40%] flex items-center justify-center p-6 sm:p-12 lg:px-24 bg-white shadow-[-20px_0_40px_-10px_rgba(0,0,0,0.02)] z-10">
+      <div class="relative w-full lg:w-[45%] xl:w-[40%] flex items-center justify-center p-6 sm:p-8 lg:p-12 xl:p-16 bg-white shadow-[-20px_0_40px_-10px_rgba(0,0,0,0.02)] z-10 overflow-hidden">
         
         {/* Mobile Background Elements */}
         <div class="absolute inset-0 z-0 lg:hidden overflow-hidden pointer-events-none bg-[#f8fbff]">

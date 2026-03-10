@@ -11,6 +11,7 @@ export default component$(() => {
   const error = useSignal("");
   const loading = useSignal(false);
   const activeRole = useSignal("admin");
+  const showPassword = useSignal(false);
   const nav = useNavigate();
 
   // eslint-disable-next-line qwik/no-use-visible-task
@@ -90,9 +91,9 @@ export default component$(() => {
             <div class="flex-1 px-3">
               <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 group-focus-within:text-primary transition-colors" for="username">Identitas Pengguna</label>
               <input 
-                class="block w-full bg-transparent text-[15px] text-slate-800 font-semibold placeholder:text-slate-300 placeholder:font-medium focus:outline-none" 
+                class="block w-full bg-transparent text-[15px] text-slate-800 font-semibold placeholder:text-slate-300 placeholder:font-medium focus:outline-none border-transparent focus:border-transparent focus:ring-0 p-0" 
                 id="username" 
-                placeholder="Ketik username kamu" 
+                placeholder="Masukkan identitas..." 
                 required 
                 type="text" 
                 bind:value={username}
@@ -112,14 +113,19 @@ export default component$(() => {
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 group-focus-within:text-primary transition-colors" for="password">Kata Sandi</label>
                 <a class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors -translate-y-0.5" href="#">Lupa sandi?</a>
               </div>
-              <input 
-                class="block w-full bg-transparent text-[15px] text-slate-800 font-semibold placeholder:text-slate-300 placeholder:font-medium focus:outline-none tracking-wider" 
-                id="password" 
-                placeholder="••••••••" 
-                required 
-                type="password" 
-                bind:value={password}
-              />
+              <div class="flex items-center w-full mt-0.5">
+                <input 
+                  class="block w-full bg-transparent text-[15px] text-slate-800 font-semibold placeholder:text-slate-300 placeholder:font-medium focus:outline-none tracking-wider border-transparent focus:border-transparent focus:ring-0 p-0" 
+                  id="password" 
+                  placeholder="••••••••" 
+                  required 
+                  type={showPassword.value ? "text" : "password"} 
+                  bind:value={password}
+                />
+                <button type="button" onClick$={() => showPassword.value = !showPassword.value} class="text-slate-400 hover:text-primary focus:outline-none flex items-center justify-center ml-2 transition-colors">
+                  <span class="material-symbols-outlined text-[18px]">{showPassword.value ? "visibility_off" : "visibility"}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
