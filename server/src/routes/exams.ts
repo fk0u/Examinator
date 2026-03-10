@@ -10,11 +10,6 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
 } })
   .use(authPlugin)
 
-  // ── GET /api/exams/test-auth ──────────────────────────
-  .get("/test-auth", ({ userId, userRole }) => {
-    return { ok: true, userId, userRole };
-  })
-
   // ── GET /api/exams ────────────────────────────────────
   // Students: see active exams | Admin/Operator: see all
   .get("/", async ({ userId, userRole }) => {

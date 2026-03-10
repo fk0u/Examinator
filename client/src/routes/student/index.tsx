@@ -29,8 +29,6 @@ export default component$(() => {
       exams.value = examData.exams || [];
       attempts.value = attemptData.attempts || [];
     } catch (err) {
-      console.error("Dashboard mount error:", err);
-      // Token probably expired or invalid
       logout();
       await nav("/");
     } finally {

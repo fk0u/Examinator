@@ -6,12 +6,14 @@ import { db } from "../lib/db";
 // ─── JWT Auth Plugin ────────────────────────────────────
 // Creates a reusable auth plugin for Elysia routes
 
+import { bearer } from "@elysiajs/bearer";
+
 export type AuthContext = {
   userId: string | null;
   userRole: string | null;
 };
 
-export const authPlugin = new Elysia()
+export const authPlugin = (app: Elysia) => app
   .use(
     jwt({
       name: "jwt",
@@ -19,20 +21,15 @@ export const authPlugin = new Elysia()
       exp: "7d",
     })
   )
-  .derive(async ({ jwt, headers }): Promise<AuthContext> => {
-    const authHeader = headers.authorization || (headers as any).Authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.log("Auth header missing or invalid:", authHeader);
+  .use(bearer())
+  .derive(async ({ jwt, bearer }) => {
+    if (!bearer) {
       return { userId: null, userRole: null };
     }
 
-    const token = authHeader.split(" ")[1];
-
     try {
-      const payload = await jwt.verify(token);
+      const payload = await jwt.verify(bearer);
       if (!payload) {
-         console.log("JWT Payload empty");
          return { userId: null, userRole: null };
       }
 
@@ -41,7 +38,6 @@ export const authPlugin = new Elysia()
         userRole: payload.role as string,
       };
     } catch (e) {
-      console.error("JWT verify failed:", e);
       return { userId: null, userRole: null };
     }
   });
@@ -50,7 +46,6 @@ export const authPlugin = new Elysia()
 
 /** Require authenticated user */
 export function requireAuth(userId: string | null | undefined) {
-  console.log("requireAuth checking userId:", userId);
   if (!userId) {
     throw new Error("UNAUTHORIZED");
   }
