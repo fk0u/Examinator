@@ -74,7 +74,7 @@ export const analyticsRoutes = new Elysia({
             db.exam.findMany({
                 select: {
                     id: true,
-                    title: true,
+                    title: true,    
                     passingScore: true,
                 },
 
