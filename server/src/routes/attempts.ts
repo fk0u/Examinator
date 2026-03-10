@@ -4,7 +4,12 @@ import { db } from "../lib/db";
 
 // ─── Attempt Routes ─────────────────────────────────────
 
-export const attemptRoutes = new Elysia({ prefix: "/api/attempts" })
+export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
+  detail: {
+    tags: ["Attempts"],
+    description: "Endpoints for managing exam attempts, saving answers, and submitting exams",
+  }
+ })
   .use(authPlugin)
 
   // ── POST /api/attempts/start ──────────────────────────

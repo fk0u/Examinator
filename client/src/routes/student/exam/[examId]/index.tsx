@@ -185,9 +185,6 @@ export default component$(() => {
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  const currentQ = () => questions.value[currentQuestion.value];
-  const isLast = () => currentQuestion.value === questions.value.length - 1;
-
   return (
     <div class="min-h-screen bg-surface-900 select-none" onContextMenu$={(e) => e.preventDefault()}>
       {/* Cheat Warning Overlay */}
@@ -270,19 +267,19 @@ export default component$(() => {
 
               {/* Question Text */}
               <h2 class="text-xl font-medium text-surface-100 mb-6 leading-relaxed">
-                {currentQ()?.text}
+                {questions.value[currentQuestion.value]?.text}
               </h2>
 
               {/* Options */}
               <div class="space-y-3">
-                {currentQ()?.options?.map((option: any, idx: number) => {
-                  const isSelected = answers.value[currentQ()?.id] === option.id;
+                {questions.value[currentQuestion.value]?.options?.map((option: any, idx: number) => {
+                  const isSelected = answers.value[questions.value[currentQuestion.value]?.id] === option.id;
                   const letters = ["A", "B", "C", "D", "E"];
 
                   return (
                     <button
                       key={option.id}
-                      onClick$={() => saveAnswer(currentQ().id, option.id)}
+                      onClick$={() => saveAnswer(questions.value[currentQuestion.value].id, option.id)}
                       class={`w-full p-4 rounded-xl text-left transition-all duration-200 flex items-start gap-3 group ${
                         isSelected
                           ? 'bg-primary-500/10 border-2 border-primary-500 text-surface-100 shadow-lg shadow-primary-500/10'
@@ -336,7 +333,7 @@ export default component$(() => {
                 </button>
               )}
 
-              {isLast() ? (
+              {currentQuestion.value === questions.value.length - 1 ? (
                 <button
                   onClick$={submitExam}
                   disabled={submitting.value}

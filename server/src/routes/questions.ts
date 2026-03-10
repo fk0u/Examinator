@@ -4,11 +4,15 @@ import { db } from "../lib/db";
 
 // ─── Question Routes ────────────────────────────────────
 
-export const questionRoutes = new Elysia({ prefix: "/api/exams/:examId/questions" })
+export const questionRoutes = new Elysia({ prefix: "/api/exams/:examId/questions", detail: {
+  tags: ["Questions"],
+  description: "Endpoints for managing questions of an exam (Admin/Operator only)",
+  }})
+
   .use(authPlugin)
 
   // ── GET all questions for an exam ─────────────────────
-  .get("/", async ({ params, userId }) => {
+  .get("/", async ({ params, userId }: any) => {
     requireAuth(userId);
 
     const questions = await db.question.findMany({
@@ -25,7 +29,7 @@ export const questionRoutes = new Elysia({ prefix: "/api/exams/:examId/questions
   // ── POST create question ──────────────────────────────
   .post(
     "/",
-    async ({ params, body, userId, userRole, set }) => {
+    async ({ params, body, userId, userRole, set }: any) => {
       requireAuth(userId);
       requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
@@ -37,7 +41,7 @@ export const questionRoutes = new Elysia({ prefix: "/api/exams/:examId/questions
           examId: params.examId,
           options: options
             ? {
-                create: options.map((opt, idx) => ({
+                create: options.map((opt: any, idx: number) => ({
                   text: opt.text,
                   isCorrect: opt.isCorrect || false,
                   order: idx,
@@ -79,7 +83,7 @@ export const questionRoutes = new Elysia({ prefix: "/api/exams/:examId/questions
   // ── PUT update question ───────────────────────────────
   .put(
     "/:questionId",
-    async ({ params, body, userId, userRole }) => {
+    async ({ params, body, userId, userRole }: any) => {
       requireAuth(userId);
       requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
@@ -95,7 +99,7 @@ export const questionRoutes = new Elysia({ prefix: "/api/exams/:examId/questions
       if (options) {
         await db.option.deleteMany({ where: { questionId: params.questionId } });
         await db.option.createMany({
-          data: options.map((opt, idx) => ({
+          data: options.map((opt: any, idx: number) => ({
             questionId: params.questionId,
             text: opt.text,
             isCorrect: opt.isCorrect || false,
@@ -131,7 +135,7 @@ export const questionRoutes = new Elysia({ prefix: "/api/exams/:examId/questions
   )
 
   // ── DELETE question ───────────────────────────────────
-  .delete("/:questionId", async ({ params, userId, userRole }) => {
+  .delete("/:questionId", async ({ params, userId, userRole }: any) => {
     requireAuth(userId);
     requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
