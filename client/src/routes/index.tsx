@@ -1,205 +1,345 @@
-import { component$, useVisibleTask$ } from "@builder.io/qwik";
+import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
+import { Link } from "@builder.io/qwik-city";
 import type { DocumentHead } from "@builder.io/qwik-city";
-import LoginForm from "~/components/auth/login-form";
+import { t, LANG_LABELS, type Lang } from "~/lib/i18n";
 
-// ─── Hyper-Immersive IRA Design Login Page ───────────────────────────────
+const GREETINGS = [
+  "Hello", "Halo", "Bonjour", "こんにちは", "Hola", "Ciao",
+  "مرحبا", "Привет", "안녕하세요", "Olá", "Merhaba", "Sawubona",
+  "Xin chào", "Kamusta", "Habari", "Namaste", "Hej", "Szia",
+];
 
 export default component$(() => {
+  const showLoader = useSignal(true);
+  const loaderPhase = useSignal<"typing" | "done">("typing");
+  const displayedText = useSignal("");
+  const currentGreetingIdx = useSignal(0);
+  const lang = useSignal<Lang>("id");
+  const langOpen = useSignal(false);
+
   // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(async () => {
-    const { animate, stagger } = await import("motion");
-    
-    // Abstract Illustration Animations
-    animate(".blob-1" as any, 
-      { scale: [0.95, 1.05], rotate: [0, 10], x: [0, 30] }, 
-      { duration: 8, repeat: Infinity, direction: "alternate", ease: "easeInOut" } as any
-    );
-    animate(".blob-2" as any, 
-      { scale: [1, 1.1], rotate: [0, -15], y: [0, -40] }, 
-      { duration: 10, repeat: Infinity, direction: "alternate", ease: "easeInOut" } as any
-    );
+    // ── Apple-style typewriter greeting ──
+    let gIdx = 0;
+    const typeGreeting = (word: string) => {
+      return new Promise<void>((resolve) => {
+        let charIdx = 0;
+        displayedText.value = "";
+        const typeInterval = setInterval(() => {
+          displayedText.value = word.slice(0, charIdx + 1);
+          charIdx++;
+          if (charIdx >= word.length) {
+            clearInterval(typeInterval);
+            setTimeout(resolve, 400);
+          }
+        }, 60);
+      });
+    };
 
-    animate(".float-obj-1" as any, 
-      { y: ["-15px", "15px"], rotate: [-2, 2] }, 
-      { duration: 4, repeat: Infinity, direction: "alternate", ease: "easeInOut" } as any
-    );
-    animate(".float-obj-2" as any, 
-      { y: ["20px", "-20px"], rotate: [5, -5] }, 
-      { duration: 5, repeat: Infinity, direction: "alternate", ease: "easeInOut" } as any
-    );
-    animate(".float-obj-3" as any, 
-      { y: ["-10px", "10px"], scale: [0.95, 1.05] }, 
-      { duration: 3.5, repeat: Infinity, direction: "alternate", ease: "easeInOut" } as any
-    );
+    const eraseGreeting = () => {
+      return new Promise<void>((resolve) => {
+        const word = displayedText.value;
+        let charIdx = word.length;
+        const eraseInterval = setInterval(() => {
+          charIdx--;
+          displayedText.value = word.slice(0, charIdx);
+          if (charIdx <= 0) {
+            clearInterval(eraseInterval);
+            setTimeout(resolve, 100);
+          }
+        }, 35);
+      });
+    };
 
-    // Staggered entrance for the right side
-    animate(".stagger-in" as any, 
-      { opacity: [0, 1], x: [40, 0] }, 
-      { duration: 0.8, delay: stagger(0.12), ease: [0.16, 1, 0.3, 1] } as any
-    );
-    
-    // Smooth fade in for the left side text
-    animate(".fade-in-up" as any,
-      { opacity: [0, 1], y: [30, 0] }, 
-      { duration: 1, delay: stagger(0.2), ease: [0.16, 1, 0.3, 1] } as any
-    );
+    // Cycle through ~6 greetings
+    for (let i = 0; i < 6; i++) {
+      currentGreetingIdx.value = gIdx;
+      await typeGreeting(GREETINGS[gIdx]);
+      if (i < 5) await eraseGreeting();
+      gIdx = (gIdx + 1) % GREETINGS.length;
+    }
+
+    loaderPhase.value = "done";
+    setTimeout(() => { showLoader.value = false; }, 600);
+
+    // ── Main content animations ──
+    setTimeout(async () => {
+      const { animate, stagger } = await import("motion");
+      animate(".blob-1" as any, { scale: [1, 1.15], rotate: [0, 60], y: [0, -30] }, { duration: 14, repeat: Infinity, direction: "alternate", ease: "easeInOut" } as any);
+      animate(".blob-2" as any, { scale: [0.9, 1.1], rotate: [0, -40], x: [0, 40] }, { duration: 18, repeat: Infinity, direction: "alternate", ease: "easeInOut" } as any);
+      animate(".blob-3" as any, { scale: [1, 0.85], rotate: [0, 25], y: [0, 25] }, { duration: 20, repeat: Infinity, direction: "alternate", ease: "easeInOut" } as any);
+      animate(".fade-up" as any, { opacity: [0, 1], y: [50, 0] }, { duration: 0.8, delay: stagger(0.12), ease: [0.16, 1, 0.3, 1] } as any);
+      const sections = document.querySelectorAll(".section-reveal");
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const children = entry.target.querySelectorAll(".reveal-item");
+            animate(children as any, { opacity: [0, 1], y: [40, 0] }, { duration: 0.7, delay: stagger(0.1), ease: [0.16, 1, 0.3, 1] } as any);
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15 });
+      sections.forEach((s) => observer.observe(s));
+    }, 800);
   });
 
-  return (
-    <div class="font-sans h-[100dvh] w-full flex bg-[#fafcff] overflow-hidden selection:bg-primary/20 selection:text-primary">
-      
-      {/* ─── LEFT PANEL (Vibrant IRA Design Illustration) ─── */}
-      <div class="relative hidden lg:flex w-[55%] xl:w-[60%] flex-col justify-between overflow-hidden p-6 lg:p-10 xl:p-12 border-r border-slate-100/50 bg-[#f8fbff]">
-        
-        {/* Massive Animated SVG Blobs (IRA Style) */}
-        <div class="absolute inset-0 z-0 pointer-events-none flex items-center justify-center -translate-x-[10%] translate-y-[10%]">
-          {/* Primary Blue Blob */}
-          <div class="blob-1 absolute w-[120%] h-[120%] opacity-80 mix-blend-multiply filter blur-[60px]" style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(59,130,246,0) 70%)' }}></div>
-          {/* Secondary Yellow Blob */}
-          <div class="blob-2 absolute w-[100%] h-[100%] opacity-80 mix-blend-multiply filter blur-[80px] translate-x-[20%] -translate-y-[20%]" style={{ background: 'radial-gradient(circle, rgba(234,179,8,0.25) 0%, rgba(234,179,8,0) 70%)' }}></div>
-          {/* Indigo Accent */}
-          <div class="absolute w-[80%] h-[80%] opacity-70 mix-blend-multiply filter blur-[100px] -translate-x-[30%]" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.2) 0%, rgba(79,70,229,0) 70%)' }}></div>
-        </div>
-        
-        {/* Noise Texture for Premium Feel */}
-        <div class="pointer-events-none fixed inset-0 z-10 opacity-[0.02] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
+  const L = () => t[lang.value];
 
-        {/* Top Header & Copy */}
-        <div class="relative z-20 mt-2 xl:mt-8">
-          <div class="fade-in-up inline-flex items-center justify-center p-2.5 xl:p-3 bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 mb-4 xl:mb-6 group transition-transform duration-500 hover:-translate-y-1">
-            <span class="material-symbols-outlined text-[24px] xl:text-[28px] text-primary transition-transform duration-500 group-hover:scale-110">schema</span>
-          </div>
-          <h1 class="fade-in-up text-[2.75rem] xl:text-[4rem] leading-[1.1] font-[900] text-slate-900 tracking-tight">
-            Meningkatkan <br /> standar <br />
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-500">penilaian digital</span>
-            <span class="text-secondary">.</span>
-          </h1>
-          <p class="fade-in-up mt-4 xl:mt-6 text-slate-500 font-medium text-[0.95rem] xl:text-[1.1rem] max-w-[90%] xl:max-w-lg leading-relaxed mix-blend-darken">
-            Platform Ujian Berbasis Komputer mutakhir yang mengintegrasikan pengawasan ketat, performa mulus, dan desain estetika yang imersif.
+  return (
+    <div class="font-sans w-full bg-[#fdfdfd] text-slate-900 overflow-x-hidden selection:bg-blue-500/20 selection:text-blue-700 relative">
+
+      {/* ═══ LOADING SCREEN ═══ */}
+      <div class={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950 transition-all duration-700 ${showLoader.value ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+        <div class="relative">
+          <p class="text-5xl sm:text-7xl md:text-8xl font-[900] text-white tracking-tight min-h-[1.2em] flex items-center">
+            <span>{displayedText.value}</span>
+            <span class={`inline-block w-[3px] h-[0.8em] bg-blue-400 ml-1 ${loaderPhase.value === "done" ? "opacity-0" : "animate-pulse"}`}></span>
           </p>
         </div>
-
-        {/* 3D Abstract UI Composition */}
-        <div class="relative z-20 flex-1 w-full flex items-center justify-end mt-4 mb-4 pr-4 xl:pr-10 min-h-0">
-           <div class="relative w-full max-w-[320px] xl:max-w-[480px] aspect-square">
-              
-              {/* Back Element: Code/Data Representation */}
-              <div class="float-obj-2 absolute top-[15%] right-[0%] w-[65%] h-[60%] rounded-[2rem] bg-gradient-to-br from-blue-500 to-indigo-600 shadow-[0_30px_60px_-15px_rgba(59,130,246,0.4)] border border-white/20 flex flex-col p-6 overflow-hidden">
-                 <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xNSkiLz48L3N2Zz4=')] opacity-50"></div>
-                 <div class="w-full flex justify-between items-center mb-6">
-                    <div class="flex gap-2">
-                       <div class="w-3 h-3 rounded-full bg-white/30"></div>
-                       <div class="w-3 h-3 rounded-full bg-white/30"></div>
-                    </div>
-                    <span class="material-symbols-outlined text-white/50">monitoring</span>
-                 </div>
-                 <div class="space-y-4 w-full">
-                    <div class="w-3/4 h-3 bg-white/20 rounded-full"></div>
-                    <div class="w-full h-3 bg-white/20 rounded-full"></div>
-                    <div class="w-5/6 h-3 bg-white/20 rounded-full"></div>
-                    <div class="w-1/2 h-3 bg-white/20 rounded-full"></div>
-                 </div>
-              </div>
-
-              {/* Front Element: Main Glass Morphic Dashboard */}
-              <div class="float-obj-1 absolute bottom-[10%] left-[5%] w-[80%] h-[60%] rounded-[2.5rem] bg-white/60 backdrop-blur-2xl border-[1.5px] border-white shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col p-8">
-                 <div class="flex items-center gap-4 mb-8">
-                    <div class="w-12 h-12 rounded-[1.25rem] bg-primary/10 flex items-center justify-center text-primary">
-                       <span class="material-symbols-outlined text-2xl">space_dashboard</span>
-                    </div>
-                    <div>
-                       <div class="w-24 h-3.5 bg-slate-200 rounded-full mb-2"></div>
-                       <div class="w-16 h-2.5 bg-slate-100 rounded-full"></div>
-                    </div>
-                 </div>
-                 <div class="flex-1 w-full bg-gradient-to-r from-slate-50 to-slate-100/50 rounded-2xl border border-white/60 p-5 flex flex-col justify-between">
-                    <div class="w-full h-24 bg-white rounded-xl shadow-sm border border-slate-50 flex items-end p-4 gap-3">
-                       <div class="w-1/6 h-[40%] bg-blue-200 rounded-t-sm"></div>
-                       <div class="w-1/6 h-[70%] bg-primary rounded-t-sm shadow-[0_0_15px_rgba(59,130,246,0.3)]"></div>
-                       <div class="w-1/6 h-[50%] bg-blue-200 rounded-t-sm"></div>
-                       <div class="w-1/6 h-[90%] bg-secondary rounded-t-sm shadow-[0_0_15px_rgba(234,179,8,0.3)]"></div>
-                       <div class="w-1/6 h-[30%] bg-blue-200 rounded-t-sm"></div>
-                    </div>
-                 </div>
-              </div>
-              
-              {/* Floating Accent Orb */}
-              <div class="float-obj-3 absolute top-[25%] left-[-5%] w-28 h-28 rounded-full bg-gradient-to-br from-secondary to-amber-400 shadow-[0_0_50px_rgba(250,204,21,0.5)] border-[3px] border-white/80 flex items-center justify-center">
-                 <div class="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full"></div>
-              </div>
-              
-              {/* Floating Small Status Badge */}
-              <div class="float-obj-2 absolute bottom-[35%] right-[-10%] w-36 h-auto p-4 rounded-[1.5rem] bg-white/80 backdrop-blur-xl border border-white shadow-2xl flex flex-col items-center justify-center gap-2" style={{ animationDelay: '-2s' }}>
-                 <div class="w-12 h-12 rounded-[1rem] bg-emerald-100 flex items-center justify-center shadow-inner">
-                    <span class="material-symbols-outlined text-emerald-500 text-[28px]">verified_user</span>
-                 </div>
-                 <span class="text-[13px] font-[800] text-slate-700 tracking-wide">Secure</span>
-              </div>
-           </div>
+        <div class="mt-10 flex items-center gap-1.5">
+          {[0, 150, 300].map((d) => (
+            <div key={d} class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: `${d}ms` }}></div>
+          ))}
         </div>
-
-        {/* Bottom Footer */}
-        <div class="fade-in-up relative z-20 flex justify-between items-center text-[11px] font-[800] text-slate-400 tracking-wider uppercase">
-          <span>© 2026 Examinator Core</span>
-          <div class="flex items-center gap-2.5 bg-white/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-            <div class="relative flex h-2.5 w-2.5">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-            </div>
-            <span class="text-slate-600">All Systems Online</span>
-          </div>
-        </div>
+        <p class="mt-6 text-slate-500 text-sm font-medium tracking-wider uppercase">Examinator</p>
       </div>
 
-      {/* ─── RIGHT PANEL (Login Form) ─── */}
-      <div class="relative w-full lg:w-[45%] xl:w-[40%] flex items-center justify-center p-6 sm:p-8 lg:p-12 xl:p-16 bg-white shadow-[-20px_0_40px_-10px_rgba(0,0,0,0.02)] z-10 overflow-hidden">
-        
-        {/* Mobile Background Elements */}
-        <div class="absolute inset-0 z-0 lg:hidden overflow-hidden pointer-events-none bg-[#f8fbff]">
-          <div class="absolute top-[-10%] left-[-20%] w-[300px] h-[300px] rounded-full bg-primary/20 blur-[60px]" />
-          <div class="absolute bottom-[-10%] right-[-20%] w-[300px] h-[300px] rounded-full bg-secondary/20 blur-[60px]" />
-          <div class="pointer-events-none fixed inset-0 z-10 opacity-[0.03] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
-        </div>
-
-        {/* Inner Form Container */}
-        <div class="w-full max-w-[420px] relative z-10">
-          
-          {/* Mobile Header (Hidden on Desktop) */}
-          <div class="lg:hidden text-center mb-10 stagger-in opacity-0">
-            <div class="inline-flex items-center justify-center p-4 bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white mb-6">
-              <span class="material-symbols-outlined text-[32px] text-primary">schema</span>
-            </div>
-            <h1 class="text-3xl font-[900] text-slate-900 tracking-tight leading-tight">
-              Examinator<span class="text-primary">.</span>
-            </h1>
-            <p class="text-slate-500 text-[13px] mt-2 font-medium tracking-wide">Next-Gen Assessment Platform</p>
-          </div>
-
-          {/* Desktop Header Greeting */}
-          <div class="stagger-in hidden lg:block mb-10 opacity-0">
-            <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-slate-50 border border-slate-100 mb-6">
-               <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-               <span class="text-[11px] font-[800] tracking-widest text-slate-500 uppercase">Portal Masuk</span>
-            </div>
-            <h2 class="text-[2.5rem] font-[900] text-slate-900 tracking-tight leading-[1.1] mb-3">Selamat Datang 👋</h2>
-            <p class="text-slate-500 font-medium text-[15px] leading-relaxed pr-8">
-              Silakan masuk dengan kredensial Anda untuk melanjutkan ke dashboard manajemen sesi ujian.
-            </p>
-          </div>
-
-          <div class="stagger-in opacity-0">
-             <LoginForm />
-          </div>
-
-        </div>
+      {/* ═══ BACKGROUND ═══ */}
+      <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div class="blob-1 absolute top-[-15%] left-[-10%] w-[55vw] h-[55vw] rounded-full opacity-30 mix-blend-multiply filter blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 70%)' }}></div>
+        <div class="blob-2 absolute bottom-[-15%] right-[-10%] w-[60vw] h-[60vw] rounded-full opacity-25 mix-blend-multiply filter blur-[120px]" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.2) 0%, transparent 70%)' }}></div>
+        <div class="blob-3 absolute top-[40%] left-[50%] w-[40vw] h-[40vw] rounded-full opacity-20 mix-blend-multiply filter blur-[90px]" style={{ background: 'radial-gradient(circle, rgba(234,179,8,0.15) 0%, transparent 70%)' }}></div>
       </div>
+
+      {/* ═══ NAVIGATION ═══ */}
+      <nav class="sticky top-0 z-50 w-full px-5 sm:px-8 md:px-12 py-4 flex justify-between items-center fade-up opacity-0 bg-white/70 backdrop-blur-xl border-b border-slate-200/50">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-500/25">
+            <span class="text-white font-[900] text-lg leading-none">E</span>
+          </div>
+          <span class="text-xl font-[900] tracking-tight text-slate-900">Examinator</span>
+        </div>
+        <div class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-500">
+          <a href="#features" class="hover:text-blue-600 transition-colors">{L().nav_features}</a>
+          <a href="#tech" class="hover:text-blue-600 transition-colors">{L().nav_tech}</a>
+          <a href="#docs" class="hover:text-blue-600 transition-colors">{L().nav_docs}</a>
+          <a href="#team" class="hover:text-blue-600 transition-colors">{L().nav_team}</a>
+        </div>
+        <div class="flex items-center gap-3">
+          {/* Language Switcher */}
+          <div class="relative">
+            <button onClick$={() => langOpen.value = !langOpen.value} class="px-3 py-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-xs font-bold text-slate-600 flex items-center gap-1.5 border border-slate-200">
+              <span>{LANG_LABELS[lang.value].slice(0, 4)}</span>
+              <span class="material-symbols-outlined text-[14px]">expand_more</span>
+            </button>
+            {langOpen.value && (
+              <div class="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-slate-200 py-2 min-w-[160px] z-50">
+                {(Object.keys(LANG_LABELS) as Lang[]).map((l) => (
+                  <button key={l} onClick$={() => { lang.value = l; langOpen.value = false; }} class={`w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-blue-50 transition-colors ${lang.value === l ? "text-blue-600 bg-blue-50/50" : "text-slate-700"}`}>
+                    {LANG_LABELS[l]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <Link href="/login" class="group px-5 py-2.5 rounded-full bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20 flex items-center gap-2">
+            <span>{L().nav_login}</span>
+            <span class="material-symbols-outlined text-[16px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+          </Link>
+        </div>
+      </nav>
+
+      {/* ═══ HERO ═══ */}
+      <section class="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-8 md:px-12 pt-8 sm:pt-10 md:pt-14 lg:pt-16 pb-16 sm:pb-20 flex flex-col items-center text-center min-h-[80vh] justify-center">
+        <div class="fade-up opacity-0 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50/80 border border-blue-100/50 mb-6 sm:mb-8 backdrop-blur-sm">
+          <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span></span>
+          <span class="text-[10px] sm:text-xs font-bold text-blue-700 tracking-wider uppercase">{L().hero_badge}</span>
+        </div>
+        <h1 class="fade-up opacity-0 text-[2.5rem] sm:text-[3.5rem] md:text-[5rem] lg:text-[6.5rem] leading-[1.05] font-[900] tracking-tighter text-slate-900 mb-5 sm:mb-6 max-w-5xl">
+          {L().hero_title_1} <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500">{L().hero_title_2}</span>
+        </h1>
+        <p class="fade-up opacity-0 text-base sm:text-lg md:text-xl text-slate-500 font-medium max-w-2xl leading-relaxed mb-8 sm:mb-10 px-2">{L().hero_desc}</p>
+        <div class="fade-up opacity-0 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full justify-center">
+          <Link href="/login" class="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-full bg-blue-600 text-white font-[700] text-base sm:text-lg hover:bg-blue-700 transition-all duration-300 shadow-[0_8px_20px_rgba(37,99,235,0.3)] hover:-translate-y-1 flex items-center justify-center gap-3 group">
+            <span>{L().hero_cta}</span><span class="material-symbols-outlined text-[20px] group-hover:translate-x-1.5 transition-transform">arrow_forward</span>
+          </Link>
+          <a href="#features" class="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-full bg-white/60 backdrop-blur-md border border-slate-200/80 text-slate-700 font-[600] text-base sm:text-lg hover:bg-white transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-[20px]">explore</span><span>{L().hero_cta2}</span>
+          </a>
+        </div>
+        <div class="fade-up opacity-0 mt-14 sm:mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 w-full max-w-3xl">
+          {[{ v: "10K+", k: "stat_conn", i: "hub" }, { v: "<1.2s", k: "stat_lcp", i: "speed" }, { v: "99.9%", k: "stat_uptime", i: "verified" }, { v: "3s", k: "stat_snap", i: "photo_camera" }].map((s) => (
+            <div key={s.k} class="flex flex-col items-center p-3 sm:p-4 rounded-2xl bg-white/50 backdrop-blur-sm border border-slate-100">
+              <span class="material-symbols-outlined text-blue-500 text-xl sm:text-2xl mb-1">{s.i}</span>
+              <span class="text-xl sm:text-2xl font-[900] text-slate-900">{s.v}</span>
+              <span class="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5">{L()[s.k]}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══ FEATURES ═══ */}
+      <section id="features" class="section-reveal relative z-10 w-full bg-white py-16 sm:py-24 border-t border-slate-100">
+        <div class="max-w-7xl mx-auto px-5 sm:px-8 md:px-12">
+          <div class="reveal-item opacity-0 text-center mb-12 sm:mb-16">
+            <span class="inline-block px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-widest mb-4">{L().feat_badge}</span>
+            <h2 class="text-2xl sm:text-3xl md:text-5xl font-[900] text-slate-900 tracking-tight mb-3 sm:mb-4">{L().feat_title}</h2>
+            <p class="text-slate-500 max-w-2xl mx-auto font-medium text-sm sm:text-lg">{L().feat_desc}</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
+            {[
+              { icon: "policy", color: "blue", tk: "f1_title", dk: "f1_desc" },
+              { icon: "visibility_off", color: "red", tk: "f2_title", dk: "f2_desc" },
+              { icon: "photo_camera", color: "emerald", tk: "f3_title", dk: "f3_desc" },
+              { icon: "fullscreen_exit", color: "amber", tk: "f4_title", dk: "f4_desc" },
+              { icon: "bolt", color: "indigo", tk: "f5_title", dk: "f5_desc" },
+              { icon: "cell_tower", color: "teal", tk: "f6_title", dk: "f6_desc" },
+            ].map((f) => (
+              <div key={f.tk} class={`reveal-item opacity-0 group bg-slate-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}>
+                <div class={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-${f.color}-100 to-${f.color}-50 border border-${f.color}-200 flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform`}>
+                  <span class={`material-symbols-outlined text-2xl sm:text-3xl text-${f.color}-600`}>{f.icon}</span>
+                </div>
+                <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-2 sm:mb-3">{L()[f.tk]}</h3>
+                <p class="text-slate-600 leading-relaxed text-xs sm:text-sm">{L()[f.dk]}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ TECH STACK ═══ */}
+      <section id="tech" class="section-reveal relative z-10 w-full bg-slate-950 text-white py-16 sm:py-24 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-5 sm:px-8 md:px-12 relative z-10">
+          <div class="reveal-item opacity-0 text-center mb-12 sm:mb-16">
+            <span class="inline-block px-4 py-1.5 rounded-full bg-white/10 text-blue-400 text-xs font-bold uppercase tracking-widest mb-4 border border-white/10">{L().tech_badge}</span>
+            <h2 class="text-2xl sm:text-3xl md:text-5xl font-[900] tracking-tight mb-3">{L().tech_title_1} <span class="text-blue-400">{L().tech_title_2}</span></h2>
+            <p class="text-slate-400 max-w-2xl mx-auto font-medium text-sm sm:text-lg">{L().tech_desc}</p>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-12 sm:mb-16">
+            {[
+              { name: "Qwik", role: "Frontend", c: "from-cyan-500 to-blue-600" },
+              { name: "Elysia.js", role: "Backend", c: "from-pink-500 to-rose-600" },
+              { name: "Bun", role: "Runtime", c: "from-amber-400 to-orange-500" },
+              { name: "Prisma", role: "ORM", c: "from-slate-400 to-slate-600" },
+              { name: "MySQL", role: "Database", c: "from-blue-500 to-indigo-600" },
+            ].map((tc) => (
+              <div key={tc.name} class="reveal-item opacity-0 group flex flex-col items-center p-5 sm:p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all hover:-translate-y-1 text-center">
+                <div class={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${tc.c} flex items-center justify-center mb-3 sm:mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
+                  <span class="text-white font-[900] text-lg sm:text-xl">{tc.name[0]}</span>
+                </div>
+                <h4 class="text-sm sm:text-base font-bold">{tc.name}</h4>
+                <p class="text-[10px] sm:text-xs text-slate-400 mt-1">{tc.role}</p>
+              </div>
+            ))}
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+            {[
+              { i: "desktop_windows", tk: "layer1_title", dk: "layer1_desc", tags: ["Qwik City", "Tailwind v4", "Motion"] },
+              { i: "dns", tk: "layer2_title", dk: "layer2_desc", tags: ["JWT Auth", "REST API", "WebSocket"] },
+              { i: "storage", tk: "layer3_title", dk: "layer3_desc", tags: ["Prisma ORM", "MySQL", "ACID"] },
+            ].map((ly) => (
+              <div key={ly.tk} class="reveal-item opacity-0 p-6 sm:p-8 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+                <span class="material-symbols-outlined text-3xl sm:text-4xl text-blue-400 mb-4 block">{ly.i}</span>
+                <h3 class="text-lg sm:text-xl font-bold mb-2 sm:mb-3">{L()[ly.tk]}</h3>
+                <p class="text-slate-400 text-xs sm:text-sm leading-relaxed mb-4">{L()[ly.dk]}</p>
+                <div class="flex flex-wrap gap-2">
+                  {ly.tags.map((tg) => <span key={tg} class="px-3 py-1 rounded-full bg-blue-500/10 text-blue-300 text-[10px] sm:text-xs font-semibold border border-blue-500/20">{tg}</span>)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ DOCS ═══ */}
+      <section id="docs" class="section-reveal relative z-10 w-full bg-slate-900 py-16 sm:py-24 text-white">
+        <div class="max-w-7xl mx-auto px-5 sm:px-8 md:px-12 flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
+          <div class="reveal-item opacity-0 lg:w-1/2 text-center lg:text-left">
+            <span class="inline-block px-4 py-1.5 rounded-full bg-white/10 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-4 border border-white/10">{L().docs_badge}</span>
+            <h2 class="text-2xl sm:text-3xl md:text-5xl font-[900] tracking-tight mb-4 sm:mb-6">{L().docs_title_1} <span class="text-blue-400">{L().docs_title_2}</span></h2>
+            <p class="text-slate-300 font-medium text-sm sm:text-lg leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">{L().docs_desc}</p>
+          </div>
+          <div class="reveal-item opacity-0 lg:w-1/2 w-full max-w-xl mx-auto lg:mx-0">
+            <div class="bg-slate-800/50 backdrop-blur-2xl border border-slate-600/40 p-4 sm:p-6 rounded-2xl shadow-2xl space-y-3">
+              {[
+                { i: "school", c: "from-blue-500 to-indigo-600", t: "Karya Tulis Ilmiah", s: "Edge-Ready Framework & Bun" },
+                { i: "architecture", c: "from-emerald-500 to-teal-600", t: "SRS (IEEE 830-1998)", s: "Software Requirements Spec" },
+                { i: "account_tree", c: "from-purple-500 to-violet-600", t: "System Architecture", s: "3-Layer Monorepo" },
+                { i: "api", c: "from-pink-500 to-rose-600", t: "API Reference", s: "REST & WebSocket Handlers" },
+                { i: "rocket_launch", c: "from-amber-500 to-orange-600", t: "Deployment Guide", s: "NGINX, PM2, Production" },
+              ].map((dc) => (
+                <div key={dc.t} class="group flex items-center justify-between p-3 sm:p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all cursor-pointer">
+                  <div class="flex items-center gap-3 sm:gap-4">
+                    <div class={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${dc.c} flex items-center justify-center shadow-lg shrink-0`}>
+                      <span class="material-symbols-outlined text-white text-lg sm:text-xl">{dc.i}</span>
+                    </div>
+                    <div class="min-w-0">
+                      <h4 class="text-sm sm:text-base font-bold group-hover:text-blue-300 transition-colors truncate">{dc.t}</h4>
+                      <p class="text-[10px] sm:text-xs text-slate-400 truncate">{dc.s}</p>
+                    </div>
+                  </div>
+                  <span class="material-symbols-outlined text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0">chevron_right</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ TEAM ═══ */}
+      <section id="team" class="section-reveal relative z-10 w-full bg-slate-50 py-16 sm:py-24 border-t border-slate-200/60">
+        <div class="max-w-7xl mx-auto px-5 sm:px-8 md:px-12 text-center">
+          <div class="reveal-item opacity-0 mb-12 sm:mb-16">
+            <span class="inline-block px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-widest mb-4">{L().team_badge}</span>
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-[900] text-slate-900 tracking-tight mb-3">{L().team_title}</h2>
+            <p class="text-slate-500 max-w-xl mx-auto font-medium text-sm sm:text-base">{L().team_desc}</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-8 max-w-5xl mx-auto">
+            {[
+              { n: "Al-Ghani Desta Setyawan", rk: "dev1_role", dk: "dev1_desc", i: "engineering", c: "blue" },
+              { n: "Hilal Sulthanul Adzam", rk: "dev2_role", dk: "dev2_desc", i: "devices", c: "emerald" },
+              { n: "Diaz Daffa Aulia", rk: "dev3_role", dk: "dev3_desc", i: "dns", c: "amber" },
+            ].map((d) => (
+              <div key={d.n} class="reveal-item opacity-0 group p-6 sm:p-8 rounded-2xl bg-white border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 hover:-translate-y-2 flex flex-col items-center">
+                <div class={`w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-${d.c}-100 to-${d.c}-50 mb-4 sm:mb-6 flex items-center justify-center border-4 border-white shadow-sm group-hover:scale-105 transition-transform`}>
+                  <span class={`material-symbols-outlined text-3xl sm:text-4xl text-${d.c}-500`}>{d.i}</span>
+                </div>
+                <h3 class="text-base sm:text-xl font-bold text-slate-900 mb-1">{d.n}</h3>
+                <p class={`text-[10px] sm:text-sm font-semibold text-${d.c}-600 uppercase tracking-widest mb-3 sm:mb-4`}>{L()[d.rk]}</p>
+                <p class="text-slate-500 text-xs sm:text-sm leading-relaxed">{L()[d.dk]}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ CTA ═══ */}
+      <section class="section-reveal relative z-10 w-full bg-slate-950 py-16 sm:py-24 overflow-hidden">
+        <div class="absolute -top-40 -right-40 w-80 sm:w-96 h-80 sm:h-96 bg-blue-500 rounded-full filter blur-[120px] opacity-30"></div>
+        <div class="reveal-item opacity-0 max-w-4xl mx-auto px-5 sm:px-8 text-center relative z-10">
+          <h2 class="text-2xl sm:text-3xl md:text-5xl font-[900] text-white tracking-tight mb-4 sm:mb-6">{L().cta_title_1} <span class="text-blue-400">{L().cta_title_2}</span></h2>
+          <p class="text-slate-300 font-medium text-sm sm:text-lg max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">{L().cta_desc}</p>
+          <Link href="/login" class="inline-flex px-7 sm:px-8 py-3.5 sm:py-4 rounded-full bg-white text-slate-900 font-[800] text-base sm:text-lg hover:bg-blue-50 hover:text-blue-700 transition-all hover:scale-105 shadow-lg">{L().cta_btn}</Link>
+        </div>
+      </section>
+
+      {/* ═══ FOOTER ═══ */}
+      <footer class="relative z-10 w-full py-6 sm:py-8 border-t border-slate-200/50 bg-white">
+        <div class="max-w-7xl mx-auto px-5 sm:px-8 md:px-12 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-md bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center"><span class="text-white font-[900] text-xs">E</span></div>
+            <span class="font-[800] text-slate-900 text-sm">Examinator</span>
+            <span class="text-slate-400 font-medium text-xs sm:text-sm">© 2026</span>
+          </div>
+          <p class="text-slate-500 text-xs sm:text-sm font-medium">{L().footer_text}</p>
+        </div>
+      </footer>
+
     </div>
   );
 });
 
 export const head: DocumentHead = {
-  title: "Akses Portal - Examinator",
-  meta: [
-    { name: "description", content: "Sistem Manajemen Ujian Terpadu" },
-  ],
+  title: "Examinator — Platform CBT & Proctoring Masa Depan",
+  meta: [{ name: "description", content: "Platform Ujian Berbasis Komputer mutakhir dengan keamanan proctoring multi-lapis dan arsitektur O(1) Resumability." }],
 };
