@@ -60,5 +60,5 @@ export function useCamera(attemptIdSignal: any) {
     }
   });
 
-  return { cameraEnabled, capturePhoto };
+  return { cameraEnabled, capturePhoto, stream };
 }
