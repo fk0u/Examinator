@@ -16,7 +16,8 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
   // Student starts an exam attempt
   .post(
     "/start",
-    async ({ body, userId, request, set }) => {
+    async (context) => {
+      const { body, userId, request, set } = context as any;
       const id = requireAuth(userId);
 
       // Check if exam exists and is active
@@ -95,7 +96,8 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
   // Save answer for a question
   .post(
     "/:id/answer",
-    async ({ params, body, userId, set }) => {
+    async (context) => {
+      const { params, body, userId, set } = context as any;
       const id = requireAuth(userId);
 
       const attempt = await db.attempt.findUnique({
@@ -145,7 +147,8 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
 
   // ── POST /api/attempts/:id/submit ─────────────────────
   // Submit exam and calculate score
-  .post("/:id/submit", async ({ params, userId, set }) => {
+  .post("/:id/submit", async (context) => {
+    const { params, userId, set } = context as any;
     const id = requireAuth(userId);
 
     const attempt = await db.attempt.findUnique({
@@ -226,7 +229,8 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
 
   // ── GET /api/attempts/my ──────────────────────────────
   // Student's own attempts
-  .get("/my", async ({ userId }) => {
+  .get("/my", async (context) => {
+    const { userId } = context as any;
     const id = requireAuth(userId);
 
     const attempts = await db.attempt.findMany({
@@ -245,7 +249,8 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
 
   // ── GET /api/attempts/exam/:examId ────────────────────
   // All attempts for an exam (proctor/admin view)
-  .get("/exam/:examId", async ({ params, userId, userRole }) => {
+  .get("/exam/:examId", async (context) => {
+    const { params, userId, userRole } = context as any;
     requireAuth(userId);
 
     const attempts = await db.attempt.findMany({

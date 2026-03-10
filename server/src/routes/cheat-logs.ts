@@ -17,7 +17,8 @@ export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs",
   // Log a cheat event (called from client on detection)
   .post(
     "/",
-    async ({ body, userId, set }) => {
+    async (context) => {
+      const { body, userId, set } = context as any;
       const id = requireAuth(userId);
 
       // Verify attempt belongs to user
@@ -65,7 +66,8 @@ export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs",
   // Upload a cheat capture (photo/video)
   .post(
     "/capture",
-    async ({ body, userId, set }) => {
+    async (context) => {
+      const { body, userId, set } = context as any;
       const id = requireAuth(userId);
 
       const { attemptId, cheatType, captureType, file, description } = body;
@@ -108,7 +110,8 @@ export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs",
 
   // ── GET /api/cheat-logs/attempt/:attemptId ────────────
   // Get all cheat logs for a specific attempt
-  .get("/attempt/:attemptId", async ({ params, userId, userRole }) => {
+  .get("/attempt/:attemptId", async (context) => {
+    const { params, userId, userRole } = context as any;
     requireAuth(userId);
 
     const logs = await db.cheatLog.findMany({
@@ -126,7 +129,8 @@ export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs",
 
   // ── GET /api/cheat-logs/stats ─────────────────────────
   // Dashboard stats for proctor/admin
-  .get("/stats", async ({ userId, userRole, query }) => {
+  .get("/stats", async (context) => {
+    const { userId, userRole, query } = context as any;
     requireAuth(userId);
     requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
