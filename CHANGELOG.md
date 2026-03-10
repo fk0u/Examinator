@@ -10,6 +10,9 @@ All notable changes to the **Examinator** project will be documented in this fil
 
 #### Added
 
+- **[Feature] Student Results & History Hub**: A centralized page (`student/results`) where students can view unified statistics like Total Exams, Average Score, and Exams Passed.
+- **[Feature] History Data Rendering**: Implemented a comprehensive list view for past exams including final calculated scores, Pass/Fail status (based on exam passing scores), and actual time taken.
+- **[Feature] Profile Management Expansion**: Extended the `/profile` route to allow students to visually update their Full Name, Username, and Password in one seamless form.
 - **[UI/UX] Pre-Exam Readiness Room**: A high-fidelity glassmorphic "waiting room" that validates system integrity (camera, connection) before starting the exam.
 - **[UI/UX] Glassmorphism Design System**: Implemented `.glass` and `.mesh-gradient` utility classes in `global.css` for a premium, modern aesthetic.
 - **[Feature] Live Camera Preview**: Integrated a real-time camera feed into the Readiness Room to ensure proctoring validity before the timer starts.
@@ -17,6 +20,7 @@ All notable changes to the **Examinator** project will be documented in this fil
 
 #### Changed
 
+- **[UI/UX] Unified "Premium Minimalism" Routing**: Updated the main student Dashboard to redirect historical lookups and profile accesses strictly to the new glassmorphic endpoints.
 - **[Core] Student Dashboard Refactor**: Migrated the legacy dashboard to a stunning modern layout with simplified navigation and better visual hierarchy.
 - **[Hook] useCamera Enhancement**: Refactored the camera hook to expose the raw `MediaStream` for UI previews while maintaining background capture capabilities.
 - **[logic] Enhanced Readiness Flow**: Decoupled the backend `attempt:start` trigger from the frontend UI, allowing students to verify their setup without consuming exam time.
