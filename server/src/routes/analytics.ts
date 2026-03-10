@@ -131,6 +131,115 @@ export const analyticsRoutes = new Elysia({
                 attempts: recentAttempts,
                 cheatLogs: recentCheatLogs,
             },
+                        generatedAt: new Date().toISOString(),
+                        };
+        })
+
+    // ── GET /api/analytics/my-summary ────────────────────
+    .get("/my-summary", async (context) => {
+        const { userId, userRole } = context as any;
+        const id = requireAuth(userId);
+        requireRole(userRole, ["STUDENT"]);
+
+        const [
+            totalAttempts,
+            submittedAttempts,
+            inProgressAttempts,
+            averageScoreAgg,
+            totalCheatLogs,
+            cheatByType,
+            submittedAttemptDetails,
+            recentAttempts,
+        ] = await Promise.all([
+            db.attempt.count({ where: { userId: id } }),
+            db.attempt.count({ where: { userId: id, status: "SUBMITTED" } }),
+            db.attempt.count({ where: { userId: id, status: "IN_PROGRESS" } }),
+            db.attempt.aggregate({
+                where: { userId: id, score: { not: null } },
+                _avg: { score: true },
+            }),
+            db.cheatLog.count({ where: { userId: id } }),
+            db.cheatLog.groupBy({
+                by: ["cheatType"],
+                where: { userId: id },
+                _count: true,
+            }),
+            db.attempt.findMany({
+                where: { userId: id, status: "SUBMITTED", score: { not: null } },
+                select: {
+                    score: true,
+                    exam: {
+                        select: {
+                            id: true,
+                            title: true,
+                            subject: true,
+                            passingScore: true,
+                        },
+                    },
+                },
+            }),
+            db.attempt.findMany({
+                where: { userId: id },
+                select: {
+                    id: true,
+                    status: true,
+                    score: true,
+                    startedAt: true,
+                    submittedAt: true,
+                    _count: { select: { cheatLogs: true } },
+                    exam: {
+                        select: {
+                            id: true,
+                            title: true,
+                            subject: true,
+                            passingScore: true,
+                        },
+                    },
+                },
+                orderBy: { startedAt: "desc" },
+                take: 10,
+            }),
+        ]);
+
+        const averageScore = averageScoreAgg._avg.score ?? 0;
+        const completionRate =
+            totalAttempts > 0 ? (submittedAttempts / totalAttempts) * 100 : 0;
+
+        const passedCount = submittedAttemptDetails.filter((attempt) => {
+            const threshold = attempt.exam.passingScore ?? 70;
+            return (attempt.score ?? 0) >= threshold;
+        }).length;
+
+        const passRate =
+            submittedAttemptDetails.length > 0
+                ? (passedCount / submittedAttemptDetails.length) * 100
+                : 0;
+
+        const averageCheatPerAttempt =
+            totalAttempts > 0 ? totalCheatLogs / totalAttempts : 0;
+
+        return {
+            overview: {
+                totalAttempts,
+                submittedAttempts,
+                inProgressAttempts,
+                completionRate: Number(completionRate.toFixed(2)),
+            },
+            performance: {
+                averageScore: Number(averageScore.toFixed(2)),
+                passRate: Number(passRate.toFixed(2)),
+                passedCount,
+                gradedAttempts: submittedAttemptDetails.length,
+            },
+            proctoring: {
+                totalCheatLogs,
+                averageCheatPerAttempt: Number(averageCheatPerAttempt.toFixed(2)),
+                byType: cheatByType.map((item) => ({
+                    type: item.cheatType,
+                    count: item._count,
+                })),
+            },
+            recentAttempts,
             generatedAt: new Date().toISOString(),
-            };
+        };
     });
