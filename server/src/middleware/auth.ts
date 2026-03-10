@@ -6,6 +6,11 @@ import { db } from "../lib/db";
 // ─── JWT Auth Plugin ────────────────────────────────────
 // Creates a reusable auth plugin for Elysia routes
 
+export type AuthContext = {
+  userId: string | null;
+  userRole: string | null;
+};
+
 export const authPlugin = new Elysia({ name: "auth" })
   .use(
     jwt({
@@ -14,7 +19,7 @@ export const authPlugin = new Elysia({ name: "auth" })
       exp: "7d",
     })
   )
-  .derive(async ({ jwt, request }) => {
+  .derive(async ({ jwt, request }): Promise<AuthContext> => {
     const authHeader = request.headers.get("Authorization");
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {

@@ -4,7 +4,10 @@ import { db } from "../lib/db";
 
 // ─── Exam Routes ────────────────────────────────────────
 
-export const examRoutes = new Elysia({ prefix: "/api/exams" })
+export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
+  tags: ["Exams"],
+  description: "Endpoints for managing exams (Admin/Operator) and viewing active exams (Student)",
+} })
   .use(authPlugin)
 
   // ── GET /api/exams ────────────────────────────────────

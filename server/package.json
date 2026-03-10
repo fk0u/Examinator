@@ -11,13 +11,14 @@
     "db:studio": "bunx prisma studio"
   },
   "dependencies": {
-    "elysia": "^1.2.25",
-    "@elysiajs/cors": "^1.2.0",
-    "@elysiajs/jwt": "^1.2.0",
     "@elysiajs/bearer": "^1.2.0",
+    "@elysiajs/cors": "^1.4.1",
+    "@elysiajs/jwt": "^1.2.0",
     "@elysiajs/static": "^1.2.0",
+    "@elysiajs/swagger": "^1.3.1",
     "@prisma/client": "^6.4.1",
-    "bcryptjs": "^3.0.2"
+    "bcryptjs": "^3.0.2",
+    "elysia": "^1.2.25"
   },
   "devDependencies": {
     "prisma": "^6.4.1",

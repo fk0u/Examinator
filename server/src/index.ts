@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import { swagger } from "@elysiajs/swagger";
 import { cors } from "@elysiajs/cors";
 import { staticPlugin } from "@elysiajs/static";
 import { env } from "./config/env";
@@ -26,8 +27,8 @@ const banner = `
 ║   ███████╗██╔╝ ██╗██║  ██║██║ ╚═╝ ██║             ║
 ║   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝             ║
 ║                                                   ║
-║   E X A M I N A T O R   S E R V E R              ║
-║   CBT Proctoring SaaS                            ║
+║   E X A M I N A T O R   S E R V E R               ║
+║   CBT Proctoring SaaS                             ║
 ║                                                   ║
 ╚═══════════════════════════════════════════════════╝`;
 
@@ -49,19 +50,22 @@ const app = new Elysia()
       prefix: "/uploads",
     })
   )
+  .use(swagger())
 
   // ── Error handler ───────────────────────────────────
   .onError(({ code, error, set }) => {
-    if (error.message === "UNAUTHORIZED") {
+    const errorMessage = (error as any)?.message || "Unknown error";
+
+    if (errorMessage === "UNAUTHORIZED") {
       set.status = 401;
       return { error: "Authentication required" };
     }
-    if (error.message === "FORBIDDEN") {
+    if (errorMessage === "FORBIDDEN") {
       set.status = 403;
       return { error: "Insufficient permissions" };
     }
 
-    console.error(`❌ Error [${code}]:`, error.message);
+    console.error(`❌ Error [${code}]:`, errorMessage);
 
     if (code === "NOT_FOUND") {
       set.status = 404;
@@ -69,7 +73,7 @@ const app = new Elysia()
     }
     if (code === "VALIDATION") {
       set.status = 400;
-      return { error: "Validation failed", details: error.message };
+      return { error: "Validation failed", details: errorMessage };
     }
 
     set.status = 500;
