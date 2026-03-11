@@ -4,6 +4,8 @@ import { useNavigate } from "@builder.io/qwik-city";
 import { getUserData, isAuthenticated, logout } from "~/lib/auth";
 import { getWsClient } from "~/lib/ws";
 import { Clock } from "~/components/ui/clock";
+import { ThemeToggle } from "~/components/ui/theme-toggle";
+import { initTheme } from "~/lib/theme";
 
 interface Student {
   id: string;
@@ -32,6 +34,7 @@ export default component$(() => {
   const connected = useSignal(false);
 
   useVisibleTask$(async () => {
+    initTheme();
     if (!isAuthenticated()) { await nav("/"); return; }
     user.value = getUserData();
     if (user.value?.role !== "OPERATOR" && user.value?.role !== "ADMIN") {
@@ -84,10 +87,10 @@ export default component$(() => {
   const camOffN    = () => students.value.filter(s => !s.cameraEnabled).length;
 
   return (
-    <div class="min-h-screen bg-[#fdfdfd] text-slate-900 font-sans overflow-x-hidden selection:bg-blue-500/20 selection:text-blue-700">
+    <div class="min-h-screen bg-[#fdfdfd] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-x-hidden selection:bg-blue-500/20 selection:text-blue-700 transition-colors duration-300">
 
       {/* ── BACKGROUND BLOBS ── */}
-      <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+      <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden dark:opacity-40">
         <div class="absolute top-[-15%] left-[-10%] w-[55vw] h-[55vw] rounded-full opacity-20 mix-blend-multiply filter blur-[100px]"
           style="background: radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 70%)" />
         <div class="absolute bottom-[-15%] right-[-10%] w-[50vw] h-[50vw] rounded-full opacity-15 mix-blend-multiply filter blur-[120px]"
@@ -97,7 +100,7 @@ export default component$(() => {
       {/* ══════════════════════════════════════════════════════
           HEADER
       ══════════════════════════════════════════════════════ */}
-      <header class="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-slate-200/50">
+      <header class="sticky top-0 z-50 w-full bg-white/70 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50">
         <div class="max-w-full mx-auto px-5 sm:px-8 py-3.5 flex items-center justify-between gap-4">
 
           {/* Left: logo + title + live badge */}
@@ -109,9 +112,9 @@ export default component$(() => {
               </svg>
             </div>
             <div>
-              <span class="text-base font-[900] tracking-tight text-slate-900">Proctor Dashboard</span>
+              <span class="text-base font-[900] tracking-tight text-slate-900 dark:text-white">Proctor Dashboard</span>
               <span class="hidden sm:inline text-slate-300 mx-2">·</span>
-              <span class="hidden sm:inline text-xs font-semibold text-slate-400">Examinator</span>
+              <span class="hidden sm:inline text-xs font-semibold text-slate-400 dark:text-slate-500">Examinator</span>
             </div>
 
             {/* Live / Offline pill */}
@@ -134,7 +137,7 @@ export default component$(() => {
             {user.value?.role === "ADMIN" && (
               <button
                 onClick$={() => nav("/admin/")}
-                class="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-200 text-slate-600 text-xs font-semibold hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition-all"
+                class="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:border-blue-300 dark:hover:border-blue-600 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 transition-all"
               >
                 <span class="material-symbols-outlined text-[14px]">arrow_back</span>
                 Admin Panel
@@ -143,22 +146,24 @@ export default component$(() => {
 
             {/* User pill */}
             <button
-              class="flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 rounded-full border border-slate-200/80 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+              class="flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 rounded-full border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 transition-all shadow-sm"
               onClick$={() => nav("/profile/")}
             >
               <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-[800] text-sm shadow-sm">
                 {user.value?.fullName?.charAt(0) || "P"}
               </div>
               <div class="hidden sm:flex flex-col items-start leading-tight">
-                <span class="text-xs font-bold text-slate-800">{user.value?.fullName}</span>
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">{user.value?.fullName}</span>
                 <span class="text-[10px] text-slate-400 capitalize">{user.value?.role?.toLowerCase()}</span>
               </div>
             </button>
 
+            <ThemeToggle />
+
             {/* Logout */}
             <button
               onClick$={() => { logout(); }}
-              class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-red-200 bg-red-50 text-red-500 text-xs font-semibold hover:bg-red-100 hover:border-red-300 transition-all"
+              class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/50 text-red-500 dark:text-red-400 text-xs font-semibold hover:bg-red-100 dark:hover:bg-red-900/50 hover:border-red-300 transition-all"
               title="Keluar"
             >
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -173,7 +178,7 @@ export default component$(() => {
       {/* ══════════════════════════════════════════════════════
           STATS BAR
       ══════════════════════════════════════════════════════ */}
-      <div class="relative z-10 border-b border-slate-100 bg-white/60 backdrop-blur-sm">
+      <div class="relative z-10 border-b border-slate-100 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm">
         <div class="max-w-full mx-auto px-5 sm:px-8 py-4">
           <div class="grid grid-cols-5 gap-3">
             {[
@@ -183,13 +188,13 @@ export default component$(() => {
               { label: "Selesai",       value: submittedN(),           icon: "task_alt",      bg: "bg-blue-50",     border: "border-blue-200",    text: "text-blue-700",    icolor: "text-blue-500"     },
               { label: "Kamera OFF",    value: camOffN(),              icon: "videocam_off",  bg: "bg-amber-50",    border: "border-amber-200",   text: "text-amber-700",   icolor: "text-amber-500"    },
             ].map(stat => (
-              <div key={stat.label} class={`${stat.bg} border ${stat.border} rounded-2xl px-4 py-3 flex items-center gap-3`}>
+              <div key={stat.label} class={`${stat.bg} dark:bg-slate-800/80 border ${stat.border} dark:border-slate-700/50 rounded-2xl px-4 py-3 flex items-center gap-3`}>
                 <div class={`w-8 h-8 rounded-lg ${stat.bg} border ${stat.border} flex items-center justify-center flex-shrink-0`}>
                   <span class={`material-symbols-outlined text-base ${stat.icolor}`}>{stat.icon}</span>
                 </div>
                 <div>
                   <div class={`text-xl font-[900] tracking-tight ${stat.text}`}>{stat.value}</div>
-                  <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{stat.label}</div>
+                  <div class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{stat.label}</div>
                 </div>
               </div>
             ))}
@@ -205,7 +210,7 @@ export default component$(() => {
         {/* ── STUDENT GRID ── */}
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-3 mb-5">
-            <h2 class="text-base font-[900] tracking-tight text-slate-900">Siswa Online</h2>
+            <h2 class="text-base font-[900] tracking-tight text-slate-900 dark:text-white">Siswa Online</h2>
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-bold text-blue-600 uppercase tracking-wider">
               {students.value.length} Peserta
             </span>
@@ -213,12 +218,12 @@ export default component$(() => {
 
           {students.value.length === 0 ? (
             /* Empty state */
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.06)] p-16 text-center">
+            <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.06)] p-16 text-center">
               <div class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
                 <span class="material-symbols-outlined text-3xl text-slate-300">groups</span>
               </div>
-              <p class="text-slate-400 font-semibold text-sm">Menunggu siswa memulai ujian...</p>
-              <p class="text-slate-300 text-xs mt-1">Siswa akan muncul otomatis saat terhubung</p>
+              <p class="text-slate-400 dark:text-slate-500 font-semibold text-sm">Menunggu siswa memulai ujian...</p>
+              <p class="text-slate-300 dark:text-slate-600 text-xs mt-1">Siswa akan muncul otomatis saat terhubung</p>
             </div>
           ) : (
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -228,7 +233,7 @@ export default component$(() => {
                   class={`bg-white rounded-2xl border p-4 transition-all hover:shadow-md hover:-translate-y-0.5 ${
                     st.status === "flagged"
                       ? "border-rose-200 shadow-[0_0_0_1px_rgba(244,63,94,0.1)] bg-rose-50/30"
-                      : "border-slate-100 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.06)]"
+                      : "border-slate-100 dark:border-slate-700 dark:bg-slate-800/80 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.06)]"
                   }`}
                   style={`animation-delay:${i * 40}ms`}
                 >
@@ -239,7 +244,7 @@ export default component$(() => {
                     }`}>
                       {st.fullName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()}
                     </div>
-                    <p class="text-xs font-[700] text-slate-800 truncate leading-tight">{st.fullName}</p>
+                    <p class="text-xs font-[700] text-slate-800 dark:text-slate-100 truncate leading-tight">{st.fullName}</p>
                   </div>
 
                   {/* Status + cheat count */}
@@ -276,7 +281,7 @@ export default component$(() => {
         <div class="w-72 shrink-0 hidden lg:block">
           <div class="flex items-center gap-2 mb-4">
             <div class="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-            <h3 class="text-sm font-[800] tracking-tight text-slate-900">Live Alerts</h3>
+            <h3 class="text-sm font-[800] tracking-tight text-slate-900 dark:text-white">Live Alerts</h3>
             {alerts.value.length > 0 && (
               <span class="ml-auto inline-flex items-center px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[10px] font-bold text-rose-600">
                 {alerts.value.length}
@@ -286,12 +291,12 @@ export default component$(() => {
 
           <div class="space-y-2 max-h-[calc(100vh-260px)] overflow-y-auto pr-1">
             {alerts.value.length === 0 ? (
-              <div class="bg-white rounded-2xl border border-slate-100 p-6 text-center shadow-sm">
+              <div class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6 text-center shadow-sm">
                 <span class="material-symbols-outlined text-3xl text-slate-200 block mb-2">shield</span>
                 <p class="text-slate-400 text-xs font-semibold">Belum ada pelanggaran</p>
               </div>
             ) : alerts.value.map((a, i) => (
-              <div key={i} class="bg-white rounded-xl border border-slate-100 border-l-2 border-l-rose-400 p-3 shadow-sm hover:shadow-md transition-shadow">
+              <div key={i} class="bg-white dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700/50 border-l-2 border-l-rose-400 p-3 shadow-sm hover:shadow-md transition-shadow">
                 <div class="flex items-center justify-between mb-1.5">
                   <span class="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">
                     <span class="material-symbols-outlined text-[10px]">warning</span>
@@ -299,8 +304,8 @@ export default component$(() => {
                   </span>
                   <span class="text-[10px] text-slate-400 font-mono">{new Date(a.timestamp).toLocaleTimeString("id-ID")}</span>
                 </div>
-                <p class="text-xs font-[700] text-slate-700">{a.student.fullName}</p>
-                {a.description && <p class="text-[10px] text-slate-400 mt-0.5 truncate">{a.description}</p>}
+                <p class="text-xs font-[700] text-slate-700 dark:text-slate-200">{a.student.fullName}</p>
+                {a.description && <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">{a.description}</p>}
               </div>
             ))}
           </div>
