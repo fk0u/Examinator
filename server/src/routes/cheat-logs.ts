@@ -72,6 +72,15 @@ export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs",
 
       const { attemptId, cheatType, captureType, file, description } = body;
 
+      const attempt = await db.attempt.findUnique({
+        where: { id: attemptId },
+      });
+
+      if (!attempt || attempt.userId !== id) {
+        set.status = 403;
+        return { error: "Invalid attempt" };
+      }
+
       // Save file
       let capturePath: string | undefined;
       if (file) {
@@ -112,7 +121,22 @@ export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs",
   // Get all cheat logs for a specific attempt
   .get("/attempt/:attemptId", async (context) => {
     const { params, userId, userRole } = context as any;
-    requireAuth(userId);
+    const id = requireAuth(userId);
+
+    const attempt = await db.attempt.findUnique({
+      where: { id: params.attemptId },
+      select: { id: true, userId: true },
+    });
+
+    if (!attempt) {
+      return { logs: [] };
+    }
+
+    const canViewAllLogs = ["ADMIN", "OPERATOR"].includes(userRole ?? "");
+    if (!canViewAllLogs && attempt.userId !== id) {
+      context.set.status = 403;
+      return { error: "Forbidden" };
+    }
 
     const logs = await db.cheatLog.findMany({
       where: { attemptId: params.attemptId },
