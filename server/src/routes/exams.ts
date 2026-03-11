@@ -12,7 +12,8 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
 
   // ── GET /api/exams ────────────────────────────────────
   // Students: see active exams | Admin/Operator: see all
-  .get("/", async ({ userId, userRole }) => {
+  .get("/", async (context) => {
+    const { userId, userRole } = context as any;
     const id = requireAuth(userId);
 
     const where = userRole === "STUDENT" ? { active: true } : {};
@@ -29,7 +30,8 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
   })
 
   // ── GET /api/exams/:examId ────────────────────────────────
-  .get("/:examId", async ({ params, userId, userRole, set }) => {
+  .get("/:examId", async (context) => {
+    const { params, userId, userRole, set } = context as any;
     requireAuth(userId);
 
     const exam = await db.exam.findUnique({
@@ -64,7 +66,8 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
   // ── POST /api/exams ───────────────────────────────────
   .post(
     "/",
-    async ({ body, userId, userRole, set }) => {
+    async (context) => {
+      const { body, userId, userRole, set } = context as any;
       requireAuth(userId);
       requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
@@ -90,7 +93,8 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
   // ── PUT /api/exams/:examId ────────────────────────────────
   .put(
     "/:examId",
-    async ({ params, body, userId, userRole, set }) => {
+    async (context) => {
+      const { params, body, userId, userRole, set } = context as any;
       requireAuth(userId);
       requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
@@ -117,7 +121,8 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
   )
 
   // ── DELETE /api/exams/:examId ─────────────────────────────
-  .delete("/:examId", async ({ params, userId, userRole }) => {
+  .delete("/:examId", async (context) => {
+    const { params, userId, userRole } = context as any;
     requireAuth(userId);
     requireRole(userRole, ["ADMIN"]);
 
