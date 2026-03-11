@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { authPlugin, requireAuth } from "../middleware/auth";
+import { authPlugin, requireAuth, requireRole } from "../middleware/auth";
 import { db } from "../lib/db";
 
 // ─── Attempt Routes ─────────────────────────────────────
@@ -270,6 +270,7 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
   .get("/exam/:examId", async (context) => {
     const { params, userId, userRole } = context as any;
     requireAuth(userId);
+    requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
     const attempts = await db.attempt.findMany({
       where: { examId: params.examId },

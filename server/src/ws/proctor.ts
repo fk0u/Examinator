@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import { db } from "../lib/db";
 
 // ─── WebSocket Proctor Module ───────────────────────────
 // Handles realtime communication between students and proctors
@@ -16,8 +17,11 @@ interface ConnectedStudent {
   lastActivity: number;
 }
 
+type ConnectionRole = "student" | "proctor";
+
 const connectedStudents = new Map<string, ConnectedStudent>();
 const proctorSockets = new Set<string>();
+const connectionRoles = new Map<string, ConnectionRole>();
 
 export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
   // ── Connection opened ─────────────────────────────────
@@ -26,29 +30,74 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
   },
 
   // ── Message received ──────────────────────────────────
-  message(ws, message: any) {
-    const data = typeof message === "string" ? JSON.parse(message) : message;
+  async message(ws, message: any) {
+    let data: any;
+
+    try {
+      data = typeof message === "string" ? JSON.parse(message) : message;
+    } catch {
+      ws.send(
+        JSON.stringify({
+          type: "error",
+          message: "Invalid message payload",
+        })
+      );
+      return;
+    }
 
     switch (data.type) {
       // ── Student joins exam ──────────────────────────────
       case "student:join": {
+        const attempt = await db.attempt.findUnique({
+          where: { id: data.attemptId },
+          select: {
+            id: true,
+            userId: true,
+            examId: true,
+            status: true,
+            cameraEnabled: true,
+            user: {
+              select: {
+                fullName: true,
+              },
+            },
+          },
+        });
+
+        if (
+          !attempt ||
+          attempt.status !== "IN_PROGRESS" ||
+          attempt.userId !== data.userId ||
+          attempt.examId !== data.examId
+        ) {
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: "Invalid exam session",
+            })
+          );
+          ws.close();
+          break;
+        }
+
         const student: ConnectedStudent = {
           id: ws.id,
-          userId: data.userId,
-          fullName: data.fullName,
-          attemptId: data.attemptId,
-          examId: data.examId,
-          cameraEnabled: data.cameraEnabled || false,
+          userId: attempt.userId,
+          fullName: attempt.user.fullName,
+          attemptId: attempt.id,
+          examId: attempt.examId,
+          cameraEnabled: Boolean(data.cameraEnabled ?? attempt.cameraEnabled),
           status: "active",
           cheatCount: 0,
           lastActivity: Date.now(),
         };
 
         connectedStudents.set(ws.id, student);
+        connectionRoles.set(ws.id, "student");
 
         // Subscribe to exam room
-        ws.subscribe(`exam:${data.examId}`);
-        ws.subscribe("proctors");
+        ws.subscribe(`exam:${attempt.examId}`);
+        ws.subscribe(`student:${ws.id}`);
 
         // Notify proctors
         ws.publish(
@@ -73,6 +122,7 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
       // ── Proctor joins monitoring ────────────────────────
       case "proctor:join": {
         proctorSockets.add(ws.id);
+        connectionRoles.set(ws.id, "proctor");
         ws.subscribe("proctors");
 
         // Send current state
@@ -88,6 +138,16 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
 
       // ── Cheat event detected ────────────────────────────
       case "cheat:detected": {
+        if (connectionRoles.get(ws.id) !== "student") {
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: "Only active student sessions can report cheat events",
+            })
+          );
+          break;
+        }
+
         const cheatStudent = connectedStudents.get(ws.id);
         if (cheatStudent) {
           cheatStudent.cheatCount++;
@@ -112,6 +172,10 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
 
       // ── Student activity heartbeat ──────────────────────
       case "student:heartbeat": {
+        if (connectionRoles.get(ws.id) !== "student") {
+          break;
+        }
+
         const heartbeatStudent = connectedStudents.get(ws.id);
         if (heartbeatStudent) {
           heartbeatStudent.lastActivity = Date.now();
@@ -123,6 +187,10 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
 
       // ── Student submits exam ────────────────────────────
       case "student:submit": {
+        if (connectionRoles.get(ws.id) !== "student") {
+          break;
+        }
+
         const submitStudent = connectedStudents.get(ws.id);
         if (submitStudent) {
           submitStudent.status = "submitted";
@@ -141,11 +209,21 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
 
       // ── Proctor sends message to student ────────────────
       case "proctor:message": {
+        if (connectionRoles.get(ws.id) !== "proctor") {
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: "Only proctor sessions can send warnings",
+            })
+          );
+          break;
+        }
+
         // Find student socket by userId
         const targetId = data.targetStudentWsId;
-        if (targetId) {
+        if (targetId && connectedStudents.has(targetId)) {
           ws.publish(
-            targetId,
+            `student:${targetId}`,
             JSON.stringify({
               type: "proctor:warning",
               message: data.message,
@@ -157,10 +235,20 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
 
       // ── Proctor force-submits student exam ──────────────
       case "proctor:force-submit": {
+        if (connectionRoles.get(ws.id) !== "proctor") {
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: "Only proctor sessions can force-submit",
+            })
+          );
+          break;
+        }
+
         const targetSocketId = data.targetStudentWsId;
-        if (targetSocketId) {
+        if (targetSocketId && connectedStudents.has(targetSocketId)) {
           ws.publish(
-            targetSocketId,
+            `student:${targetSocketId}`,
             JSON.stringify({
               type: "force:submit",
               reason: data.reason || "Force submitted by proctor",
@@ -196,6 +284,7 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
     }
 
     proctorSockets.delete(ws.id);
+    connectionRoles.delete(ws.id);
 
     console.log(`🔌 WebSocket disconnected: ${ws.id}`);
   },
