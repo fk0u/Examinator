@@ -41,7 +41,9 @@ export default component$(() => {
       const data = await attemptsApi.start(examId, cameraEnabled.value);
       attempt.value = data.attempt;
       questions.value = data.attempt.exam?.questions || [];
-      timeLeft.value = data.attempt.exam?.duration * 60; // Convert to seconds
+      timeLeft.value = typeof data.remainingSeconds === "number"
+        ? data.remainingSeconds
+        : data.attempt.exam?.duration * 60; // Convert to seconds
 
       // Connect WebSocket
       const ws = getWsClient();

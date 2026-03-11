@@ -55,6 +55,22 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
             return { error: "Attempt not found" };
           }
 
+          const remainingSeconds = calculateRemainingSeconds(
+            fullAttempt.startedAt,
+            fullAttempt.exam.duration
+          );
+          if (remainingSeconds <= 0) {
+            await db.attempt.update({
+              where: { id: existing.id },
+              data: {
+                status: "TIMED_OUT",
+                submittedAt: new Date(),
+              },
+            });
+            set.status = 403;
+            return { error: "Exam time is up" };
+          }
+
           return buildAttemptPayload(fullAttempt, true);
         }
         set.status = 409;
