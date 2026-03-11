@@ -4,6 +4,8 @@ import { useNavigate } from "@builder.io/qwik-city";
 import { getUserData, isAuthenticated, logout } from "~/lib/auth";
 import { getWsClient } from "~/lib/ws";
 import { Clock } from "~/components/ui/clock";
+import { ThemeToggle } from "~/components/ui/theme-toggle";
+import { initTheme } from "~/lib/theme";
 
 interface Student {
   id: string;
@@ -32,6 +34,7 @@ export default component$(() => {
   const connected = useSignal(false);
 
   useVisibleTask$(async () => {
+    initTheme();
     if (!isAuthenticated()) { await nav("/"); return; }
     user.value = getUserData();
     if (user.value?.role !== "OPERATOR" && user.value?.role !== "ADMIN") {
@@ -41,10 +44,7 @@ export default component$(() => {
     const ws = getWsClient();
     ws.connect();
 
-    ws.on("connected", () => {
-      connected.value = true;
-      ws.send("proctor:join", {});
-    });
+    ws.on("connected", () => { connected.value = true; ws.send("proctor:join", {}); });
     ws.on("disconnected", () => { connected.value = false; });
     ws.on("proctor:state", (data: any) => { students.value = data.students || []; });
     ws.on("student:joined", (data: any) => {
@@ -67,156 +67,250 @@ export default component$(() => {
   });
 
   const statusStyle = (s: string) => {
-    if (s === "active") return "bg-success/10 text-success border-success/20";
-    if (s === "flagged") return "bg-danger/10 text-danger border-danger/20";
-    if (s === "submitted") return "bg-info/10 text-info border-info/20";
-    return "bg-surface-700/10 text-surface-400 border-surface-600/20";
+    if (s === "active")    return "bg-emerald-50 text-emerald-600 border-emerald-200";
+    if (s === "flagged")   return "bg-rose-50 text-rose-600 border-rose-200";
+    if (s === "submitted") return "bg-blue-50 text-blue-600 border-blue-200";
+    return "bg-slate-100 text-slate-400 border-slate-200";
   };
-  const statusLabel = (s: string) => s === "active" ? "Aktif" : s === "flagged" ? "Ditandai" : s === "submitted" ? "Selesai" : "Idle";
+  const statusLabel = (s: string) =>
+    s === "active" ? "Aktif" : s === "flagged" ? "Ditandai" : s === "submitted" ? "Selesai" : "Idle";
+
   const cheatLabel: Record<string, string> = {
     TAB_SWITCH: "Pindah Tab", FULLSCREEN_EXIT: "Keluar Fullscreen",
     WINDOW_BLUR: "Window Blur", COPY_PASTE: "Copy/Paste",
     RIGHT_CLICK: "Klik Kanan", DEVTOOLS: "DevTools", CAMERA_OFF: "Kamera Mati",
   };
 
-  const activeN = () => students.value.filter(s => s.status === "active").length;
-  const flaggedN = () => students.value.filter(s => s.status === "flagged").length;
+  const activeN    = () => students.value.filter(s => s.status === "active").length;
+  const flaggedN   = () => students.value.filter(s => s.status === "flagged").length;
   const submittedN = () => students.value.filter(s => s.status === "submitted").length;
-  const camOffN = () => students.value.filter(s => !s.cameraEnabled).length;
+  const camOffN    = () => students.value.filter(s => !s.cameraEnabled).length;
 
   return (
-    <div class="min-h-screen bg-surface-900 bg-gradient-mesh">
-      {/* Header */}
-      <header class="glass sticky top-0 z-40">
-        <div class="max-w-full mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-md shadow-primary-500/20">
-                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </div>
-              <span class="font-bold text-gradient text-lg tracking-tight">Proctor Dashboard</span>
-              
-              <div class={`ml-2 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${connected.value ? 'bg-success/10 text-success border border-success/20' : 'bg-danger/10 text-danger border border-danger/20'}`}>
-                <div class={`w-1.5 h-1.5 rounded-full ${connected.value ? 'bg-success animate-pulse' : 'bg-danger'}`} />
-                {connected.value ? "Live" : "Offline"}
-              </div>
+    <div class="min-h-screen bg-[#fdfdfd] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-x-hidden selection:bg-blue-500/20 selection:text-blue-700 transition-colors duration-300">
+
+      {/* ── BACKGROUND BLOBS ── */}
+      <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden dark:opacity-40">
+        <div class="absolute top-[-15%] left-[-10%] w-[55vw] h-[55vw] rounded-full opacity-20 mix-blend-multiply filter blur-[100px]"
+          style="background: radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 70%)" />
+        <div class="absolute bottom-[-15%] right-[-10%] w-[50vw] h-[50vw] rounded-full opacity-15 mix-blend-multiply filter blur-[120px]"
+          style="background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)" />
+      </div>
+
+      {/* ══════════════════════════════════════════════════════
+          HEADER
+      ══════════════════════════════════════════════════════ */}
+      <header class="sticky top-0 z-50 w-full bg-white/70 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50">
+        <div class="max-w-full mx-auto px-5 sm:px-8 py-3.5 flex items-center justify-between gap-4">
+
+          {/* Left: logo + title + live badge */}
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
             </div>
-            
-            <div class="md:hidden">
-              <Clock />
+            <div>
+              <span class="text-base font-[900] tracking-tight text-slate-900 dark:text-white">Proctor Dashboard</span>
+              <span class="hidden sm:inline text-slate-300 mx-2">·</span>
+              <span class="hidden sm:inline text-xs font-semibold text-slate-400 dark:text-slate-500">Examinator</span>
+            </div>
+
+            {/* Live / Offline pill */}
+            <div class={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-widest ${
+              connected.value
+                ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                : "bg-rose-50 text-rose-500 border-rose-200"
+            }`}>
+              <span class={`w-1.5 h-1.5 rounded-full ${connected.value ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />
+              {connected.value ? "Live" : "Offline"}
             </div>
           </div>
-          
-          <div class="flex items-center justify-between md:justify-end gap-6">
+
+          {/* Right: clock + nav + user + logout */}
+          <div class="flex items-center gap-3">
             <div class="hidden md:block">
               <Clock />
             </div>
-            
-            <div class="flex items-center gap-4 border-l border-surface-200 pl-4">
-              <button onClick$={() => nav("/admin/")} class="text-xs px-3 py-1.5 rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors font-medium border border-primary-200">
-                ← Admin Panel
-              </button>
-              
-              <div class="flex items-center gap-3 cursor-pointer group" onClick$={() => nav('/profile/')}>
-                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-primary-400 to-secondary-500 flex items-center justify-center text-white ring-2 ring-white shadow-sm transition-transform group-hover:scale-105">
-                  <span class="text-sm font-bold">{user.value?.fullName?.charAt(0) || "P"}</span>
-                </div>
-                <div class="hidden sm:block text-left">
-                  <div class="text-sm text-surface-800 font-semibold leading-tight">{user.value?.fullName}</div>
-                  <div class="text-xs text-surface-500 leading-tight capitalize">{user.value?.role.toLowerCase()}</div>
-                </div>
-              </div>
-              
+
+            {user.value?.role === "ADMIN" && (
               <button
-                onClick$={() => { logout(); }}
-                class="p-2 rounded-lg text-surface-500 hover:text-danger hover:bg-danger/10 transition-colors"
-                title="Keluar"
+                onClick$={() => nav("/admin/")}
+                class="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:border-blue-300 dark:hover:border-blue-600 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 transition-all"
               >
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
+                <span class="material-symbols-outlined text-[14px]">arrow_back</span>
+                Admin Panel
               </button>
-            </div>
+            )}
+
+            {/* User pill */}
+            <button
+              class="flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 rounded-full border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 transition-all shadow-sm"
+              onClick$={() => nav("/profile/")}
+            >
+              <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-[800] text-sm shadow-sm">
+                {user.value?.fullName?.charAt(0) || "P"}
+              </div>
+              <div class="hidden sm:flex flex-col items-start leading-tight">
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">{user.value?.fullName}</span>
+                <span class="text-[10px] text-slate-400 capitalize">{user.value?.role?.toLowerCase()}</span>
+              </div>
+            </button>
+
+            <ThemeToggle />
+
+            {/* Logout */}
+            <button
+              onClick$={() => { logout(); }}
+              class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/50 text-red-500 dark:text-red-400 text-xs font-semibold hover:bg-red-100 dark:hover:bg-red-900/50 hover:border-red-300 transition-all"
+              title="Keluar"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span class="hidden sm:inline">Keluar</span>
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Stats */}
-      <div class="px-6 py-4 border-b border-surface-800">
-        <div class="grid grid-cols-5 gap-3">
-          {[
-            { label: "Total Online", value: students.value.length, color: "text-surface-100" },
-            { label: "🟢 Aktif", value: activeN(), color: "text-success" },
-            { label: "🔴 Ditandai", value: flaggedN(), color: "text-danger" },
-            { label: "✅ Selesai", value: submittedN(), color: "text-info" },
-            { label: "📷 Kamera OFF", value: camOffN(), color: "text-warning" },
-          ].map((stat) => (
-            <div key={stat.label} class="glass rounded-xl p-4 card-hover">
-              <div class={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
-              <div class="text-xs text-surface-400 mt-1">{stat.label}</div>
-            </div>
-          ))}
+      {/* ══════════════════════════════════════════════════════
+          STATS BAR
+      ══════════════════════════════════════════════════════ */}
+      <div class="relative z-10 border-b border-slate-100 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm">
+        <div class="max-w-full mx-auto px-5 sm:px-8 py-4">
+          <div class="grid grid-cols-5 gap-3">
+            {[
+              { label: "Total Online",  value: students.value.length, icon: "wifi",          bg: "bg-slate-50",    border: "border-slate-200",   text: "text-slate-700",   icolor: "text-slate-400"    },
+              { label: "Aktif",         value: activeN(),              icon: "check_circle",  bg: "bg-emerald-50",  border: "border-emerald-200", text: "text-emerald-700", icolor: "text-emerald-500"  },
+              { label: "Ditandai",      value: flaggedN(),             icon: "warning",       bg: "bg-rose-50",     border: "border-rose-200",    text: "text-rose-700",    icolor: "text-rose-500"     },
+              { label: "Selesai",       value: submittedN(),           icon: "task_alt",      bg: "bg-blue-50",     border: "border-blue-200",    text: "text-blue-700",    icolor: "text-blue-500"     },
+              { label: "Kamera OFF",    value: camOffN(),              icon: "videocam_off",  bg: "bg-amber-50",    border: "border-amber-200",   text: "text-amber-700",   icolor: "text-amber-500"    },
+            ].map(stat => (
+              <div key={stat.label} class={`${stat.bg} dark:bg-slate-800/80 border ${stat.border} dark:border-slate-700/50 rounded-2xl px-4 py-3 flex items-center gap-3`}>
+                <div class={`w-8 h-8 rounded-lg ${stat.bg} border ${stat.border} flex items-center justify-center flex-shrink-0`}>
+                  <span class={`material-symbols-outlined text-base ${stat.icolor}`}>{stat.icon}</span>
+                </div>
+                <div>
+                  <div class={`text-xl font-[900] tracking-tight ${stat.text}`}>{stat.value}</div>
+                  <div class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{stat.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Main */}
-      <div class="px-6 py-6 flex gap-6">
-        {/* Student Grid */}
-        <div class="flex-1">
-          <h2 class="text-lg font-semibold text-surface-200 mb-4">Siswa Online ({students.value.length})</h2>
+      {/* ══════════════════════════════════════════════════════
+          MAIN: Student Grid + Alert Feed
+      ══════════════════════════════════════════════════════ */}
+      <div class="relative z-10 max-w-full mx-auto px-5 sm:px-8 py-6 flex gap-5">
+
+        {/* ── STUDENT GRID ── */}
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-3 mb-5">
+            <h2 class="text-base font-[900] tracking-tight text-slate-900 dark:text-white">Siswa Online</h2>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+              {students.value.length} Peserta
+            </span>
+          </div>
+
           {students.value.length === 0 ? (
-            <div class="glass rounded-2xl p-12 text-center">
-              <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-surface-800 flex items-center justify-center animate-float">
-                <svg class="w-8 h-8 text-surface-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+            /* Empty state */
+            <div class="bg-white dark:bg-slate-800/80 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.06)] p-16 text-center">
+              <div class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+                <span class="material-symbols-outlined text-3xl text-slate-300">groups</span>
               </div>
-              <p class="text-surface-400 text-sm">Menunggu siswa memulai ujian...</p>
+              <p class="text-slate-400 dark:text-slate-500 font-semibold text-sm">Menunggu siswa memulai ujian...</p>
+              <p class="text-slate-300 dark:text-slate-600 text-xs mt-1">Siswa akan muncul otomatis saat terhubung</p>
             </div>
           ) : (
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {students.value.map((st, i) => (
-                <div key={st.id} class={`glass rounded-xl p-4 card-hover animate-fade-in ${st.status === "flagged" ? "ring-1 ring-danger/30" : ""}`} style={`animation-delay:${i * 50}ms`}>
+                <div
+                  key={st.id}
+                  class={`bg-white rounded-2xl border p-4 transition-all hover:shadow-md hover:-translate-y-0.5 ${
+                    st.status === "flagged"
+                      ? "border-rose-200 shadow-[0_0_0_1px_rgba(244,63,94,0.1)] bg-rose-50/30"
+                      : "border-slate-100 dark:border-slate-700 dark:bg-slate-800/80 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.06)]"
+                  }`}
+                  style={`animation-delay:${i * 40}ms`}
+                >
+                  {/* Avatar + name */}
                   <div class="flex items-center gap-2 mb-3">
-                    <div class="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center text-xs font-bold text-white">
-                      {st.fullName.split(" ").map(w => w[0]).join("").slice(0, 2)}
+                    <div class={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-[800] text-white flex-shrink-0 ${
+                      st.status === "flagged" ? "bg-gradient-to-br from-rose-500 to-red-600" : "bg-gradient-to-br from-blue-500 to-indigo-600"
+                    }`}>
+                      {st.fullName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()}
                     </div>
-                    <p class="text-sm font-medium text-surface-200 truncate">{st.fullName}</p>
+                    <p class="text-xs font-[700] text-slate-800 dark:text-slate-100 truncate leading-tight">{st.fullName}</p>
                   </div>
-                  <div class="flex items-center justify-between">
-                    <span class={`text-xs font-medium px-2 py-0.5 rounded-full border ${statusStyle(st.status)}`}>
+
+                  {/* Status + cheat count */}
+                  <div class="flex items-center justify-between gap-1">
+                    <span class={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusStyle(st.status)}`}>
+                      <span class={`w-1 h-1 rounded-full ${
+                        st.status === "active" ? "bg-emerald-500" :
+                        st.status === "flagged" ? "bg-rose-500" :
+                        st.status === "submitted" ? "bg-blue-500" : "bg-slate-400"
+                      }`} />
                       {statusLabel(st.status)}
                     </span>
-                    {st.cheatCount > 0 && <span class="text-xs px-1.5 py-0.5 rounded bg-danger/10 text-danger font-bold">⚠ {st.cheatCount}</span>}
+                    {st.cheatCount > 0 && (
+                      <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-rose-50 border border-rose-200 text-rose-600 font-[800]">
+                        ⚠ {st.cheatCount}
+                      </span>
+                    )}
                   </div>
-                  {!st.cameraEnabled && <div class="mt-2 text-xs text-warning/80">📷 OFF</div>}
+
+                  {/* Camera off warning */}
+                  {!st.cameraEnabled && (
+                    <div class="mt-2 flex items-center gap-1 text-[10px] font-semibold text-amber-600">
+                      <span class="material-symbols-outlined text-[12px]">videocam_off</span>
+                      Kamera Mati
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Alert Feed */}
-        <div class="w-80 shrink-0 hidden lg:block">
-          <h3 class="text-sm font-semibold text-surface-300 mb-3 flex items-center gap-2">
-            <div class="w-2 h-2 rounded-full bg-danger animate-pulse" /> Live Alerts
-          </h3>
-          <div class="space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
-            {alerts.value.length === 0 && <div class="glass rounded-xl p-4 text-center"><p class="text-surface-500 text-xs">Belum ada pelanggaran</p></div>}
-            {alerts.value.map((a, i) => (
-              <div key={i} class="glass rounded-xl p-3 border-l-2 border-danger animate-slide-right">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="text-xs font-bold text-danger">{cheatLabel[a.cheatType] || a.cheatType}</span>
-                  <span class="text-[10px] text-surface-500">{new Date(a.timestamp).toLocaleTimeString("id-ID")}</span>
+        {/* ── ALERT FEED ── */}
+        <div class="w-72 shrink-0 hidden lg:block">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+            <h3 class="text-sm font-[800] tracking-tight text-slate-900 dark:text-white">Live Alerts</h3>
+            {alerts.value.length > 0 && (
+              <span class="ml-auto inline-flex items-center px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[10px] font-bold text-rose-600">
+                {alerts.value.length}
+              </span>
+            )}
+          </div>
+
+          <div class="space-y-2 max-h-[calc(100vh-260px)] overflow-y-auto pr-1">
+            {alerts.value.length === 0 ? (
+              <div class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6 text-center shadow-sm">
+                <span class="material-symbols-outlined text-3xl text-slate-200 block mb-2">shield</span>
+                <p class="text-slate-400 text-xs font-semibold">Belum ada pelanggaran</p>
+              </div>
+            ) : alerts.value.map((a, i) => (
+              <div key={i} class="bg-white dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700/50 border-l-2 border-l-rose-400 p-3 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">
+                    <span class="material-symbols-outlined text-[10px]">warning</span>
+                    {cheatLabel[a.cheatType] || a.cheatType}
+                  </span>
+                  <span class="text-[10px] text-slate-400 font-mono">{new Date(a.timestamp).toLocaleTimeString("id-ID")}</span>
                 </div>
-                <p class="text-xs text-surface-300">{a.student.fullName}</p>
+                <p class="text-xs font-[700] text-slate-700 dark:text-slate-200">{a.student.fullName}</p>
+                {a.description && <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">{a.description}</p>}
               </div>
             ))}
           </div>
         </div>
+
       </div>
     </div>
   );
