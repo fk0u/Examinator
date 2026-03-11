@@ -223,9 +223,9 @@ export default component$(() => {
             <div class="z-10 text-center md:text-left">
               <h3 class="text-2xl font-bold mb-2">Ingin meningkatkan skormu?</h3>
               <p class="text-blue-100 max-w-sm mb-6 text-sm sm:text-base">Pastikan koneksi internet stabil dan webcam berfungsi dengan baik sebelum memulai ujian dengan fitur proctoring.</p>
-              <button class="bg-white text-blue-500 px-8 py-3 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg cursor-not-allowed">
+              <Link href="/student/test-device/" class="bg-white text-blue-500 px-8 py-3 rounded-xl font-bold hover:scale-105 transition-transform shadow-lg inline-block">
                 Cek Kesiapan Perangkat
-              </button>
+              </Link>
             </div>
             <div class="z-10 hidden md:block">
               <span class="material-symbols-outlined text-[100px] lg:text-[120px] opacity-30">laptop_mac</span>
@@ -265,10 +265,18 @@ export default component$(() => {
               )}
             </div>
             {historyExams.length > 3 && (
-              <Link href="/student/results/" class="w-full mt-4 py-2 block text-center text-blue-500 font-bold text-sm hover:underline transition-colors">
+              <Link href="/student/results/" class="w-full mt-2 py-2 block text-center text-blue-500 font-bold text-sm hover:underline transition-colors">
                 Lihat Semua Nilai
               </Link>
             )}
+
+            <div class="mt-4 pt-4 border-t border-slate-100">
+               <Link href="/student/simulation/" class="w-full py-4 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-100 transition-all">
+                 <span class="material-symbols-outlined">science</span>
+                 Coba Simulasi Ujian
+               </Link>
+               <p class="text-[10px] text-center text-slate-400 mt-2 font-medium italic italic">Kenali sistem proctoring kami tanpa risiko nilai.</p>
+            </div>
           </div>
           
         </section>

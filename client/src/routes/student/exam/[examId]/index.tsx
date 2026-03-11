@@ -19,8 +19,11 @@ export default component$(() => {
   const answers = useSignal<Record<string, string>>({});
   const timeLeft = useSignal(0);
   
-  const { cameraEnabled, capturePhoto, stream } = useCamera(attempt);
+  const { cameraEnabled, micEnabled, capturePhoto, stream } = useCamera(attempt);
   const videoPreviewRef = useSignal<HTMLVideoElement>();
+  
+  const isOnline = useSignal(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const isFullscreen = useSignal(false);
   
   const isReady = useSignal(false);
   const termsAccepted = useSignal(false);
@@ -37,6 +40,22 @@ export default component$(() => {
     if (stream.value && videoPreviewRef.value) {
       videoPreviewRef.value.srcObject = stream.value;
     }
+  });
+
+  // System Checks (Online & Fullscreen)
+  useVisibleTask$(() => {
+    const updateOnlineStatus = () => isOnline.value = navigator.onLine;
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
+    const updateFullscreenStatus = () => isFullscreen.value = !!document.fullscreenElement;
+    document.addEventListener('fullscreenchange', updateFullscreenStatus);
+
+    return () => {
+      window.removeEventListener('online', updateOnlineStatus);
+      window.removeEventListener('offline', updateOnlineStatus);
+      document.removeEventListener('fullscreenchange', updateFullscreenStatus);
+    };
   });
 
   // ── Load Exam Info for Readiness Room ────────────────
@@ -211,7 +230,7 @@ export default component$(() => {
     }
 
     return (
-      <div class="font-sans bg-slate-50 text-slate-900 mesh-gradient min-h-screen">
+      <div class="font-sans bg-slate-50 text-slate-900 bg-gradient-mesh min-h-screen">
         <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
           {/* Top Navigation Bar */}
           <nav class="sticky top-0 z-50 px-6 py-3">
@@ -241,12 +260,12 @@ export default component$(() => {
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full animate-fade-in" style={{ animationDelay: "100ms" }}>
               {/* Left: Camera Preview & System Check */}
               <div class="lg:col-span-7 flex flex-col gap-6">
-                <div class="glass rounded-xl p-6 shadow-sm">
+                <div class="glass-darker rounded-3xl p-6 shadow-sm">
                   <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
                     <span class="material-symbols-outlined text-blue-500">videocam</span>
                     Webcam Preview
                   </h3>
-                  <div class="relative aspect-video bg-slate-200 rounded-xl overflow-hidden group border border-slate-300">
+                  <div class="relative aspect-video bg-slate-200 rounded-2xl overflow-hidden group border border-slate-300">
                     {stream.value ? (
                       <video autoplay playsInline ref={videoPreviewRef} class="w-full h-full object-cover scale-x-[-1]" />
                     ) : (
@@ -255,38 +274,67 @@ export default component$(() => {
                         <p class="text-sm font-medium">Kamera Sedang Dimuat / Tidak Tersedia</p>
                       </div>
                     )}
-                    <div class="absolute inset-0 border-2 border-blue-500/30 rounded-xl pointer-events-none"></div>
+                    <div class="absolute inset-0 border-2 border-blue-500/30 rounded-2xl pointer-events-none"></div>
                     <div class="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs flex items-center gap-2">
                       <span class={`size-2 rounded-full animate-pulse ${stream.value ? 'bg-emerald-500' : 'bg-red-500'}`}></span> 
                       {stream.value ? 'Live Preview' : 'No Connection'}
                     </div>
                   </div>
-                  <p class="mt-4 text-sm text-slate-500 italic">Pastikan wajah terlihat jelas dan berada di tengah frame.</p>
+                  <p class="mt-4 text-sm text-slate-500 italic flex items-center gap-2">
+                    <span class="material-symbols-outlined text-xs">info</span>
+                    Pastikan wajah terlihat jelas dan berada di tengah frame.
+                  </p>
                 </div>
 
-                <div class="glass rounded-xl p-6 shadow-sm border-l-4 border-l-yellow-500">
+                <div class="glass-darker rounded-3xl p-6 shadow-sm border-l-4 border-l-blue-500">
                   <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
                     <span class="material-symbols-outlined text-blue-500">analytics</span>
                     System Check Panel
                   </h3>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-slate-100">
+                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-2xl border border-slate-100">
                       <div class="flex items-center gap-3">
-                        <span class={`material-symbols-outlined ${stream.value ? 'text-emerald-500' : 'text-red-500'}`}>
-                          {stream.value ? 'check_circle' : 'error'}
+                        <span class={`material-symbols-outlined ${cameraEnabled.value ? 'text-emerald-500' : 'text-red-500'}`}>
+                          {cameraEnabled.value ? 'check_circle' : 'error'}
                         </span>
-                        <span class="font-medium text-slate-800">Camera Active</span>
+                        <span class="font-medium text-slate-800">Camera</span>
                       </div>
-                      <span class={`text-[10px] sm:text-xs font-bold uppercase ${stream.value ? 'text-emerald-600' : 'text-red-500'}`}>
-                        {stream.value ? 'Ready' : 'Block'}
+                      <span class={`text-[10px] sm:text-xs font-bold uppercase ${cameraEnabled.value ? 'text-emerald-600' : 'text-red-500'}`}>
+                        {cameraEnabled.value ? 'Ready' : 'Block'}
                       </span>
                     </div>
-                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-slate-100">
+                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-2xl border border-slate-100">
                       <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-emerald-500">check_circle</span>
+                        <span class={`material-symbols-outlined ${micEnabled.value ? 'text-emerald-500' : 'text-red-500'}`}>
+                          {micEnabled.value ? 'check_circle' : 'error'}
+                        </span>
+                        <span class="font-medium text-slate-800">Microphone</span>
+                      </div>
+                      <span class={`text-[10px] sm:text-xs font-bold uppercase ${micEnabled.value ? 'text-emerald-600' : 'text-red-500'}`}>
+                        {micEnabled.value ? 'Ready' : 'Block'}
+                      </span>
+                    </div>
+                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-2xl border border-slate-100">
+                      <div class="flex items-center gap-3">
+                        <span class={`material-symbols-outlined ${isOnline.value ? 'text-emerald-500' : 'text-red-500'}`}>
+                          {isOnline.value ? 'check_circle' : 'error'}
+                        </span>
                         <span class="font-medium text-slate-800">Connection</span>
                       </div>
-                      <span class="text-xs font-bold text-emerald-600 uppercase">Stable</span>
+                      <span class={`text-[10px] sm:text-xs font-bold uppercase ${isOnline.value ? 'text-emerald-600' : 'text-red-500'}`}>
+                        {isOnline.value ? 'Stable' : 'Offline'}
+                      </span>
+                    </div>
+                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-2xl border border-slate-100">
+                      <div class="flex items-center gap-3">
+                        <span class={`material-symbols-outlined ${isFullscreen.value ? 'text-emerald-500' : 'text-yellow-500'}`}>
+                          {isFullscreen.value ? 'check_circle' : 'info'}
+                        </span>
+                        <span class="font-medium text-slate-800">Fullscreen</span>
+                      </div>
+                      <span class={`text-[10px] sm:text-xs font-bold uppercase ${isFullscreen.value ? 'text-emerald-600' : 'text-yellow-600'}`}>
+                        {isFullscreen.value ? 'Ready' : 'Normal'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -294,72 +342,90 @@ export default component$(() => {
 
               {/* Right: Rules & CTA */}
               <div class="lg:col-span-5 flex flex-col gap-6">
-                <div class="glass rounded-xl p-8 shadow-sm h-full flex flex-col">
-                  <h3 class="text-xl font-bold mb-6 text-slate-900 border-b border-slate-200 pb-4">Tata Tertib Ujian</h3>
+                <div class="glass-darker rounded-3xl p-8 shadow-sm h-full flex flex-col">
+                  <h3 class="text-xl font-bold mb-6 text-slate-900 border-b border-slate-200 pb-4">Tata Tertib & Peraturan</h3>
                   <ul class="space-y-6 flex-1">
-                    <li class="flex gap-4">
-                      <div class="flex-shrink-0 size-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                        <span class="material-symbols-outlined text-yellow-600 text-lg">tab_unselected</span>
+                    <li class="flex gap-4 group">
+                      <div class="flex-shrink-0 size-10 bg-blue-50 rounded-xl flex items-center justify-center transition-colors group-hover:bg-blue-100">
+                        <span class="material-symbols-outlined text-blue-600 text-xl font-light">tab_unselected</span>
                       </div>
                       <div>
                         <h4 class="font-bold text-slate-800">Dilarang berpindah tab</h4>
-                        <p class="text-sm text-slate-500">Sistem mendeteksi jika Anda membuka tab atau aplikasi lain secara otomatis.</p>
+                        <p class="text-sm text-slate-500 leading-relaxed">Sistem akan otomatis mendeteksi dan mencatat jika Anda membuka tab atau aplikasi lain.</p>
                       </div>
                     </li>
-                    <li class="flex gap-4">
-                      <div class="flex-shrink-0 size-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                        <span class="material-symbols-outlined text-yellow-600 text-lg">videocam</span>
+                    <li class="flex gap-4 group">
+                      <div class="flex-shrink-0 size-10 bg-blue-50 rounded-xl flex items-center justify-center transition-colors group-hover:bg-blue-100">
+                        <span class="material-symbols-outlined text-blue-600 text-xl font-light">videocam</span>
                       </div>
                       <div>
                         <h4 class="font-bold text-slate-800">Kamera Merekam Aktif</h4>
-                        <p class="text-sm text-slate-500">Aktifitas direkam periodik untuk keperluan integritas dan validasi.</p>
+                        <p class="text-sm text-slate-500 leading-relaxed">Aktifitas visual direkam periodik untuk keperluan validasi integritas ujian.</p>
                       </div>
                     </li>
-                    <li class="flex gap-4">
-                      <div class="flex-shrink-0 size-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                        <span class="material-symbols-outlined text-yellow-600 text-lg">person_pin</span>
+                    <li class="flex gap-4 group">
+                      <div class="flex-shrink-0 size-10 bg-blue-50 rounded-xl flex items-center justify-center transition-colors group-hover:bg-blue-100">
+                        <span class="material-symbols-outlined text-blue-600 text-xl font-light">person_pin</span>
                       </div>
                       <div>
                         <h4 class="font-bold text-slate-800">Tetap di Area Layar</h4>
-                        <p class="text-sm text-slate-500">Pastikan Anda tidak meninggalkan area tangkapan pengawasan kamera.</p>
+                        <p class="text-sm text-slate-500 leading-relaxed">Pastikan Anda tidak meninggalkan area tangkapan pengawasan kamera selama ujian.</p>
+                      </div>
+                    </li>
+                    <li class="flex gap-4 group">
+                      <div class="flex-shrink-0 size-10 bg-blue-50 rounded-xl flex items-center justify-center transition-colors group-hover:bg-blue-100">
+                        <span class="material-symbols-outlined text-blue-600 text-xl font-light">keyboard_capslock</span>
+                      </div>
+                      <div>
+                        <h4 class="font-bold text-slate-800">Selesaikan Tepat Waktu</h4>
+                        <p class="text-sm text-slate-500 leading-relaxed">Pastikan Anda menekan tombol Selesai sebelum waktu pengerjaan berakhir.</p>
                       </div>
                     </li>
                   </ul>
                   
                   <div class="mt-8 pt-6 border-t border-slate-200">
-                    <div class="flex items-start gap-3 mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                      <input 
-                        id="terms" 
-                        type="checkbox" 
-                        checked={termsAccepted.value}
-                        onChange$={(e: any) => termsAccepted.value = e.target.checked}
-                        class="mt-1 rounded border-blue-500 text-blue-600 focus:ring-blue-500 h-5 w-5 cursor-pointer" 
-                      />
+                    <div class="flex items-start gap-4 mb-6 p-4 bg-blue-50/50 rounded-2xl border border-blue-100 shadow-inner">
+                      <div class="pt-0.5">
+                        <input 
+                          id="terms" 
+                          type="checkbox" 
+                          checked={termsAccepted.value}
+                          onChange$={(e: any) => termsAccepted.value = e.target.checked}
+                          class="rounded-md border-slate-300 text-blue-600 focus:ring-blue-500 h-5 w-5 cursor-pointer" 
+                        />
+                      </div>
                       <label class="text-sm text-slate-600 leading-relaxed cursor-pointer font-medium" for="terms">
-                        Saya telah membaca semua aturan dan menyetujui perekaman sistem demi kelancaran ujian.
+                        Saya mengerti dan menyetujui semua aturan di atas serta bersedia mengikuti ujian dengan jujur.
                       </label>
                     </div>
                     <button 
                       onClick$={startActualExam}
                       disabled={!termsAccepted.value || loading.value}
-                      class={`w-full flex items-center justify-center gap-2 rounded-xl h-14 font-bold text-lg transition-all shadow-lg ${
-                        termsAccepted.value 
-                          ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/25 hover:-translate-y-1" 
-                          : "bg-slate-300 text-slate-500 cursor-not-allowed shadow-none"
+                      class={`w-full flex items-center justify-center gap-3 rounded-2xl h-14 font-bold text-lg transition-all shadow-xl ${
+                        termsAccepted.value && !loading.value
+                          ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/25 hover:-translate-y-1 active:translate-y-0" 
+                          : "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
                       }`}
                     >
-                      <span>{loading.value ? "Menyiapkan Ujian..." : "Saya Mengerti & Mulai Ujian"}</span>
-                      {!loading.value && <span class="material-symbols-outlined">arrow_forward</span>}
+                      <span class="tracking-wide">{loading.value ? "Menyiapkan Sistem..." : "Saya Mengerti & Mulai Ujian"}</span>
+                      {!loading.value && <span class="material-symbols-outlined">rocket_launch</span>}
+                      {loading.value && <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
                     </button>
+                    {!termsAccepted.value && (
+                      <p class="text-center mt-3 text-[10px] text-slate-400 uppercase font-black tracking-widest">Setujui aturan untuk melanjutkan</p>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Footer Simple Info */}
-            <div class="mt-12 flex flex-col items-center gap-2 text-slate-500 font-medium">
-              <p class="text-sm">Ujian: {examData.value?.subject}</p>
-              <p class="text-xs">Ujian ID: {examData.value?.id} | Durasi: {examData.value?.duration} Menit</p>
+            <div class="mt-12 flex flex-col items-center gap-2 text-slate-400 font-medium animate-fade-in" style={{ animationDelay: "200ms" }}>
+              <div class="flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full border border-slate-200">
+                <span class="size-2 rounded-full bg-blue-500"></span>
+                <p class="text-xs">Ujian: <span class="text-slate-900">{examData.value?.title}</span></p>
+              </div>
+              <p class="text-[10px] uppercase tracking-widest">Ujian ID: {examId} | Durasi: {examData.value?.duration} Menit</p>
             </div>
           </main>
         </div>
@@ -371,12 +437,12 @@ export default component$(() => {
   // Render Active Exam Interface
   // ──────────────────────────────────────────────────────
   return (
-    <div class="min-h-screen bg-slate-50 mesh-gradient text-slate-800 select-none flex flex-col pt-8 sm:pt-12" onContextMenu$={(e) => e.preventDefault()}>
+    <div class="min-h-screen bg-slate-50 bg-gradient-mesh text-slate-800 select-none flex flex-col pt-8 sm:pt-12" onContextMenu$={(e) => e.preventDefault()}>
       
       {/* Cheat Warning Overlay */}
       {showWarning.value && (
         <div class="fixed inset-0 z-[100] flex items-center justify-center bg-red-500/10 backdrop-blur-sm animate-fade-in">
-          <div class="bg-white border-2 border-red-500 rounded-2xl p-8 max-w-md text-center animate-shake shadow-2xl shadow-red-500/20">
+          <div class="glass-darker border-2 border-red-500 rounded-3xl p-8 max-w-md text-center animate-shake shadow-2xl shadow-red-500/20">
             <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-4xl">
               <span class="material-symbols-outlined">warning</span>
             </div>
@@ -387,7 +453,7 @@ export default component$(() => {
       )}
 
       {/* Top Fixed Bar */}
-      <div class="fixed top-0 left-0 right-0 glass border-b border-slate-200 px-6 py-4 flex items-center justify-between z-50">
+      <div class="fixed top-0 left-0 right-0 glass-darker border-b border-white px-6 py-4 flex items-center justify-between z-50 shadow-sm">
         <div class="flex items-center gap-4">
           <div class="bg-blue-100 text-blue-600 p-2.5 rounded-xl hidden sm:flex">
             <span class="material-symbols-outlined">menu_book</span>
@@ -439,7 +505,7 @@ export default component$(() => {
 
       {/* Main Content Area */}
       <div class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-10 pb-32 overflow-y-auto mt-12">
-        <div class="glass rounded-3xl p-8 sm:p-12 shadow-xl border border-white/60 relative overflow-hidden animate-fade-in" key={currentQuestion.value}>
+        <div class="glass-darker rounded-[2.5rem] p-8 sm:p-12 shadow-2xl border border-white relative overflow-hidden animate-fade-in" key={currentQuestion.value}>
           {/* Decorative Corner */}
           <div class="absolute -top-12 -right-12 text-blue-50 opacity-50 select-none pointer-events-none">
             <span class="material-symbols-outlined text-[150px]">help_outline</span>
