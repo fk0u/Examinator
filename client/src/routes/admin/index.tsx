@@ -17,7 +17,6 @@ export default component$(() => {
   const activeTab = useSignal<"overview" | "exams" | "users">("overview");
   const searchQuery = useSignal("");
 
-  // Create exam form
   const showCreateExam = useSignal(false);
   const newExam = useSignal({ title: "", subject: "", duration: 60, description: "", passingScore: 70 });
 
@@ -64,12 +63,8 @@ export default component$(() => {
   const handleExportUsers = $(() => {
     if (!users.value.length) return;
     const exportData = users.value.map(u => ({
-      ID: u.id,
-      "Nama Lengkap": u.fullName,
-      Username: u.username,
-      Role: u.role,
-      "Kelas/Jurusan": u.kelas || "-",
-      "Status Aktif": u.active ? "Aktif" : "Nonaktif"
+      ID: u.id, "Nama Lengkap": u.fullName, Username: u.username,
+      Role: u.role, "Kelas/Jurusan": u.kelas || "-", "Status Aktif": u.active ? "Aktif" : "Nonaktif"
     }));
     exportToCSV("examinator_users.csv", exportData);
   });
@@ -77,132 +72,180 @@ export default component$(() => {
   const handleExportExams = $(() => {
     if (!exams.value.length) return;
     const exportData = exams.value.map(e => ({
-      ID: e.id,
-      "Judul Ujian": e.title,
-      "Mata Pelajaran": e.subject,
-      "Durasi (Menit)": e.duration,
-      "Jumlah Soal": e._count?.questions || 0,
-      "Nilai KKM": e.passingScore,
-      "Status": e.active ? "Aktif" : "Nonaktif",
+      ID: e.id, "Judul Ujian": e.title, "Mata Pelajaran": e.subject,
+      "Durasi (Menit)": e.duration, "Jumlah Soal": e._count?.questions || 0,
+      "Nilai KKM": e.passingScore, "Status": e.active ? "Aktif" : "Nonaktif",
       "Dibuat Pada": new Date(e.createdAt).toLocaleString("id-ID")
     }));
     exportToCSV("examinator_exams.csv", exportData);
   });
 
+  const filteredExams = () => exams.value.filter(e =>
+    e.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    e.subject.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+
+  const filteredUsers = () => users.value.filter(u =>
+    u.fullName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    u.username.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    u.role.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+
   return (
-    <div class="min-h-screen bg-surface-900 bg-gradient-mesh">
-      {/* Header */}
-      <header class="glass sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-md shadow-primary-500/20">
-                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <span class="font-bold text-gradient text-lg tracking-tight">Admin Panel</span>
+    <div class="min-h-screen bg-[#fdfdfd] text-slate-900 font-sans overflow-x-hidden selection:bg-blue-500/20 selection:text-blue-700">
+
+      {/* ── BACKGROUND BLOBS — identical to landing page ── */}
+      <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div class="absolute top-[-15%] left-[-10%] w-[55vw] h-[55vw] rounded-full opacity-20 mix-blend-multiply filter blur-[100px]"
+          style={{ background: "radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 70%)" }} />
+        <div class="absolute bottom-[-15%] right-[-10%] w-[50vw] h-[50vw] rounded-full opacity-15 mix-blend-multiply filter blur-[120px]"
+          style={{ background: "radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)" }} />
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════
+          HEADER — matches landing page nav exactly
+      ══════════════════════════════════════════════════════════════ */}
+      <header class="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-slate-200/50">
+        <div class="max-w-7xl mx-auto px-5 sm:px-8 md:px-12 py-3.5 flex items-center justify-between gap-4">
+
+          {/* Logo — same as landing */}
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <span class="text-white font-[900] text-lg leading-none">E</span>
             </div>
-            
-            <div class="md:hidden">
-              <Clock />
-            </div>
+            <span class="text-xl font-[900] tracking-tight text-slate-900">Examinator</span>
+            <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-[10px] font-bold uppercase tracking-widest">
+              Admin
+            </span>
           </div>
-          
-          <div class="flex items-center justify-between md:justify-end gap-6">
+
+          {/* Right side actions */}
+          <div class="flex items-center gap-3">
             <div class="hidden md:block">
               <Clock />
             </div>
-            
-            <div class="flex items-center gap-4 border-l border-surface-200 pl-4">
-              <button onClick$={() => nav("/proctor/")} class="text-xs px-3 py-1.5 rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors font-medium border border-primary-200">
-                Proctor View →
-              </button>
-              
-              <div class="flex items-center gap-3 cursor-pointer group" onClick$={() => nav('/profile/')}>
-                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-primary-400 to-secondary-500 flex items-center justify-center text-white ring-2 ring-white shadow-sm transition-transform group-hover:scale-105">
-                  <span class="text-sm font-bold">{user.value?.fullName?.charAt(0) || "A"}</span>
-                </div>
-                <div class="hidden sm:block text-left">
-                  <div class="text-sm text-surface-800 font-semibold leading-tight">{user.value?.fullName}</div>
-                  <div class="text-xs text-surface-500 leading-tight capitalize">{user.value?.role.toLowerCase()}</div>
-                </div>
+
+            <button
+              onClick$={() => nav("/proctor/")}
+              class="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-200 text-slate-600 text-xs font-semibold hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition-all"
+            >
+              Proctor View
+              <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+            </button>
+
+            {/* User pill */}
+            <button
+              class="flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 rounded-full border border-slate-200/80 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm group"
+              onClick$={() => nav("/profile/")}
+            >
+              <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-[800] text-sm shadow-sm">
+                {user.value?.fullName?.charAt(0) || "A"}
               </div>
-              
-              <button
-                onClick$={() => { logout(); }}
-                class="p-2 rounded-lg text-surface-500 hover:text-danger hover:bg-danger/10 transition-colors"
-                title="Keluar"
-              >
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            </div>
+              <div class="hidden sm:flex flex-col items-start leading-tight">
+                <span class="text-xs font-bold text-slate-800">{user.value?.fullName}</span>
+                <span class="text-[10px] text-slate-400 capitalize">{user.value?.role?.toLowerCase()}</span>
+              </div>
+            </button>
+
+            {/* Logout */}
+            <button
+              onClick$={() => { logout(); }}
+              class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-red-200 bg-red-50 text-red-500 text-xs font-semibold hover:bg-red-100 hover:border-red-300 transition-all"
+              title="Keluar"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span class="hidden sm:inline">Keluar</span>
+            </button>
           </div>
         </div>
       </header>
 
-      <main class="max-w-7xl mx-auto px-6 py-8">
-        {/* Tabs */}
-        <div class="flex gap-1 mb-8 p-1 bg-surface-100 rounded-xl w-fit border border-surface-200 shadow-sm">
+      {/* ══════════════════════════════════════════════════════════════
+          MAIN CONTENT
+      ══════════════════════════════════════════════════════════════ */}
+      <main class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 md:px-12 py-8 pb-20">
+
+        {/* ── TABS ── */}
+        <div class="flex gap-1 mb-8 p-1 bg-white/60 backdrop-blur-sm border border-slate-200/80 rounded-2xl w-fit shadow-sm">
           {(["overview", "exams", "users"] as const).map(tab => (
-            <button key={tab} 
-              onClick$={() => { 
-                activeTab.value = tab; 
-                searchQuery.value = ""; 
-              }}
-              class={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab.value === tab ? "bg-white text-primary-600 shadow-sm border border-surface-200" : "text-surface-500 hover:text-surface-800"}`}>
+            <button
+              key={tab}
+              onClick$={() => { activeTab.value = tab; searchQuery.value = ""; }}
+              class={`px-5 py-2 rounded-xl text-sm font-[700] transition-all ${
+                activeTab.value === tab
+                  ? "bg-white text-blue-600 shadow-sm border border-slate-200/60"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
               {tab === "overview" ? "📊 Overview" : tab === "exams" ? "📝 Ujian" : "👥 Users"}
             </button>
           ))}
         </div>
 
+        {/* ── LOADING ── */}
         {loading.value ? (
-          <div class="flex justify-center py-20"><div class="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" /></div>
+          <div class="flex flex-col items-center justify-center py-24 gap-4">
+            <div class="w-10 h-10 rounded-full border-[3px] border-slate-100 border-t-blue-600 animate-spin" />
+            <p class="text-slate-400 text-sm font-semibold">Memuat data...</p>
+          </div>
         ) : (
           <>
-            {/* Overview Tab */}
+            {/* ══════ OVERVIEW ══════ */}
             {activeTab.value === "overview" && (
-              <div class="animate-fade-in">
-                <div class="mb-8 flex flex-col sm:flex-row items-center justify-between bg-white rounded-2xl p-6 shadow-sm border border-surface-200">
-                  <div class="text-center sm:text-left">
-                    <h1 class="text-2xl font-bold text-surface-800 mb-1">
+              <div>
+                {/* Welcome hero card */}
+                <div class="relative overflow-hidden mb-6 bg-white rounded-3xl border border-slate-100 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.07)] p-7 sm:p-8">
+                  <div class="absolute -top-24 -right-24 w-72 h-72 bg-blue-500 rounded-full filter blur-[90px] opacity-[0.07] pointer-events-none" />
+                  <div class="absolute -bottom-16 right-40 w-48 h-48 bg-indigo-400 rounded-full filter blur-[70px] opacity-[0.06] pointer-events-none" />
+                  <div class="relative z-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100/80 mb-4">
+                      <span class="relative flex h-1.5 w-1.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
+                      </span>
+                      <span class="text-[10px] font-bold text-blue-700 tracking-widest uppercase">Dashboard Aktif</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-[900] tracking-tight text-slate-900 mb-1.5">
                       <Greeting name={user.value?.fullName} />
                     </h1>
-                    <p class="text-surface-500">
-                      Ringkasan statistik sistem Examinator hari ini.
-                    </p>
+                    <p class="text-slate-500 font-medium text-sm sm:text-base">Ringkasan statistik sistem Examinator hari ini.</p>
                   </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                {/* Stat cards */}
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                   {[
-                    { label: "Total Ujian", value: exams.value.length, icon: "📝", color: "text-primary-600", bg: "bg-primary-50" },
-                    { label: "Ujian Aktif", value: exams.value.filter(e => e.active).length, icon: "🟢", color: "text-success", bg: "bg-green-50" },
-                    { label: "Total User", value: users.value.length, icon: "👥", color: "text-info", bg: "bg-blue-50" },
-                    { label: "Total Pelanggaran", value: stats.value?.totalLogs || 0, icon: "⚠️", color: "text-danger", bg: "bg-red-50" },
+                    { label: "Total Ujian",       value: exams.value.length,                        icon: "description",   from: "from-blue-500",    to: "to-indigo-600",   bg: "bg-blue-50",    border: "border-blue-100",   text: "text-blue-600"    },
+                    { label: "Ujian Aktif",        value: exams.value.filter(e => e.active).length,  icon: "check_circle",  from: "from-emerald-500", to: "to-teal-600",     bg: "bg-emerald-50", border: "border-emerald-100", text: "text-emerald-600" },
+                    { label: "Total User",         value: users.value.length,                        icon: "group",         from: "from-violet-500",  to: "to-purple-600",   bg: "bg-violet-50",  border: "border-violet-100",  text: "text-violet-600"  },
+                    { label: "Total Pelanggaran",  value: stats.value?.totalLogs || 0,               icon: "warning",       from: "from-rose-500",    to: "to-red-600",      bg: "bg-rose-50",    border: "border-rose-100",   text: "text-rose-600"    },
                   ].map(s => (
-                    <div key={s.label} class="bg-white rounded-xl p-5 card-hover shadow-sm border border-surface-200 flex items-center gap-4">
-                      <div class={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${s.bg}`}>
-                        {s.icon}
+                    <div key={s.label} class={`bg-white rounded-2xl border ${s.border} p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 transition-all duration-300`}>
+                      <div class={`w-11 h-11 rounded-xl ${s.bg} border ${s.border} flex items-center justify-center mb-4`}>
+                        <span class={`material-symbols-outlined text-xl ${s.text}`}>{s.icon}</span>
                       </div>
-                      <div>
-                        <div class={`text-2xl font-bold ${s.color}`}>{s.value}</div>
-                        <p class="text-xs font-medium text-surface-500">{s.label}</p>
-                      </div>
+                      <div class="text-3xl font-[900] tracking-tight text-slate-900 mb-0.5">{s.value}</div>
+                      <div class={`text-[10px] font-bold ${s.text} uppercase tracking-widest`}>{s.label}</div>
                     </div>
                   ))}
                 </div>
+
+                {/* Violations breakdown */}
                 {stats.value?.byType?.length > 0 && (
-                  <div class="glass rounded-xl p-5">
-                    <h3 class="text-sm font-semibold text-surface-200 mb-4">Pelanggaran per Tipe</h3>
+                  <div class="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] p-6">
+                    <div class="flex items-center gap-3 mb-5">
+                      <div class="w-8 h-8 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-base text-rose-500">policy</span>
+                      </div>
+                      <h3 class="font-[800] tracking-tight text-slate-900">Pelanggaran per Tipe</h3>
+                    </div>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {stats.value.byType.map((t: any) => (
-                        <div key={t.type} class="bg-surface-800/50 rounded-lg p-3 flex items-center justify-between">
-                          <span class="text-xs text-surface-400">{t.type.replace("_", " ")}</span>
-                          <span class="text-sm font-bold text-danger">{t.count}</span>
+                        <div key={t.type} class="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between hover:border-rose-200 hover:bg-rose-50/40 transition-all">
+                          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t.type.replace("_", " ")}</span>
+                          <span class="text-xl font-[900] text-rose-500">{t.count}</span>
                         </div>
                       ))}
                     </div>
@@ -211,224 +254,222 @@ export default component$(() => {
               </div>
             )}
 
-            {/* Exams Tab */}
+            {/* ══════ EXAMS ══════ */}
             {activeTab.value === "exams" && (
-              <div class="animate-fade-in bg-white rounded-2xl shadow-sm border border-surface-200 overflow-hidden">
-                <div class="p-6 border-b border-surface-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <h2 class="text-lg font-bold text-surface-800">Kelola Ujian</h2>
-                  
-                  <div class="flex flex-col sm:flex-row items-center gap-3">
-                    {/* Search Input */}
-                    <div class="relative w-full sm:w-64">
-                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-4 w-4 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <div class="bg-white rounded-3xl border border-slate-100 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.07)] overflow-hidden">
+                <div class="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h2 class="text-lg font-[900] tracking-tight text-slate-900">Kelola Ujian</h2>
+                    <p class="text-xs text-slate-400 font-medium mt-0.5">{exams.value.length} ujian terdaftar</p>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <div class="relative">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Cari ujian..."
-                        class="block w-full pl-10 pr-3 py-2 border border-surface-300 rounded-lg leading-5 bg-white placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-all text-surface-900"
+                      </span>
+                      <input type="text" placeholder="Cari ujian..."
+                        class="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all w-52"
                         value={searchQuery.value}
                         onInput$={(e) => searchQuery.value = (e.target as HTMLInputElement).value}
                       />
                     </div>
-                
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                      <button onClick$={handleExportExams} class="flex-1 sm:flex-none justify-center px-4 py-2 rounded-lg bg-surface-100 text-surface-600 border border-surface-200 text-sm hover:bg-surface-200 transition-colors flex items-center gap-2 font-medium">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        Export CSV
-                      </button>
-                      <button onClick$={() => { showCreateExam.value = !showCreateExam.value; }}
-                        class="flex-1 sm:flex-none justify-center px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 active:scale-[0.98] transition-all shadow-sm">
-                        + Buat Ujian
-                      </button>
-                    </div>
+                    <button onClick$={handleExportExams}
+                      class="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all">
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Export
+                    </button>
+                    <button onClick$={() => { showCreateExam.value = !showCreateExam.value; }}
+                      class="group flex items-center gap-1.5 px-5 py-2 rounded-xl bg-blue-600 text-white text-sm font-[700] hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20 hover:-translate-y-0.5 active:scale-[0.98]">
+                      <span class="material-symbols-outlined text-[16px]">add</span>
+                      Buat Ujian
+                    </button>
                   </div>
                 </div>
 
+                {/* Inline create form */}
                 {showCreateExam.value && (
-                  <div class="p-6 bg-surface-50 border-b border-surface-200 animate-slide-down">
+                  <div class="px-6 py-5 bg-blue-50/40 border-b border-blue-100/60">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div>
-                        <label class="block text-xs font-medium text-surface-500 mb-1">Judul Ujian</label>
-                        <input class="w-full px-3 py-2 bg-white border border-surface-300 rounded-lg text-sm text-surface-900 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-                          value={newExam.value.title} onInput$={(e) => { newExam.value = { ...newExam.value, title: (e.target as HTMLInputElement).value }; }} />
-                      </div>
-                      <div>
-                        <label class="block text-xs font-medium text-surface-500 mb-1">Mata Pelajaran</label>
-                        <input class="w-full px-3 py-2 bg-white border border-surface-300 rounded-lg text-sm text-surface-900 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-                          value={newExam.value.subject} onInput$={(e) => { newExam.value = { ...newExam.value, subject: (e.target as HTMLInputElement).value }; }} />
-                      </div>
-                      <div>
-                        <label class="block text-xs font-medium text-surface-500 mb-1">Durasi (menit)</label>
-                        <input type="number" class="w-full px-3 py-2 bg-white border border-surface-300 rounded-lg text-sm text-surface-900 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-                          value={newExam.value.duration} onInput$={(e) => { newExam.value = { ...newExam.value, duration: parseInt((e.target as HTMLInputElement).value) }; }} />
-                      </div>
-                      <div>
-                        <label class="block text-xs font-medium text-surface-500 mb-1">KKM</label>
-                        <input type="number" class="w-full px-3 py-2 bg-white border border-surface-300 rounded-lg text-sm text-surface-900 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-                          value={newExam.value.passingScore} onInput$={(e) => { newExam.value = { ...newExam.value, passingScore: parseInt((e.target as HTMLInputElement).value) }; }} />
-                      </div>
+                      {[
+                        { label: "Judul Ujian", key: "title", type: "text" },
+                        { label: "Mata Pelajaran", key: "subject", type: "text" },
+                        { label: "Durasi (menit)", key: "duration", type: "number" },
+                        { label: "KKM", key: "passingScore", type: "number" },
+                      ].map(f => (
+                        <div key={f.key}>
+                          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">{f.label}</label>
+                          <input type={f.type}
+                            class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                            value={(newExam.value as any)[f.key]}
+                            onInput$={(e) => {
+                              const val = (e.target as HTMLInputElement).value;
+                              newExam.value = { ...newExam.value, [f.key]: f.type === "number" ? parseInt(val) : val };
+                            }}
+                          />
+                        </div>
+                      ))}
                     </div>
                     <div class="mt-4 flex justify-end gap-2">
-                      <button onClick$={() => { showCreateExam.value = false; }} class="px-4 py-2 rounded-lg text-surface-500 font-medium text-sm hover:bg-surface-200 transition-colors border border-transparent hover:border-surface-300">Batal</button>
-                      <button onClick$={createExam} class="px-6 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium shadow-sm transition-colors">Simpan Ujian Baru</button>
+                      <button onClick$={() => { showCreateExam.value = false; }}
+                        class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-100 transition-colors">
+                        Batal
+                      </button>
+                      <button onClick$={createExam}
+                        class="px-6 py-2 rounded-xl bg-blue-600 text-white text-sm font-[700] hover:bg-blue-700 transition-all shadow-sm shadow-blue-500/20">
+                        Simpan Ujian
+                      </button>
                     </div>
                   </div>
                 )}
 
+                {/* Exams table */}
                 <div class="overflow-x-auto">
-                  <table class="min-w-full divide-y divide-surface-200">
-                    <thead class="bg-surface-50">
-                      <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">Info Ujian</th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-surface-500 uppercase tracking-wider">Durasi</th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-surface-500 uppercase tracking-wider">Soal & KKM</th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-surface-500 uppercase tracking-wider">Status</th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-surface-500 uppercase tracking-wider w-32">Aksi</th>
+                  <table class="min-w-full">
+                    <thead>
+                      <tr class="border-b border-slate-100">
+                        <th class="px-6 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Info Ujian</th>
+                        <th class="px-6 py-3.5 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Durasi</th>
+                        <th class="px-6 py-3.5 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Soal & KKM</th>
+                        <th class="px-6 py-3.5 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                        <th class="px-6 py-3.5 w-14" />
                       </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-surface-200 text-sm">
-                      {exams.value.filter(e => 
-                        e.title.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-                        e.subject.toLowerCase().includes(searchQuery.value.toLowerCase())
-                      ).length === 0 ? (
-                        <tr>
-                          <td colSpan={5} class="px-6 py-8 text-center text-surface-500">
-                            {searchQuery.value ? "Tidak ada ujian yang sesuai pencarian." : "Belum ada ujian. Silakan buat baru."}
+                    <tbody>
+                      {filteredExams().length === 0 ? (
+                        <tr><td colSpan={5} class="px-6 py-16 text-center">
+                          <span class="material-symbols-outlined text-5xl text-slate-200 block mb-3">description</span>
+                          <p class="text-slate-400 font-medium text-sm">{searchQuery.value ? "Tidak ada ujian yang sesuai pencarian." : "Belum ada ujian. Silakan buat baru."}</p>
+                        </td></tr>
+                      ) : filteredExams().map(exam => (
+                        <tr key={exam.id} class="border-b border-slate-50 hover:bg-slate-50/60 transition-colors group">
+                          <td class="px-6 py-4">
+                            <p class="font-[700] text-slate-900 text-sm mb-1">{exam.title}</p>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{exam.subject}</span>
+                          </td>
+                          <td class="px-6 py-4 text-center">
+                            <span class="text-sm font-[700] text-slate-700">{exam.duration}</span>
+                            <span class="text-xs text-slate-400 ml-1">mnt</span>
+                          </td>
+                          <td class="px-6 py-4 text-center">
+                            <div class="flex flex-col items-center gap-1">
+                              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-semibold text-slate-600">{exam._count?.questions || 0} Soal</span>
+                              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-bold text-blue-600">KKM {exam.passingScore}</span>
+                            </div>
+                          </td>
+                          <td class="px-6 py-4 text-center">
+                            <button onClick$={() => toggleExam(exam.id, exam.active)}
+                              class={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-[700] transition-all border ${
+                                exam.active
+                                  ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100"
+                                  : "bg-slate-100 text-slate-400 border-slate-200 hover:bg-slate-200"
+                              }`}>
+                              <span class={`w-1.5 h-1.5 rounded-full ${exam.active ? "bg-emerald-500" : "bg-slate-300"}`} />
+                              {exam.active ? "Aktif" : "Nonaktif"}
+                            </button>
+                          </td>
+                          <td class="px-6 py-4 text-center">
+                            <button onClick$={() => deleteExam(exam.id)}
+                              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 mx-auto"
+                              title="Hapus Ujian">
+                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
                           </td>
                         </tr>
-                      ) : (
-                        exams.value.filter(e => 
-                          e.title.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-                          e.subject.toLowerCase().includes(searchQuery.value.toLowerCase())
-                        ).map(exam => (
-                          <tr key={exam.id} class="hover:bg-surface-50 transition-colors">
-                            <td class="px-6 py-4">
-                              <p class="font-bold text-surface-900 mb-0.5">{exam.title}</p>
-                              <p class="text-xs text-surface-500 bg-surface-100 inline-block px-2 py-0.5 rounded border border-surface-200">{exam.subject}</p>
-                            </td>
-                            <td class="px-6 py-4 text-center text-surface-600 font-medium">
-                              {exam.duration} mnt
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                              <div class="flex flex-col items-center gap-1">
-                                <span class="text-xs text-surface-600 bg-surface-100 px-2 py-0.5 rounded border border-surface-200">{exam._count?.questions || 0} Soal</span>
-                                <span class="text-xs text-primary-700 bg-primary-50 px-2 py-0.5 rounded border border-primary-200 font-medium">KKM: {exam.passingScore}</span>
-                              </div>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                              <button onClick$={() => toggleExam(exam.id, exam.active)}
-                                class={`px-2.5 py-1 rounded-full text-xs font-bold transition-colors w-24 border ${exam.active ? "bg-success/10 text-success-700 border-success/30 hover:bg-success/20" : "bg-surface-100 text-surface-500 border-surface-300 hover:bg-surface-200"}`}>
-                                {exam.active ? "● Aktif" : "○ Nonaktif"}
-                              </button>
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                              <button onClick$={() => deleteExam(exam.id)} class="p-2 rounded-lg text-surface-400 hover:text-danger hover:bg-danger/10 transition-colors" title="Hapus Ujian">
-                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
+                      ))}
                     </tbody>
                   </table>
                 </div>
               </div>
             )}
 
-            {/* Users Tab */}
+            {/* ══════ USERS ══════ */}
             {activeTab.value === "users" && (
-              <div class="animate-fade-in bg-white rounded-2xl shadow-sm border border-surface-200 overflow-hidden">
-                <div class="p-6 border-b border-surface-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <h2 class="text-lg font-bold text-surface-800">Kelola Pengguna ({users.value.length})</h2>
-                  
-                  <div class="flex flex-col sm:flex-row items-center gap-3">
-                    {/* Search Input */}
-                    <div class="relative w-full sm:w-64">
-                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-4 w-4 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <div class="bg-white rounded-3xl border border-slate-100 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.07)] overflow-hidden">
+                <div class="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h2 class="text-lg font-[900] tracking-tight text-slate-900">Kelola Pengguna</h2>
+                    <p class="text-xs text-slate-400 font-medium mt-0.5">{users.value.length} pengguna terdaftar</p>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <div class="relative">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Cari pengguna..."
-                        class="block w-full pl-10 pr-3 py-2 border border-surface-300 rounded-lg leading-5 bg-white placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-all text-surface-900"
+                      </span>
+                      <input type="text" placeholder="Cari pengguna..."
+                        class="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all w-52"
                         value={searchQuery.value}
                         onInput$={(e) => searchQuery.value = (e.target as HTMLInputElement).value}
                       />
                     </div>
-                
-                    <button onClick$={handleExportUsers} class="w-full sm:w-auto px-4 py-2 rounded-lg bg-surface-100 text-surface-600 border border-surface-200 text-sm hover:bg-surface-200 transition-colors flex items-center justify-center gap-2 font-medium">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <button onClick$={handleExportUsers}
+                      class="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all">
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
                       Export CSV
                     </button>
                   </div>
                 </div>
-                
+
                 <div class="overflow-x-auto">
-                  <table class="min-w-full divide-y divide-surface-200">
-                    <thead class="bg-surface-50">
-                      <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">Nama Lengkap</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">Info Akun</th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-surface-500 uppercase tracking-wider">Kelas</th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-surface-500 uppercase tracking-wider">Status</th>
+                  <table class="min-w-full">
+                    <thead>
+                      <tr class="border-b border-slate-100">
+                        <th class="px-6 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nama Lengkap</th>
+                        <th class="px-6 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Info Akun</th>
+                        <th class="px-6 py-3.5 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kelas</th>
+                        <th class="px-6 py-3.5 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
                       </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-surface-200 text-sm">
-                      {users.value.filter(u => 
-                        u.fullName.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-                        u.username.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-                        u.role.toLowerCase().includes(searchQuery.value.toLowerCase())
-                      ).length === 0 ? (
-                        <tr>
-                          <td colSpan={4} class="px-6 py-8 text-center text-surface-500">
-                            {searchQuery.value ? "Tidak ada pengguna yang sesuai pencarian." : "Belum ada data pengguna."}
+                    <tbody>
+                      {filteredUsers().length === 0 ? (
+                        <tr><td colSpan={4} class="px-6 py-16 text-center">
+                          <span class="material-symbols-outlined text-5xl text-slate-200 block mb-3">group</span>
+                          <p class="text-slate-400 font-medium text-sm">{searchQuery.value ? "Tidak ada pengguna yang sesuai." : "Belum ada data pengguna."}</p>
+                        </td></tr>
+                      ) : filteredUsers().map(u => (
+                        <tr key={u.id} class="border-b border-slate-50 hover:bg-slate-50/60 transition-colors">
+                          <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-[800] text-xs shadow-sm flex-shrink-0">
+                                {u.fullName.charAt(0) || "U"}
+                              </div>
+                              <span class="font-[700] text-slate-900 text-sm">{u.fullName}</span>
+                            </div>
+                          </td>
+                          <td class="px-6 py-4">
+                            <div class="flex flex-col gap-1.5">
+                              <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[10px] font-mono font-semibold text-slate-500 w-fit">{u.username}</span>
+                              <span class={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider w-fit border ${
+                                u.role === "ADMIN"    ? "bg-blue-50 text-blue-600 border-blue-100" :
+                                u.role === "OPERATOR" ? "bg-violet-50 text-violet-600 border-violet-100" :
+                                                        "bg-slate-100 text-slate-500 border-slate-200"
+                              }`}>{u.role}</span>
+                            </div>
+                          </td>
+                          <td class="px-6 py-4 text-center text-sm font-semibold text-slate-600">
+                            {u.kelas || <span class="text-slate-300">—</span>}
+                          </td>
+                          <td class="px-6 py-4 text-center">
+                            <span class={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-[700] border ${
+                              u.active
+                                ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                                : "bg-slate-100 text-slate-400 border-slate-200"
+                            }`}>
+                              <span class={`w-1.5 h-1.5 rounded-full ${u.active ? "bg-emerald-500" : "bg-slate-300"}`} />
+                              {u.active ? "Aktif" : "Nonaktif"}
+                            </span>
                           </td>
                         </tr>
-                      ) : (
-                        users.value.filter(u => 
-                          u.fullName.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-                          u.username.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-                          u.role.toLowerCase().includes(searchQuery.value.toLowerCase())
-                        ).map(u => (
-                          <tr key={u.id} class="hover:bg-surface-50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                              <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-surface-200 to-surface-300 flex items-center justify-center text-surface-600 font-bold text-xs ring-2 ring-white shadow-sm">
-                                  {u.fullName.charAt(0) || "U"}
-                                </div>
-                                <span class="font-bold text-surface-900">{u.fullName}</span>
-                              </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                              <div class="flex flex-col gap-1">
-                                <span class="text-xs text-surface-500 font-mono bg-surface-100 px-2 py-0.5 rounded border border-surface-200 w-fit">{u.username}</span>
-                                <span class={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full w-fit ${u.role === "ADMIN" ? "bg-primary-100 text-primary-700 border border-primary-200" : u.role === "OPERATOR" ? "bg-info/20 text-info-700 border border-info/30" : "bg-surface-200 text-surface-700 border border-surface-300"}`}>
-                                  {u.role}
-                                </span>
-                              </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-surface-600">
-                              {u.kelas || <span class="text-surface-400">-</span>}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center">
-                              <span class={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${u.active ? "bg-success/10 text-success-700 border border-success/30" : "bg-surface-100 text-surface-500 border border-surface-200"}`}>
-                                {u.active ? "Aktif" : "Nonaktif"}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      )}
+                      ))}
                     </tbody>
                   </table>
                 </div>
