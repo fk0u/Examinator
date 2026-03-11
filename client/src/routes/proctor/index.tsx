@@ -287,7 +287,7 @@ export default component$(() => {
           <div class="space-y-2 max-h-[calc(100vh-260px)] overflow-y-auto pr-1">
             {alerts.value.length === 0 ? (
               <div class="bg-white rounded-2xl border border-slate-100 p-6 text-center shadow-sm">
-                <span class="material-symbols-outlined text-3xl text-slate-200 block mb-2">shield_check</span>
+                <span class="material-symbols-outlined text-3xl text-slate-200 block mb-2">shield</span>
                 <p class="text-slate-400 text-xs font-semibold">Belum ada pelanggaran</p>
               </div>
             ) : alerts.value.map((a, i) => (
