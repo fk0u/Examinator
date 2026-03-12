@@ -122,10 +122,10 @@ export const usersApi = {
 
 // ─── Attempts API ───────────────────────────────────────
 export const attemptsApi = {
-  start: (examId: string, cameraEnabled: boolean = false) =>
+  start: (examId: string, cameraEnabled: boolean = false, accessToken?: string) =>
     apiFetch("/attempts/start", {
       method: "POST",
-      body: JSON.stringify({ examId, cameraEnabled }),
+      body: JSON.stringify({ examId, cameraEnabled, accessToken }),
     }),
   answer: (attemptId: string, data: any) =>
     apiFetch(`/attempts/${attemptId}/answer`, {

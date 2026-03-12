@@ -27,6 +27,7 @@ export default component$(() => {
   
   const isReady = useSignal(false);
   const termsAccepted = useSignal(false);
+  const accessToken = useSignal("");
   
   const loading = useSignal(false);
   const submitting = useSignal(false);
@@ -86,15 +87,20 @@ export default component$(() => {
   // ── Mulai percobaan ujian ────────────────────────────
   const startActualExam = $(async () => {
     if (!termsAccepted.value) return;
+    if (examData.value?.requiresToken && !accessToken.value.trim()) {
+      alert("Token ujian wajib diisi.");
+      return;
+    }
     loading.value = true;
     
     try {
-      const data = await attemptsApi.start(examId, cameraEnabled.value);
+      const data = await attemptsApi.start(examId, cameraEnabled.value, accessToken.value.trim() || undefined);
       attempt.value = data.attempt;
-      questions.value = data.attempt.exam?.questions || [];
+      const examPayload = data.exam || data.attempt?.exam;
+      questions.value = examPayload?.questions || [];
       timeLeft.value = typeof data.remainingSeconds === "number"
         ? data.remainingSeconds
-        : data.attempt.exam?.duration * 60; // Ubah ke detik
+        : examPayload?.duration * 60; // Ubah ke detik
 
       // Hubungkan WebSocket
       const ws = getWsClient();
@@ -333,6 +339,21 @@ export default component$(() => {
                 </ul>
 
                 <div class="mt-10 pt-8 border-t border-white/10 relative z-10">
+                  {examData.value?.requiresToken && (
+                    <div class="mb-5 bg-black/10 p-5 rounded-3xl border border-white/5 shadow-inner">
+                      <label for="exam-token" class="block text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-2">Token Ujian</label>
+                      <input
+                        id="exam-token"
+                        type="text"
+                        value={accessToken.value}
+                        onInput$={(e: any) => accessToken.value = e.target.value}
+                        placeholder="Masukkan token dari pengawas"
+                        class="w-full h-12 px-4 rounded-2xl bg-blue-700/50 border border-white/15 text-white placeholder:text-blue-200/70 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                      />
+                      <p class="mt-2 text-[10px] font-semibold text-blue-200/90">Ujian ini diproteksi token. Pastikan token sesuai sebelum memulai.</p>
+                    </div>
+                  )}
+
                   <div class="flex items-start gap-3 mb-8 bg-black/10 p-5 rounded-3xl border border-white/5 shadow-inner">
                     <input 
                       id="terms" 
@@ -348,9 +369,13 @@ export default component$(() => {
 
                   <button 
                     onClick$={startActualExam}
-                    disabled={!termsAccepted.value || loading.value}
+                    disabled={
+                      !termsAccepted.value
+                      || loading.value
+                      || Boolean(examData.value?.requiresToken && !accessToken.value.trim())
+                    }
                     class={`w-full h-16 rounded-[1.75rem] font-bold text-lg shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 border-b-4 ${
-                      termsAccepted.value && !loading.value
+                      termsAccepted.value && !loading.value && (!examData.value?.requiresToken || !!accessToken.value.trim())
                         ? "bg-yellow-400 text-slate-900 border-yellow-600 hover:bg-yellow-500 shadow-yellow-400/25"
                         : "bg-blue-700 text-blue-400 border-blue-800 opacity-50 grayscale"
                     }`}
@@ -377,6 +402,7 @@ export default component$(() => {
              <div class="flex flex-wrap justify-center gap-4">
                <div class="px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm text-xs font-bold text-slate-700">Mata Ujian: {examData.value?.title}</div>
                <div class="px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm text-xs font-bold text-slate-700">Durasi: {examData.value?.duration} Menit</div>
+               <div class="px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm text-xs font-bold text-slate-700">Proteksi: {examData.value?.requiresToken ? "Token" : "Tanpa Token"}</div>
                <div class="px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm text-xs font-bold text-slate-700">Kode Ujian: {examId}</div>
              </div>
           </div>

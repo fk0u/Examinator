@@ -39,6 +39,7 @@ model Exam {
   title       String
   description String?   @db.Text
   subject     String    // Mata Pelajaran
+  accessTokenHash String? @db.VarChar(255) // Hash token akses ujian (opsional)
   duration    Int       // Duration in minutes
   startTime   DateTime? // Scheduled start
   endTime     DateTime? // Scheduled end

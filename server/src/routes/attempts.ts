@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { authPlugin, requireAuth, requireRole } from "../middleware/auth";
 import { db } from "../lib/db";
+import { compare } from "bcryptjs";
 
 // ─── Attempt Routes ─────────────────────────────────────
 
@@ -77,6 +78,20 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
         return { error: "Exam already submitted" };
       }
 
+      if (exam.accessTokenHash) {
+        const providedToken = typeof body.accessToken === "string" ? body.accessToken.trim() : "";
+        if (!providedToken) {
+          set.status = 403;
+          return { error: "Exam token is required" };
+        }
+
+        const isTokenValid = await compare(providedToken, exam.accessTokenHash);
+        if (!isTokenValid) {
+          set.status = 403;
+          return { error: "Exam token is invalid" };
+        }
+      }
+
       // Create new attempt
       const attempt = await db.attempt.create({
         data: {
@@ -106,6 +121,7 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
       body: t.Object({
         examId: t.String(),
         cameraEnabled: t.Optional(t.Boolean()),
+        accessToken: t.Optional(t.String()),
       }),
     }
   )

@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { authPlugin, requireAuth, requireRole } from "../middleware/auth";
 import { db } from "../lib/db";
+import { hash } from "bcryptjs";
 
 // ─── Exam Routes ────────────────────────────────────────
 
@@ -18,13 +19,15 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
 
     const where = userRole === "STUDENT" ? { active: true } : {};
 
-    const exams = await db.exam.findMany({
+    const examsRaw = await db.exam.findMany({
       where,
       include: {
         _count: { select: { questions: true, attempts: true } },
       },
       orderBy: { createdAt: "desc" },
     });
+
+    const exams = examsRaw.map((exam) => sanitizeExam(exam));
 
     return { exams };
   })
@@ -34,7 +37,7 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
     const { params, userId, userRole, set } = context as any;
     requireAuth(userId);
 
-    const exam = await db.exam.findUnique({
+    const examRaw = await db.exam.findUnique({
       where: { id: params.examId },
       include: {
         questions: {
@@ -55,10 +58,12 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
       },
     });
 
-    if (!exam) {
+    if (!examRaw) {
       set.status = 404;
       return { error: "Exam not found" };
     }
+
+    const exam = sanitizeExam(examRaw);
 
     return { exam };
   })
@@ -71,7 +76,17 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
       requireAuth(userId);
       requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
-      const exam = await db.exam.create({ data: body });
+      const { accessToken, ...rest } = body;
+      const normalizedToken = normalizeAccessToken(accessToken);
+
+      const examRaw = await db.exam.create({
+        data: {
+          ...rest,
+          accessTokenHash: normalizedToken ? await hash(normalizedToken, 10) : null,
+        },
+      });
+
+      const exam = sanitizeExam(examRaw);
       set.status = 201;
       return { exam };
     },
@@ -86,6 +101,7 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
         shuffle: t.Optional(t.Boolean()),
         active: t.Optional(t.Boolean()),
         passingScore: t.Optional(t.Number({ minimum: 0, maximum: 100 })),
+        accessToken: t.Optional(t.String({ minLength: 4, maxLength: 64 })),
       }),
     }
   )
@@ -98,10 +114,25 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
       requireAuth(userId);
       requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
-      const exam = await db.exam.update({
+      const { accessToken, clearAccessToken, ...rest } = body;
+
+      const data: Record<string, unknown> = {
+        ...rest,
+      };
+
+      if (clearAccessToken) {
+        data.accessTokenHash = null;
+      } else if (typeof accessToken !== "undefined") {
+        const normalizedToken = normalizeAccessToken(accessToken);
+        data.accessTokenHash = normalizedToken ? await hash(normalizedToken, 10) : null;
+      }
+
+      const examRaw = await db.exam.update({
         where: { id: params.examId },
-        data: body,
+        data,
       });
+
+      const exam = sanitizeExam(examRaw);
 
       return { exam };
     },
@@ -116,6 +147,8 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
         shuffle: t.Optional(t.Boolean()),
         active: t.Optional(t.Boolean()),
         passingScore: t.Optional(t.Number()),
+        accessToken: t.Optional(t.String({ minLength: 4, maxLength: 64 })),
+        clearAccessToken: t.Optional(t.Boolean()),
       }),
     }
   )
@@ -129,3 +162,17 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
     await db.exam.delete({ where: { id: params.examId } });
     return { success: true };
   });
+
+function normalizeAccessToken(token?: string) {
+  if (typeof token !== "string") return null;
+  const normalized = token.trim();
+  return normalized.length ? normalized : null;
+}
+
+function sanitizeExam<T extends { accessTokenHash?: string | null }>(exam: T) {
+  const { accessTokenHash, ...rest } = exam;
+  return {
+    ...rest,
+    requiresToken: Boolean(accessTokenHash),
+  };
+}
