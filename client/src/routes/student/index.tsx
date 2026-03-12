@@ -45,12 +45,12 @@ export default component$(() => {
 
   const availableExams = exams.value.filter(exam => {
     const attempt = getAttemptForExam(exam.id);
-    return !attempt || (attempt.status !== "SUBMITTED" && attempt.status !== "TIMED_OUT");
+    return !attempt || attempt.status === "IN_PROGRESS";
   });
 
   const historyExams = exams.value.filter(exam => {
     const attempt = getAttemptForExam(exam.id);
-    return attempt && (attempt.status === "SUBMITTED" || attempt.status === "TIMED_OUT");
+    return attempt && (attempt.status === "SUBMITTED" || attempt.status === "TIMED_OUT" || attempt.status === "FORCE_SUBMITTED");
   });
 
   const averageScore = historyExams.length > 0 
@@ -248,6 +248,8 @@ export default component$(() => {
                  ) : (
                    historyExams.slice(0, 3).map((exam) => {
                      const attempt = getAttemptForExam(exam.id);
+                     const isForced = attempt.status === "FORCE_SUBMITTED";
+                    const scoreText = typeof attempt.score === "number" ? String(Math.round(attempt.score)) : "--";
                      return (
                        <div key={exam.id} class="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-slate-100/50 group hover:bg-white hover:border-blue-100 transition-all">
                           <div class="flex items-center gap-4">
@@ -257,11 +259,14 @@ export default component$(() => {
                              <div>
                                 <p class="text-sm font-bold text-slate-800 line-clamp-1">{exam.title}</p>
                                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{new Date(attempt.startedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</p>
+                                {isForced && (
+                                 <span class="inline-flex items-center mt-1 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[9px] font-bold uppercase tracking-wider text-rose-700">Force Submit</span>
+                                )}
                              </div>
                           </div>
                           <div class="text-right">
                              <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Skor</p>
-                             <p class="text-2xl font-bold text-blue-600">{Math.round(attempt.score)}<span class="text-xs text-slate-300 ml-0.5">%</span></p>
+                              <p class="text-2xl font-bold text-blue-600">{scoreText}<span class="text-xs text-slate-300 ml-0.5">{scoreText === "--" ? "" : "%"}</span></p>
                           </div>
                        </div>
                      );

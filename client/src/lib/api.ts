@@ -135,7 +135,15 @@ export const attemptsApi = {
   submit: (attemptId: string) =>
     apiFetch(`/attempts/${attemptId}/submit`, { method: "POST" }),
   my: () => apiFetch("/attempts/my"),
-  forced: (limit: number = 20) => apiFetch(`/attempts/forced?limit=${limit}`),
+  forced: (params?: { limit?: number; examId?: string; from?: string; to?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.limit) query.set("limit", String(params.limit));
+    if (params?.examId) query.set("examId", params.examId);
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return apiFetch(`/attempts/forced${suffix}`);
+  },
   byExam: (examId: string) => apiFetch(`/attempts/exam/${examId}`),
 };
 

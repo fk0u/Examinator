@@ -16,6 +16,9 @@ export default component$(() => {
   const users = useSignal<any[]>([]);
   const stats = useSignal<any>(null);
   const forcedAttempts = useSignal<any[]>([]);
+  const forcedSummary = useSignal<{ totalReturned: number; totalFiltered: number }>({ totalReturned: 0, totalFiltered: 0 });
+  const forcedLoading = useSignal(false);
+  const forcedFilters = useSignal({ examId: "", from: "", to: "" });
   const loading = useSignal(true);
   const activeTab = useSignal<"overview" | "exams" | "users">("overview");
   const searchQuery = useSignal("");
@@ -31,14 +34,33 @@ export default component$(() => {
 
     try {
       const [examData, userData, statsData, forcedData] = await Promise.all([
-        examsApi.list(), usersApi.list(), cheatLogsApi.stats(), attemptsApi.forced(12),
+        examsApi.list(), usersApi.list(), cheatLogsApi.stats(), attemptsApi.forced({ limit: 12 }),
       ]);
       exams.value = examData.exams || [];
       users.value = userData.users || [];
       stats.value = statsData.stats;
       forcedAttempts.value = forcedData.attempts || [];
+      forcedSummary.value = forcedData.summary || { totalReturned: 0, totalFiltered: 0 };
     } catch { /* silently */ }
     loading.value = false;
+  });
+
+  const loadForcedAttempts = $(async () => {
+    forcedLoading.value = true;
+    try {
+      const data = await attemptsApi.forced({
+        limit: 50,
+        examId: forcedFilters.value.examId || undefined,
+        from: forcedFilters.value.from || undefined,
+        to: forcedFilters.value.to || undefined,
+      });
+      forcedAttempts.value = data.attempts || [];
+      forcedSummary.value = data.summary || { totalReturned: 0, totalFiltered: 0 };
+    } catch (e: any) {
+      alert("Gagal memuat audit force submit: " + e.message);
+    } finally {
+      forcedLoading.value = false;
+    }
   });
 
   const createExam = $(async () => {
@@ -104,6 +126,24 @@ export default component$(() => {
       "Dibuat Pada": new Date(e.createdAt).toLocaleString("id-ID")
     }));
     exportToCSV("examinator_exams.csv", exportData);
+  });
+
+  const handleExportForcedAttempts = $(() => {
+    if (!forcedAttempts.value.length) return;
+    const exportData = forcedAttempts.value.map((item) => ({
+      "ID Attempt": item.id,
+      "Nama Siswa": item.user?.fullName || "-",
+      Username: item.user?.username || "-",
+      Kelas: item.user?.kelas || "-",
+      NISN: item.user?.nisn || "-",
+      "Judul Ujian": item.exam?.title || "-",
+      "Mata Pelajaran": item.exam?.subject || "-",
+      "Jumlah Pelanggaran": item._count?.cheatLogs || 0,
+      "Batas Pelanggaran": item.exam?.maxCheatViolations ?? 5,
+      "Jawaban Tersimpan": item._count?.answers || 0,
+      "Waktu Force Submit": item.submittedAt ? new Date(item.submittedAt).toLocaleString("id-ID") : "-",
+    }));
+    exportToCSV("audit_force_submitted.csv", exportData);
   });
 
   const filteredExams = () => exams.value.filter(e =>
@@ -313,8 +353,62 @@ export default component$(() => {
                       <h3 class="font-[800] tracking-tight text-slate-900 dark:text-white">Audit Force Submit Otomatis</h3>
                     </div>
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[10px] font-bold text-rose-700 uppercase tracking-wider">
-                      {forcedAttempts.value.length} Sesi Terakhir
+                      {forcedSummary.value.totalFiltered} Total Terfilter
                     </span>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                    <select
+                      class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                      title="Filter ujian"
+                      value={forcedFilters.value.examId}
+                      onChange$={(e) => forcedFilters.value = { ...forcedFilters.value, examId: (e.target as HTMLSelectElement).value }}
+                    >
+                      <option value="">Semua Ujian</option>
+                      {exams.value.map((exam) => (
+                        <option key={exam.id} value={exam.id}>{exam.title}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="datetime-local"
+                      class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                      title="Filter dari tanggal"
+                      placeholder="Dari tanggal"
+                      value={forcedFilters.value.from}
+                      onInput$={(e) => forcedFilters.value = { ...forcedFilters.value, from: (e.target as HTMLInputElement).value }}
+                    />
+                    <input
+                      type="datetime-local"
+                      class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                      title="Filter sampai tanggal"
+                      placeholder="Sampai tanggal"
+                      value={forcedFilters.value.to}
+                      onInput$={(e) => forcedFilters.value = { ...forcedFilters.value, to: (e.target as HTMLInputElement).value }}
+                    />
+                    <div class="flex items-center gap-2">
+                      <button
+                        onClick$={loadForcedAttempts}
+                        class="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-all"
+                      >
+                        {forcedLoading.value ? "Memuat..." : "Terapkan"}
+                      </button>
+                      <button
+                        onClick$={() => {
+                          forcedFilters.value = { examId: "", from: "", to: "" };
+                          loadForcedAttempts();
+                        }}
+                        class="px-3 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50"
+                      >
+                        Reset
+                      </button>
+                      <button
+                        onClick$={handleExportForcedAttempts}
+                        class="px-3 py-2.5 rounded-xl border border-rose-200 text-rose-700 text-sm font-semibold hover:bg-rose-50"
+                        title="Ekspor Audit"
+                      >
+                        Ekspor
+                      </button>
+                    </div>
                   </div>
 
                   {forcedAttempts.value.length === 0 ? (

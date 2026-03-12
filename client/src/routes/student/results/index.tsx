@@ -41,7 +41,7 @@ export default component$(() => {
   };
 
   const historyAttempts = attempts.value.filter(
-    (a) => a.status === "SUBMITTED" || a.status === "TIMED_OUT"
+      (a) => a.status === "SUBMITTED" || a.status === "TIMED_OUT" || a.status === "FORCE_SUBMITTED"
   ).sort((a, b) => new Date(b.endedAt || b.createdAt).getTime() - new Date(a.endedAt || a.createdAt).getTime());
 
   const averageScore = historyAttempts.length > 0
@@ -170,6 +170,8 @@ export default component$(() => {
                   {historyAttempts.map((attempt) => {
                     const exam = getExamForAttempt(attempt.examId);
                     const isPassed = attempt.score !== null && exam.passingScore !== undefined && attempt.score >= exam.passingScore;
+                              const isForced = attempt.status === "FORCE_SUBMITTED";
+                              const statusLabel = isForced ? "Force Submit" : (isPassed ? "Tuntas" : "Perlu Ulang");
                     
                     return (
                          <div key={attempt.id} class="bg-white rounded-[2.5rem] p-6 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/30 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-10 group hover:border-blue-400/30 transition-all duration-500 hover:-translate-y-1 relative overflow-hidden">
@@ -185,8 +187,8 @@ export default component$(() => {
 
                            <div class="flex-1 space-y-2 relative z-10">
                               <div class="flex flex-wrap items-center gap-4 mb-2">
-                                 <span class={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] ${isPassed ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'}`}>
-                                    {isPassed ? 'Tuntas' : 'Perlu Ulang'}
+                                 <span class={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] ${isForced ? 'bg-rose-600 text-white shadow-lg shadow-rose-500/20' : isPassed ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'}`}>
+                                    {statusLabel}
                                  </span>
                                  <span class="text-[11px] font-bold text-slate-300 uppercase tracking-widest italic flex items-center gap-2">
                                     <span class="size-1.5 bg-slate-200 rounded-full"></span>

@@ -289,9 +289,26 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
     requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
     const take = Math.min(Math.max(Number(query?.limit || 20), 1), 100);
+    const where: Record<string, unknown> = { status: "FORCE_SUBMITTED" };
+
+    if (query?.examId) {
+      where.examId = String(query.examId);
+    }
+
+    const fromDate = query?.from ? new Date(String(query.from)) : null;
+    const toDate = query?.to ? new Date(String(query.to)) : null;
+    const hasValidFrom = fromDate && !Number.isNaN(fromDate.getTime());
+    const hasValidTo = toDate && !Number.isNaN(toDate.getTime());
+
+    if (hasValidFrom || hasValidTo) {
+      where.submittedAt = {
+        ...(hasValidFrom ? { gte: fromDate } : {}),
+        ...(hasValidTo ? { lte: toDate } : {}),
+      };
+    }
 
     const attempts = await db.attempt.findMany({
-      where: { status: "FORCE_SUBMITTED" },
+      where,
       include: {
         user: {
           select: { id: true, fullName: true, username: true, kelas: true, nisn: true },
@@ -305,10 +322,13 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
       take,
     });
 
+    const totalFiltered = await db.attempt.count({ where });
+
     return {
       attempts,
       summary: {
-        total: attempts.length,
+        totalReturned: attempts.length,
+        totalFiltered,
       },
     };
   })
