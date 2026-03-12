@@ -36,14 +36,19 @@ export default component$(() => {
   const doubtfulAnswers = useSignal<Record<string, boolean>>({});
 
   // Kaitkan stream kamera ke elemen pratinjau video
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(({ track }) => {
+    // eslint-disable-next-line qwik/valid-lexical-scope
     track(() => stream.value);
+    // eslint-disable-next-line qwik/valid-lexical-scope
     if (stream.value && videoPreviewRef.value) {
+      // eslint-disable-next-line qwik/valid-lexical-scope
       videoPreviewRef.value.srcObject = stream.value;
     }
   });
 
   // Pemeriksaan sistem (Online & Layar Penuh)
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
     const updateOnlineStatus = () => isOnline.value = navigator.onLine;
     window.addEventListener('online', updateOnlineStatus);
@@ -60,6 +65,7 @@ export default component$(() => {
   });
 
   // ── Muat informasi ujian untuk ruang persiapan ───────
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(async () => {
     if (!isAuthenticated()) {
       await nav("/");

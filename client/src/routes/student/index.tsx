@@ -5,9 +5,9 @@ import { examsApi, attemptsApi } from "~/lib/api";
 import { getUserData, isAuthenticated, logout } from "~/lib/auth";
 import { Clock } from "~/components/ui/clock";
 
-// iOS 27 inspired design system for Student Dashboard
+// Tata visual modern untuk dashboard siswa
 
-// ─── Student Dashboard ──────────────────────────────────
+// ─── Dashboard Siswa ────────────────────────────────────
 
 export default component$(() => {
   const user = useSignal<any>(null);
@@ -66,7 +66,7 @@ export default component$(() => {
 
   return (
     <div class="font-['Public_Sans',sans-serif] min-h-screen bg-[#f8fafd] text-slate-900 select-none pb-20 sm:pb-12 overflow-x-hidden">
-      {/* ═══ Premium Navigation Bar (iOS Inspired) ═══ */}
+      {/* ═══ Navigasi Utama ═══ */}
       <nav class="sticky top-0 z-50 px-4 sm:px-6 py-2 sm:py-4">
         <div class="max-w-7xl mx-auto bg-white/70 backdrop-blur-xl border border-white/40 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-6 py-2 sm:py-3 flex items-center justify-between shadow-2xl shadow-blue-500/5">
           <div class="flex items-center gap-4">
@@ -75,7 +75,7 @@ export default component$(() => {
             </div>
             <div>
               <h2 class="text-slate-900 text-lg font-bold leading-tight tracking-tight">Examinator</h2>
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 italic">Student Dashboard v3.0</p>
+              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 italic">Dashboard Siswa v3.0</p>
             </div>
           </div>
           
@@ -101,7 +101,7 @@ export default component$(() => {
 
       <main class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-8 sm:space-y-12">
         
-        {/* ═══ Header Section ═══ */}
+      {/* ═══ Bagian Header ═══ */}
         <header class="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
            <div class="space-y-2 animate-fade-in-up">
               <h1 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter mb-2 italic">Selamat Datang, <span class="text-blue-600">{user.value?.fullName?.split(' ')[0] || 'Siswa'}</span></h1>
@@ -130,7 +130,7 @@ export default component$(() => {
            </div>
         </header>
 
-        {/* ═══ Active Exams Grid ═══ */}
+      {/* ═══ Daftar Ujian Aktif ═══ */}
         <section class="space-y-8">
            <div class="flex items-center justify-between">
               <h3 class="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-3">
@@ -157,7 +157,7 @@ export default component$(() => {
                  const attempt = getAttemptForExam(exam.id);
                  const isInProgress = attempt?.status === "IN_PROGRESS";
                  return (
-                   <div key={exam.id} class="group relative bg-white rounded-[2rem] sm:rounded-[2.5rem] p-1 border-2 border-transparent hover:border-blue-600/20 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 flex flex-col h-full animate-fade-in" style={{ animationDelay: `${i * 100}ms` }}>
+                   <div key={exam.id} class="group relative bg-white rounded-[2rem] sm:rounded-[2.5rem] p-1 border-2 border-transparent hover:border-blue-600/20 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 flex flex-col h-full animate-fade-in">
                       <div class="bg-slate-50 rounded-[1.75rem] sm:rounded-[2.25rem] p-6 sm:p-8 flex-1 flex flex-col group-hover:bg-white transition-colors duration-500">
                         <div class="flex items-center justify-between mb-6 sm:mb-8">
                            <div class={`size-12 sm:size-14 rounded-xl sm:rounded-2xl flex items-center justify-center text-white shadow-lg ${isInProgress ? 'bg-amber-500 shadow-amber-500/20 rotate-3' : 'bg-blue-600 shadow-blue-500/20'}`}>
@@ -205,7 +205,7 @@ export default component$(() => {
            )}
         </section>
 
-        {/* ═══ Footer Action Cards ═══ */}
+      {/* ═══ Kartu Aksi Bawah ═══ */}
          <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 pt-4 sm:pt-8">
             <div class="relative group cursor-pointer overflow-hidden rounded-[2rem] sm:rounded-[3rem] bg-gradient-to-br from-blue-600 to-blue-800 p-8 sm:p-12 text-white shadow-2xl shadow-blue-500/30">
                <div class="absolute -top-12 -right-12 text-white/10 group-hover:rotate-12 transition-transform duration-700">
