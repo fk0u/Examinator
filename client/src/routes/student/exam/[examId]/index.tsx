@@ -34,9 +34,8 @@ export default component$(() => {
   const showWarning = useSignal(false);
   const warningMessage = useSignal("");
   const doubtfulAnswers = useSignal<Record<string, boolean>>({});
-  const filterType = useSignal<"ALL" | "ANSWERED" | "UNANSWERED" | "DOUBTFUL">("ALL");
 
-  // Bind camera stream to the Readiness Room preview video
+  // Kaitkan stream kamera ke elemen pratinjau video
   useVisibleTask$(({ track }) => {
     track(() => stream.value);
     if (stream.value && videoPreviewRef.value) {
@@ -44,7 +43,7 @@ export default component$(() => {
     }
   });
 
-  // System Checks (Online & Fullscreen)
+  // Pemeriksaan sistem (Online & Layar Penuh)
   useVisibleTask$(() => {
     const updateOnlineStatus = () => isOnline.value = navigator.onLine;
     window.addEventListener('online', updateOnlineStatus);
@@ -60,7 +59,7 @@ export default component$(() => {
     };
   });
 
-  // ── Load Exam Info for Readiness Room ────────────────
+  // ── Muat informasi ujian untuk ruang persiapan ───────
   useVisibleTask$(async () => {
     if (!isAuthenticated()) {
       await nav("/");
@@ -72,13 +71,13 @@ export default component$(() => {
       const data = await examsApi.get(examId);
       examData.value = data.exam;
     } catch (e: any) {
-      console.error("Failed to fetch exam:", e);
+      console.error("Gagal mengambil data ujian:", e);
       alert("Gagal memuat info ujian.");
       nav("/student/");
     }
   });
 
-  // ── Start attempt ────────────────────────────────────
+  // ── Mulai percobaan ujian ────────────────────────────
   const startActualExam = $(async () => {
     if (!termsAccepted.value) return;
     loading.value = true;
@@ -89,9 +88,9 @@ export default component$(() => {
       questions.value = data.attempt.exam?.questions || [];
       timeLeft.value = typeof data.remainingSeconds === "number"
         ? data.remainingSeconds
-        : data.attempt.exam?.duration * 60; // Convert to seconds
+        : data.attempt.exam?.duration * 60; // Ubah ke detik
 
-      // Connect WebSocket
+      // Hubungkan WebSocket
       const ws = getWsClient();
       ws.connect();
       ws.send("student:join", {
@@ -102,12 +101,12 @@ export default component$(() => {
         cameraEnabled: cameraEnabled.value,
       });
 
-      // Handle force-submit from proctor
+      // Tangani perintah kirim paksa dari pengawas
       ws.on("force:submit", async () => {
         await submitExam();
       });
 
-      // Start timer
+      // Mulai hitung mundur
       const timer = setInterval(() => {
         timeLeft.value--;
         if (timeLeft.value <= 0) {
@@ -116,23 +115,23 @@ export default component$(() => {
         }
       }, 1000);
 
-      // Request fullscreen
+      // Minta mode layar penuh
       try {
         await document.documentElement.requestFullscreen();
       } catch {
-        // Fullscreen may not be available immediately
+        // Mode layar penuh mungkin belum tersedia saat itu juga
       }
 
       isReady.value = true;
       loading.value = false;
     } catch (e: any) {
-      console.error("Failed to start exam:", e);
+      console.error("Gagal memulai ujian:", e);
       alert("Gagal memulai ujian: " + e.message);
       loading.value = false;
     }
   });
 
-  // ── Cheat Detection ──────────────────────────────────
+  // ── Deteksi pelanggaran ──────────────────────────────
   useOnDocument(
     "visibilitychange",
     $(() => {
@@ -156,7 +155,7 @@ export default component$(() => {
     })
   );
 
-  // ── Log cheat event ─────────────────────────────────
+  // ── Catat kejadian pelanggaran ──────────────────────
   const logCheat = $(async (type: string, description: string) => {
     cheatCount.value++;
     showWarning.value = true;
@@ -176,21 +175,21 @@ export default component$(() => {
       ws.send("cheat:detected", { cheatType: type, description });
       capturePhoto(type, description);
     } catch {
-      // silently fail
+      // Abaikan jika gagal, agar ujian tetap berjalan
     }
   });
 
-  // ── Save answer ─────────────────────────────────────
+  // ── Simpan jawaban ──────────────────────────────────
   const saveAnswer = $(async (questionId: string, optionId: string) => {
     answers.value = { ...answers.value, [questionId]: optionId };
     try {
       await attemptsApi.answer(attempt.value.id, { questionId, optionId });
     } catch {
-      // silently fail
+      // Abaikan jika gagal, jawaban lokal tetap tersimpan
     }
   });
 
-  // ── Submit exam ─────────────────────────────────────
+  // ── Kirim ujian ─────────────────────────────────────
   const submitExam = $(async () => {
     if (submitting.value) return;
     submitting.value = true;
@@ -212,12 +211,6 @@ export default component$(() => {
     }
   });
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  };
-
   if (!isReady.value) {
     if (!examData.value) {
       return (
@@ -228,13 +221,13 @@ export default component$(() => {
                <span class="material-symbols-outlined text-blue-600 animate-pulse">rocket_launch</span>
             </div>
           </div>
-          <p class="mt-6 text-slate-400 font-bold uppercase tracking-[0.3em] text-[10px]">Singkronisasi Data...</p>
+          <p class="mt-6 text-slate-400 font-bold uppercase tracking-[0.3em] text-[10px]">Sinkronisasi Data...</p>
         </div>
       );
     }
     return (
       <div class="font-['Public_Sans',sans-serif] min-h-screen bg-[#f8fafd] text-slate-900 select-none flex flex-col">
-        {/* iOS 27 Inspired Top Navigation Bar */}
+        {/* Bilah atas ruang persiapan */}
         <header class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-white/70 backdrop-blur-xl border-b border-white/40 sticky top-0 z-50">
           <div class="flex items-center gap-4">
             <div class="size-11 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-600/20 rotate-3">
@@ -242,7 +235,7 @@ export default component$(() => {
             </div>
             <div>
               <h2 class="text-slate-900 text-lg font-bold leading-tight tracking-tight">Examinator</h2>
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Ready Room v3.0</p>
+              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Ruang Persiapan v3.0</p>
             </div>
           </div>
           <div class="flex gap-3">
@@ -259,18 +252,18 @@ export default component$(() => {
           <p class="text-slate-500 font-semibold text-sm sm:text-lg max-w-2xl mx-auto px-4">Pastikan koneksi stabil dan lingkungan tenang sebelum memulai sesi.</p>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full animate-fade-in" style={{ animationDelay: "100ms" }}>
-            {/* Left: Device Visualization */}
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full animate-fade-in [animation-delay:100ms]">
+            {/* Kiri: Visualisasi perangkat */}
             <div class="lg:col-span-7 flex flex-col gap-6">
               <div class="bg-white rounded-[3rem] p-8 shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden relative">
                 <div class="flex items-center justify-between mb-6">
                    <h3 class="text-xl font-bold text-slate-900 flex items-center gap-3">
                       <span class="material-symbols-outlined text-blue-600 font-bold">videocam</span>
-                      Live Monitoring
+                      Pemantauan Langsung
                    </h3>
                    <div class="flex items-center gap-2 px-3 py-1 bg-red-50 text-red-600 rounded-full border border-red-100">
                       <div class="size-2 rounded-full bg-red-600 animate-pulse"></div>
-                      <span class="text-[10px] font-bold uppercase tracking-widest">Encrypted Stream</span>
+                      <span class="text-[10px] font-bold uppercase tracking-widest">Stream Terenkripsi</span>
                    </div>
                 </div>
 
@@ -292,25 +285,26 @@ export default component$(() => {
 
                 <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
                    {[
-                     { label: 'Camera', ok: cameraEnabled.value, icon: 'photo_camera' },
-                     { label: 'Microphone', ok: micEnabled.value, icon: 'mic' },
-                     { label: 'Network', ok: isOnline.value, icon: 'wifi' },
-                     { label: 'Secure Mode', ok: isFullscreen.value, icon: 'rocket' }
+                     { label: 'Kamera', ok: cameraEnabled.value, icon: 'photo_camera' },
+                     { label: 'Mikrofon', ok: micEnabled.value, icon: 'mic' },
+                     { label: 'Jaringan', ok: isOnline.value, icon: 'wifi' },
+                     { label: 'Mode Aman', ok: isFullscreen.value, icon: 'rocket' }
                    ].map((sys, i) => (
                      <div key={i} class="p-4 rounded-3xl bg-slate-50 border border-slate-100 flex flex-col items-center gap-3">
                         <div class={`size-10 rounded-2xl flex items-center justify-center ${sys.ok ? 'bg-emerald-100 text-emerald-600 shadow-emerald-500/10' : 'bg-red-50 text-red-400 opacity-50'}`}>
                            <span class="material-symbols-outlined font-bold text-xl">{sys.icon}</span>
                         </div>
                         <p class={`text-[9px] font-bold uppercase tracking-widest ${sys.ok ? 'text-emerald-600' : 'text-slate-400'}`}>
-                           {sys.ok ? 'Ready' : 'Wait'}
+                          {sys.ok ? 'Siap' : 'Tunggu'}
                         </p>
+                        <p class="text-[10px] font-bold text-slate-500">{sys.label}</p>
                      </div>
                    ))}
                 </div>
               </div>
             </div>
 
-            {/* Right: Rules & Commitment */}
+                {/* Kanan: Aturan & komitmen */}
             <div class="lg:col-span-5 flex flex-col gap-6">
               <div class="bg-blue-600 rounded-[3rem] p-10 text-white shadow-2xl shadow-blue-500/30 flex flex-col h-full overflow-hidden relative group">
                 <div class="absolute -top-12 -right-12 text-white/10 group-hover:rotate-12 transition-transform duration-700">
@@ -358,7 +352,7 @@ export default component$(() => {
                     {loading.value ? (
                       <div class="flex items-center gap-3">
                          <div class="size-5 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin" />
-                         <span>Singkronisasi...</span>
+                         <span>Sinkronisasi...</span>
                       </div>
                     ) : (
                       <>
@@ -372,12 +366,12 @@ export default component$(() => {
             </div>
           </div>
 
-          <div class="mt-12 text-center animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-             <p class="text-[10px] font-bold text-slate-300 uppercase tracking-[0.4em] mb-4">Exam Particulars</p>
+          <div class="mt-12 text-center animate-fade-in-up [animation-delay:200ms]">
+             <p class="text-[10px] font-bold text-slate-300 uppercase tracking-[0.4em] mb-4">Informasi Ujian</p>
              <div class="flex flex-wrap justify-center gap-4">
-                <div class="px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm text-xs font-bold text-slate-700">SUBJ: {examData.value?.title}</div>
-                <div class="px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm text-xs font-bold text-slate-700">DUR: {examData.value?.duration} MIN</div>
-                <div class="px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm text-xs font-bold text-slate-700">UID: {examId}</div>
+               <div class="px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm text-xs font-bold text-slate-700">Mata Ujian: {examData.value?.title}</div>
+               <div class="px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm text-xs font-bold text-slate-700">Durasi: {examData.value?.duration} Menit</div>
+               <div class="px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm text-xs font-bold text-slate-700">Kode Ujian: {examId}</div>
              </div>
           </div>
         </main>
@@ -386,304 +380,275 @@ export default component$(() => {
   }
 
   // ──────────────────────────────────────────────────────
-  // Render Active Exam Interface (iOS 27 Inspired)
+  // Tampilan antarmuka ujian aktif
   // ──────────────────────────────────────────────────────
   const currentQ = questions.value[currentQuestion.value];
+  const answeredCount = Object.keys(answers.value).length;
+  const completionPercent = Math.round((answeredCount / (questions.value.length || 1)) * 100);
+  const hoursLeft = Math.floor(timeLeft.value / 3600).toString().padStart(2, "0");
+  const minutesLeft = Math.floor((timeLeft.value % 3600) / 60).toString().padStart(2, "0");
+  const secondsLeft = Math.max(timeLeft.value % 60, 0).toString().padStart(2, "0");
+  const isLowTime = timeLeft.value <= 300;
+  const isCriticalTime = timeLeft.value <= 60;
 
   return (
-    <div class="font-['Public_Sans',sans-serif] min-h-screen bg-[#f8fafd] text-slate-900 font-sans select-none flex flex-col h-screen overflow-hidden">
+    <div class="font-['Public_Sans',sans-serif] min-h-screen bg-slate-100 text-slate-800 flex flex-col h-screen overflow-hidden relative">
+      <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.10),_transparent_38%),radial-gradient(circle_at_bottom_left,_rgba(16,185,129,0.08),_transparent_42%)]" />
+
       {/* Anti-cheat Overlay */}
       {showWarning.value && (
-        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-red-500/10 backdrop-blur-md animate-fade-in">
-           <div class="bg-white border-2 border-red-500 rounded-[3rem] p-10 max-w-md text-center animate-shake shadow-[0_20px_70px_rgba(239,68,68,0.3)]">
-              <div class="size-20 mx-auto mb-6 rounded-[1.5rem] bg-red-100 flex items-center justify-center text-red-600 shadow-inner">
-                <span class="material-symbols-outlined text-5xl font-bold">warning</span>
+        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-red-950/40 backdrop-blur-sm animate-fade-in px-4">
+           <div class="bg-white border border-red-100 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl shadow-red-500/20">
+              <div class="size-16 mx-auto mb-4 rounded-2xl bg-red-100 flex items-center justify-center text-red-600">
+                <span class="material-symbols-outlined text-4xl font-bold">warning</span>
               </div>
-              <p class="text-red-600 font-bold text-3xl mb-3 tracking-tighter uppercase italic">PELANGGARAN!</p>
-              <p class="text-slate-600 font-bold text-lg">{warningMessage.value}</p>
+              <p class="text-red-700 font-extrabold text-2xl mb-2 tracking-tight">Pelanggaran Terdeteksi</p>
+              <p class="text-slate-600 font-semibold leading-relaxed">{warningMessage.value}</p>
            </div>
         </div>
       )}
 
-      {/* Modern Top Header */}
-      <header class="h-16 sm:h-20 shrink-0 w-full bg-white/70 backdrop-blur-xl border-b border-slate-200/50 px-4 sm:px-8 flex items-center justify-between z-50">
-        <div class="flex items-center gap-5">
-           <div class="size-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20 rotate-3">
-              <span class="material-symbols-outlined font-bold text-2xl">rocket_launch</span>
-           </div>
-           <div class="hidden sm:block">
-              <h2 class="text-slate-900 text-lg font-bold leading-none">{attempt.value?.exam?.title}</h2>
-              <div class="flex items-center gap-3 mt-1.5">
-                 <div class="px-5 py-2.5 bg-blue-600 text-yellow-400 font-bold rounded-2xl flex items-center gap-3 shadow-xl shadow-blue-500/20 border-b-4 border-blue-800 animate-pulse">
-                    <span class="material-symbols-outlined text-2xl font-bold">timer</span>
-                    <span class="text-2xl font-bold tracking-tighter tabular-nums">{formatTime(timeLeft.value)}</span>
-                 </div>
-                 {cheatCount.value > 0 && (
-                    <div class="flex items-center gap-1.5 px-2 py-0.5 bg-red-50 text-red-600 rounded-lg border border-red-100">
-                       <span class="material-symbols-outlined text-[10px] font-bold">report</span>
-                       <span class="text-[9px] font-bold uppercase tracking-widest">{cheatCount.value} Pelanggaran</span>
-                    </div>
-                 )}
+      <header class="shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
+        <div class="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-8 h-[74px] flex items-center justify-between gap-3">
+          <div class="min-w-0 flex items-center gap-3">
+             <div class="size-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/30">
+                <span class="material-symbols-outlined text-[22px] font-bold">school</span>
+             </div>
+             <div class="min-w-0">
+                <p class="text-[10px] tracking-[0.18em] uppercase font-extrabold text-slate-400">Sesi Ujian</p>
+                <h2 class="truncate text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">
+                  {attempt.value?.exam?.title}
+                </h2>
+             </div>
+          </div>
+
+          <div class={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-2xl border shadow-inner font-bold tabular-nums ${
+            isCriticalTime
+              ? "bg-red-50 border-red-200 text-red-600 animate-pulse"
+              : isLowTime
+                ? "bg-amber-50 border-amber-200 text-amber-700"
+                : "bg-slate-100 border-slate-200 text-slate-800"
+          }`}>
+            <span class="material-symbols-outlined text-[16px] sm:text-[18px]">timer</span>
+            <span class="text-base sm:text-lg">{hoursLeft}</span>
+            <span class="opacity-40">:</span>
+            <span class="text-base sm:text-lg">{minutesLeft}</span>
+            <span class="opacity-40">:</span>
+            <span class={`text-base sm:text-lg ${isCriticalTime ? "text-red-600" : "text-blue-600"}`}>{secondsLeft}</span>
+          </div>
+
+          <div class="flex items-center gap-2 sm:gap-3">
+            {cheatCount.value > 0 && (
+              <div class="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-red-50 border border-red-100 text-red-600">
+                 <span class="material-symbols-outlined text-[14px]">report</span>
+                 <span class="text-[11px] font-bold">{cheatCount.value} pelanggaran</span>
               </div>
-           </div>
-        </div>
-
-        {/* Dynamic iOS-style Timer Widget */}
-        <div class={`flex items-center gap-3 sm:gap-6 px-4 sm:px-10 py-1.5 sm:py-2.5 rounded-2xl sm:rounded-[2rem] border-2 shadow-inner transition-all duration-300 ${
-          timeLeft.value < 300 
-            ? 'bg-red-50 border-red-200 text-red-600 animate-pulse' 
-            : 'bg-slate-100 border-slate-200/50 text-slate-800'
-        }`}>
-           <div class="flex flex-col items-center">
-              <span class="text-sm sm:text-2xl font-bold tabular-nums leading-none">
-                 {Math.floor(timeLeft.value / 3600).toString().padStart(2, '0')}
-              </span>
-           </div>
-           <span class="text-sm sm:text-2xl font-bold opacity-20">:</span>
-           <div class="flex flex-col items-center">
-              <span class="text-sm sm:text-2xl font-bold tabular-nums leading-none">
-                 {Math.floor((timeLeft.value % 3600) / 60).toString().padStart(2, '0')}
-              </span>
-           </div>
-           <span class="text-sm sm:text-2xl font-bold opacity-20">:</span>
-           <div class="flex flex-col items-center">
-              <span class={`text-sm sm:text-2xl font-bold tabular-nums leading-none ${timeLeft.value < 60 ? 'text-red-600' : 'text-blue-600'}`}>
-                 {(timeLeft.value % 60).toString().padStart(2, '0')}
-              </span>
-           </div>
-        </div>
-
-        <div class="flex items-center gap-4">
-           <button 
-             onClick$={submitExam}
-             class="h-12 px-8 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-xl shadow-red-500/20 active:scale-95 border-b-4 border-red-800 transition-all uppercase tracking-widest text-xs hidden sm:flex items-center justify-center gap-2"
-           >
-             Finish
-             <span class="material-symbols-outlined font-bold text-sm">logout</span>
-           </button>
-           <div class="size-10 bg-slate-100 rounded-full border-2 border-blue-600 flex items-center justify-center text-blue-600 overflow-hidden font-bold">
-              <img src={`https://ui-avatars.com/api/?name=${user.value?.fullName || 'User'}&background=3b82f6&color=fff&bold=true`} class="size-full object-cover" />
-           </div>
+            )}
+            <div class="hidden sm:flex items-center gap-2">
+              <img
+                src={`https://ui-avatars.com/api/?name=${user.value?.fullName || 'User'}&background=2563eb&color=fff&bold=true`}
+                class="size-9 rounded-xl object-cover border border-slate-200"
+                alt={`Avatar ${user.value?.fullName || "Siswa"}`}
+                width={36}
+                height={36}
+              />
+              <span class="max-w-[140px] truncate text-xs font-bold text-slate-600">{user.value?.fullName || "Siswa"}</span>
+            </div>
+            <button
+              onClick$={submitExam}
+              class="h-10 px-3 sm:px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all shadow-lg shadow-red-600/20 active:scale-95"
+            >
+              <span>Selesai</span>
+              <span class="material-symbols-outlined text-[17px]">done_all</span>
+            </button>
+          </div>
         </div>
       </header>
 
-      <main class="flex-1 flex overflow-hidden">
-        {/* Sidebar Question Navigator */}
-        <aside class="w-80 border-r border-slate-200/50 bg-white flex flex-col shrink-0 hidden lg:flex">
-           <div class="p-8 border-b border-slate-100">
-              <h3 class="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                 <span class="material-symbols-outlined text-blue-600 font-bold">grid_view</span>
-                 Navigator
-              </h3>
-              
-              <div class="space-y-4">
-                 <div class="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                    <span>Progres Jawaban</span>
-                    <span>{Math.round((Object.keys(answers.value).length / (questions.value.length || 1)) * 100)}%</span>
-                 </div>
-                 <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-50 shadow-inner">
-                    <div 
-                      class="h-full bg-blue-600 rounded-full transition-all duration-700 shadow-lg shadow-blue-500/30"
-                      style={{ width: `${(Object.keys(answers.value).length / (questions.value.length || 1)) * 100}%` }}
+      <main class="flex-1 overflow-hidden">
+        <div class="h-full max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-8 py-3 sm:py-4 lg:py-5">
+          <div class="h-full grid grid-cols-1 xl:grid-cols-12 gap-4 lg:gap-5">
+            <section class="xl:col-span-8 2xl:col-span-9 min-h-0 flex flex-col gap-4">
+              <div class="rounded-3xl border border-slate-200/80 bg-white shadow-sm px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div class="size-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-lg font-extrabold shadow-md">
+                    {currentQuestion.value + 1}
+                  </div>
+                  <div>
+                    <p class="text-[11px] uppercase tracking-[0.14em] font-extrabold text-slate-400">Nomor Soal</p>
+                    <p class="text-sm sm:text-base font-bold text-slate-800">Soal {currentQuestion.value + 1} dari {questions.value.length}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 sm:gap-4">
+                  <div class="text-right">
+                    <p class="text-[11px] uppercase tracking-[0.14em] font-extrabold text-slate-400">Kemajuan</p>
+                    <p class="text-sm font-bold text-blue-600">{completionPercent}% selesai</p>
+                  </div>
+                  <div class="w-28 h-2 rounded-full bg-slate-200 overflow-hidden">
+                    <progress
+                      value={completionPercent}
+                      max={100}
+                      class="h-full w-full [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-blue-600 [&::-moz-progress-bar]:bg-blue-600"
                     />
-                 </div>
+                  </div>
+                  <button
+                    onClick$={() => doubtfulAnswers.value = { ...doubtfulAnswers.value, [currentQ.id]: !doubtfulAnswers.value[currentQ.id] }}
+                    class={`h-10 px-4 rounded-xl border text-xs sm:text-sm font-bold transition-all ${
+                      doubtfulAnswers.value[currentQ.id]
+                        ? "bg-amber-100 text-amber-700 border-amber-300"
+                        : "bg-white text-slate-600 border-slate-200 hover:border-amber-300 hover:text-amber-700"
+                    }`}
+                  >
+                    {doubtfulAnswers.value[currentQ.id] ? "Sudah Ditandai Ragu" : "Tandai Ragu"}
+                  </button>
+                </div>
               </div>
-           </div>
 
-           <div class="p-8 overflow-y-auto flex-1 custom-scrollbar-hidden bg-slate-50/30">
-              <div class="grid grid-cols-4 gap-3">
-                 {questions.value.map((q, i) => {
+              <article class="min-h-0 flex-1 rounded-3xl border border-slate-200/80 bg-white shadow-sm flex flex-col overflow-hidden">
+                <div class="px-4 sm:px-6 lg:px-8 pt-5 sm:pt-6 pb-4 border-b border-slate-100">
+                  <h1 class="text-lg sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-slate-900 leading-snug">
+                    {currentQ?.text}
+                  </h1>
+                </div>
+
+                <div class="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-5 space-y-3 sm:space-y-4 custom-scrollbar">
+                  {currentQ?.options?.map((option: any, idx: number) => {
+                    const label = String.fromCharCode(65 + idx);
+                    const isSelected = answers.value[currentQ.id] === option.id;
+
+                    return (
+                      <button
+                        key={option.id}
+                        onClick$={() => saveAnswer(currentQ.id, option.id)}
+                        class={`w-full rounded-2xl border-2 px-4 sm:px-5 py-4 text-left transition-all duration-200 flex items-start sm:items-center gap-4 sm:gap-5 ${
+                          isSelected
+                            ? "bg-blue-50 border-blue-500 shadow-md shadow-blue-500/10"
+                            : "bg-slate-50/50 border-slate-200 hover:border-blue-300 hover:bg-white"
+                        }`}
+                      >
+                        <div class={`size-9 sm:size-11 rounded-xl flex items-center justify-center text-sm sm:text-base font-extrabold shrink-0 ${
+                          isSelected ? "bg-blue-600 text-white" : "bg-white border border-slate-200 text-slate-600"
+                        }`}>
+                          {label}
+                        </div>
+                        <span class={`flex-1 text-sm sm:text-base lg:text-lg leading-relaxed font-semibold ${isSelected ? "text-blue-900" : "text-slate-700"}`}>
+                          {option.text}
+                        </span>
+                        {isSelected && (
+                          <span class="material-symbols-outlined text-blue-600 text-[22px] sm:text-[26px]">check_circle</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div class="border-t border-slate-100 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-white/70 backdrop-blur-md">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <button
+                      disabled={currentQuestion.value === 0}
+                      onClick$={() => currentQuestion.value > 0 && currentQuestion.value--}
+                      class="h-11 px-4 sm:px-5 rounded-xl border border-slate-200 bg-white text-slate-600 font-bold flex items-center gap-2 hover:bg-slate-50 active:scale-95 disabled:opacity-40 disabled:active:scale-100"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                      <span>Sebelumnya</span>
+                    </button>
+
+                    {currentQuestion.value === questions.value.length - 1 ? (
+                      <button
+                        onClick$={submitExam}
+                        disabled={submitting.value}
+                        class="h-11 px-5 sm:px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-95 disabled:opacity-70"
+                      >
+                        <span>{submitting.value ? "Memproses..." : "Akhiri dan Kumpulkan"}</span>
+                        <span class="material-symbols-outlined text-[18px]">send</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick$={() => currentQuestion.value++}
+                        class="h-11 px-5 sm:px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center gap-2 shadow-lg shadow-blue-600/20 active:scale-95"
+                      >
+                        <span>Berikutnya</span>
+                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </article>
+            </section>
+
+            <aside class="xl:col-span-4 2xl:col-span-3 min-h-0 flex flex-col gap-4">
+              <div class="rounded-3xl border border-slate-200/80 bg-white shadow-sm p-4 sm:p-5">
+                <h3 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 mb-4">Navigasi Soal</h3>
+                <div class="grid grid-cols-3 gap-2 text-[11px] font-bold text-slate-500 mb-4">
+                  <div class="flex items-center gap-2"><span class="size-3 rounded-sm bg-blue-600" />Dijawab</div>
+                  <div class="flex items-center gap-2"><span class="size-3 rounded-sm bg-amber-400" />Ragu</div>
+                  <div class="flex items-center gap-2"><span class="size-3 rounded-sm bg-white border border-slate-300" />Kosong</div>
+                </div>
+                <div class="grid grid-cols-5 sm:grid-cols-6 xl:grid-cols-5 gap-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
+                  {questions.value.map((q, i) => {
                     const isAnswered = !!answers.value[q.id];
                     const isDoubtful = doubtfulAnswers.value[q.id];
                     const isActive = currentQuestion.value === i;
-                    
-                    let statusClass = "bg-white border-slate-100 text-slate-400";
-                    if (isAnswered) statusClass = "bg-blue-600 border-blue-700 text-white shadow-lg shadow-blue-600/20";
-                    if (isDoubtful) statusClass = "bg-yellow-400 border-yellow-500 text-slate-900 shadow-lg shadow-yellow-400/20";
-                    
+
+                    let statusClass = "bg-white border-slate-200 text-slate-600 hover:border-blue-400";
+                    if (isAnswered) statusClass = "bg-blue-600 border-blue-600 text-white";
+                    if (isDoubtful) statusClass = "bg-amber-400 border-amber-400 text-slate-900";
+
                     return (
-                       <button
-                         key={q.id}
-                         onClick$={() => currentQuestion.value = i}
-                         class={`aspect-square rounded-2xl flex items-center justify-center text-sm font-bold border-2 transition-all active:scale-90 ${statusClass} ${isActive ? 'scale-110 ring-4 ring-blue-500/10 !border-slate-800' : ''}`}
-                       >
-                          {i + 1}
-                       </button>
+                      <button
+                        key={q.id}
+                        onClick$={() => currentQuestion.value = i}
+                        class={`aspect-square rounded-xl text-sm font-bold border-2 transition-all active:scale-95 ${statusClass} ${isActive ? "ring-2 ring-offset-2 ring-blue-500 !border-slate-900" : ""}`}
+                      >
+                        {i + 1}
+                      </button>
                     );
-                 })}
-              </div>
-           </div>
-
-           <div class="p-8 border-t border-slate-100 space-y-3">
-              <div class="flex items-center gap-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                 <div class="size-4 bg-blue-600 rounded-md"></div>
-                 Sudah Dijawab
-              </div>
-              <div class="flex items-center gap-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                 <div class="size-4 bg-yellow-400 rounded-md"></div>
-                 Ragu-ragu
-              </div>
-              <div class="flex items-center gap-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                 <div class="size-4 bg-white border border-slate-200 rounded-md"></div>
-                 Belum Diisi
-              </div>
-           </div>
-        </aside>
-
-        {/* Content Question Area */}
-        <section class="flex-1 overflow-y-auto p-6 sm:p-10 lg:p-16 custom-scrollbar-hidden bg-white/40 shadow-inner">
-           <div class="max-w-4xl mx-auto space-y-8 sm:space-y-12">
-              <div class="flex items-center justify-between">
-                 <div class="px-3 sm:px-5 py-1.5 sm:py-2 bg-blue-50 text-blue-600 rounded-xl sm:rounded-2xl border border-blue-100 inline-flex items-center gap-3 sm:gap-4 font-bold text-[10px] sm:text-[12px] uppercase tracking-[0.2em] shadow-sm">
-                    <span>Soal</span>
-                    <span class="size-6 sm:size-7 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold">{currentQuestion.value + 1}</span>
-                    <span class="text-slate-400">/ {questions.value.length}</span>
-                 </div>
-                 
-                 <button 
-                   onClick$={() => doubtfulAnswers.value = { ...doubtfulAnswers.value, [currentQ.id]: !doubtfulAnswers.value[currentQ.id] }}
-                   class={`flex items-center gap-3 px-6 py-2.5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border-2 ${
-                     doubtfulAnswers.value[currentQ.id]
-                       ? 'bg-yellow-400 border-yellow-500 text-slate-900 shadow-xl shadow-yellow-400/20 scale-105'
-                       : 'bg-white border-slate-100 text-slate-400 hover:text-yellow-600 hover:border-yellow-200 hover:bg-yellow-50'
-                   }`}
-                 >
-                    <span class="material-symbols-outlined text-lg">{doubtfulAnswers.value[currentQ.id] ? 'bookmark_added' : 'bookmark'}</span>
-                    <span>Ragu-ragu</span>
-                 </button>
+                  })}
+                </div>
               </div>
 
-              <div class="space-y-6">
-                 <h1 class="text-3xl lg:text-4xl font-bold leading-snug text-slate-900 tracking-tight italic">
-                    {currentQ?.text}
-                 </h1>
-              </div>
-
-              <div class="grid grid-cols-1 gap-5">
-                 {currentQ?.options?.map((option: any, idx: number) => {
-                    const label = String.fromCharCode(65 + idx);
-                    const isSelected = answers.value[currentQ.id] === option.id;
-                    
-                    return (
-                       <button
-                         key={option.id}
-                         onClick$={() => saveAnswer(currentQ.id, option.id)}
-                         class={`w-full p-6 rounded-[2.5rem] border-2 text-left transition-all duration-300 group flex items-start sm:items-center gap-8 ${
-                           isSelected
-                             ? 'bg-blue-600 border-blue-700 text-white shadow-2xl shadow-blue-500/30 scale-[1.02] -rotate-1'
-                             : 'bg-white border-slate-100 text-slate-700 hover:bg-slate-50 hover:border-slate-200 shadow-md shadow-slate-200/50'
-                         }`}
-                       >
-                          <div class={`size-14 rounded-[1.25rem] flex items-center justify-center font-bold text-2xl shrink-0 transition-all ${
-                            isSelected ? 'bg-white text-blue-600' : 'bg-slate-100 text-slate-400 group-hover:bg-blue-600 group-hover:text-white'
-                          }`}>
-                             {label}
-                          </div>
-                          <span class={`text-xl font-bold leading-tight pt-1 sm:pt-0 ${isSelected ? 'text-white' : 'text-slate-800'}`}>
-                             {option.text}
-                          </span>
-                          {isSelected && (
-                             <div class="ml-auto text-white animate-pulse">
-                                <span class="material-symbols-outlined text-4xl font-bold">check_circle</span>
-                             </div>
-                          )}
-                       </button>
-                    );
-                 })}
-              </div>
-
-               <div class="pt-10 sm:pt-16 pb-32 sm:pb-20 flex flex-col sm:flex-row items-center gap-4 border-t border-slate-200/50">
-                  <button 
-                    disabled={currentQuestion.value === 0}
-                    onClick$={() => currentQuestion.value > 0 && currentQuestion.value--}
-                    class="w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-10 rounded-xl sm:rounded-[1.75rem] border-2 border-slate-100 font-bold text-slate-500 flex items-center justify-center gap-3 transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-20 order-2 sm:order-1"
-                  >
-                     <span class="material-symbols-outlined font-bold">arrow_back</span>
-                     <span>Kembali</span>
-                  </button>
-                  
-                  <div class="flex gap-4 w-full sm:w-auto order-1 sm:order-2">
-                     {currentQuestion.value === questions.value.length - 1 ? (
-                        <button 
-                          onClick$={submitExam}
-                          disabled={submitting.value}
-                          class="w-full sm:w-auto h-14 sm:h-16 px-10 sm:px-12 rounded-xl sm:rounded-[1.75rem] bg-emerald-500 text-white font-bold flex items-center justify-center gap-3 transition-all shadow-xl shadow-emerald-500/20 active:scale-95 hover:bg-emerald-600 border-b-4 border-emerald-800 uppercase tracking-[0.1em] sm:tracking-[0.2em] text-sm sm:text-base"
-                        >
-                           {submitting.value ? 'Singkron...' : 'Submit Ujian'}
-                           <span class="material-symbols-outlined font-bold text-sm sm:text-base">send</span>
-                        </button>
-                     ) : (
-                        <button 
-                          onClick$={() => currentQuestion.value++}
-                          class="w-full sm:w-auto h-14 sm:h-16 px-10 sm:px-12 rounded-xl sm:rounded-[1.75rem] bg-blue-600 text-white font-bold flex items-center justify-center gap-3 transition-all shadow-xl shadow-blue-500/20 active:scale-95 hover:bg-blue-700 border-b-4 border-blue-800 text-sm sm:text-base"
-                        >
-                           <span>Selanjutnya</span>
-                           <span class="material-symbols-outlined font-bold">arrow_forward</span>
-                        </button>
-                     )}
+              <div class="rounded-3xl border border-slate-200/80 bg-white shadow-sm p-4 sm:p-5">
+                <div class="relative aspect-video rounded-2xl overflow-hidden bg-slate-900 border border-slate-800/40">
+                  <div class="absolute top-2 left-2 z-10 px-2 py-1 rounded-lg bg-black/60 text-white text-[10px] font-bold tracking-widest flex items-center gap-1.5">
+                    <span class="size-1.5 rounded-full bg-red-500 animate-pulse" /> LANGSUNG
                   </div>
-               </div>
-           </div>
-        </section>
-      </main>
-
-      {/* Floating Webcam Monitoring Hub */}
-      <div class="fixed bottom-24 sm:bottom-32 -right-4 hover:right-4 sm:hover:right-6 transition-all duration-500 z-50 group">
-         <div class="w-32 h-44 sm:w-48 sm:h-64 bg-slate-900 border-2 sm:border-4 border-white rounded-[1.5rem] sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden relative ring-4 sm:ring-8 ring-blue-600/5 rotate-[-2deg] group-hover:rotate-0 transition-transform">
-            <div class="absolute top-3 left-3 sm:top-5 sm:left-5 z-10 flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-0.5 sm:py-1 bg-black/50 backdrop-blur-md rounded-full border border-white/10">
-               <div class="size-1.5 sm:size-2 bg-red-600 rounded-full animate-pulse"></div>
-               <span class="text-[7px] sm:text-[9px] text-white font-bold uppercase tracking-widest">Live</span>
-            </div>
-            
-            <div class="w-full h-full grayscale group-hover:grayscale-0 transition-all duration-1000">
-               {stream.value ? (
-                 <video autoplay playsInline muted ref={videoPreviewRef} class="w-full h-full object-cover scale-x-[-1] opacity-70 group-hover:opacity-100" />
-               ) : (
-                 <div class="w-full h-full flex items-center justify-center bg-slate-800">
-                    <span class="material-symbols-outlined text-slate-600 text-2xl sm:text-3xl">videocam_off</span>
-                 </div>
-               )}
-            </div>
-            <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-blue-900/40 to-transparent"></div>
-         </div>
-      </div>
-
-      {/* ═══ iOS 27 Inspired Floating Bottom Navigation (Mobile Only) ═══ */}
-      <div class="md:hidden fixed bottom-10 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-sm bg-white/70 backdrop-blur-3xl border border-white/40 rounded-[3rem] px-5 py-4 shadow-[0_30px_90px_rgba(0,0,0,0.15)] flex items-center justify-between z-50 animate-fade-in-up ring-1 ring-black/5">
-        <button 
-          onClick$={() => currentQuestion.value > 0 && currentQuestion.value--}
-          disabled={currentQuestion.value === 0}
-          class="flex flex-col items-center gap-1.5 group disabled:opacity-20 transition-opacity"
-        >
-           <div class="size-11 rounded-2xl flex items-center justify-center text-slate-400 group-active:bg-slate-100 transition-all">
-              <span class="material-symbols-outlined font-bold text-2xl">chevron_left</span>
-           </div>
-           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Prev</span>
-        </button>
-
-        <div class="relative flex flex-col items-center group">
-           <div class="size-16 -mt-10 bg-blue-600 text-white rounded-[1.75rem] flex flex-col items-center justify-center shadow-2xl shadow-blue-500/40 ring-[6px] ring-white transition-all scale-110">
-              <span class="text-[9px] font-bold uppercase tracking-tighter opacity-70 leading-none">Soal</span>
-              <span class="text-2xl font-bold">{currentQuestion.value + 1}</span>
-           </div>
-           <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Active</span>
+                  {stream.value ? (
+                    <video autoplay playsInline muted ref={videoPreviewRef} class="w-full h-full object-cover scale-x-[-1]" />
+                  ) : (
+                    <div class="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-1.5">
+                      <span class="material-symbols-outlined text-3xl">videocam_off</span>
+                      <span class="text-xs font-semibold">Kamera belum aktif</span>
+                    </div>
+                  )}
+                </div>
+                <div class="mt-4 space-y-3">
+                  <div class="flex items-center justify-between text-xs font-bold text-slate-500">
+                    <span>Kemajuan Jawaban</span>
+                    <span class="text-blue-600">{completionPercent}%</span>
+                  </div>
+                  <div class="h-2 rounded-full bg-slate-200 overflow-hidden">
+                    <progress
+                      value={completionPercent}
+                      max={100}
+                      class="h-full w-full [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-blue-600 [&::-moz-progress-bar]:bg-blue-600"
+                    />
+                  </div>
+                  <div class="grid grid-cols-2 gap-2 text-[11px]">
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                      <p class="text-slate-400 font-bold uppercase">Dijawab</p>
+                      <p class="text-slate-800 font-extrabold text-base">{answeredCount}</p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                      <p class="text-slate-400 font-bold uppercase">Sisa</p>
+                      <p class="text-slate-800 font-extrabold text-base">{Math.max(questions.value.length - answeredCount, 0)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
         </div>
-
-        <button 
-          onClick$={() => {
-            if (currentQuestion.value < questions.value.length - 1) {
-              currentQuestion.value++;
-            }
-          }}
-          disabled={currentQuestion.value === questions.value.length - 1}
-          class="flex flex-col items-center gap-1.5 group disabled:opacity-20 transition-opacity"
-        >
-           <div class="size-11 rounded-2xl flex items-center justify-center text-slate-400 group-active:bg-slate-100 transition-all">
-              <span class="material-symbols-outlined font-bold text-2xl">chevron_right</span>
-           </div>
-           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Next</span>
-        </button>
-      </div>
+      </main>
     </div>
   );
 });
