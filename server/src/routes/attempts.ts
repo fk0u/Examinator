@@ -281,6 +281,38 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
     return { attempts };
   })
 
+  // ── GET /api/attempts/forced ─────────────────────────
+  // Recent force-submitted attempts for audit dashboard (admin/proctor)
+  .get("/forced", async (context) => {
+    const { userId, userRole, query } = context as any;
+    requireAuth(userId);
+    requireRole(userRole, ["ADMIN", "OPERATOR"]);
+
+    const take = Math.min(Math.max(Number(query?.limit || 20), 1), 100);
+
+    const attempts = await db.attempt.findMany({
+      where: { status: "FORCE_SUBMITTED" },
+      include: {
+        user: {
+          select: { id: true, fullName: true, username: true, kelas: true, nisn: true },
+        },
+        exam: {
+          select: { id: true, title: true, subject: true, maxCheatViolations: true },
+        },
+        _count: { select: { cheatLogs: true, answers: true } },
+      },
+      orderBy: { submittedAt: "desc" },
+      take,
+    });
+
+    return {
+      attempts,
+      summary: {
+        total: attempts.length,
+      },
+    };
+  })
+
   // ── GET /api/attempts/exam/:examId ────────────────────
   // All attempts for an exam (proctor/admin view)
   .get("/exam/:examId", async (context) => {

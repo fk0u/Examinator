@@ -135,6 +135,7 @@ export const attemptsApi = {
   submit: (attemptId: string) =>
     apiFetch(`/attempts/${attemptId}/submit`, { method: "POST" }),
   my: () => apiFetch("/attempts/my"),
+  forced: (limit: number = 20) => apiFetch(`/attempts/forced?limit=${limit}`),
   byExam: (examId: string) => apiFetch(`/attempts/exam/${examId}`),
 };
 

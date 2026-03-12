@@ -1,7 +1,7 @@
 import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 import { useNavigate } from "@builder.io/qwik-city";
-import { examsApi, usersApi, cheatLogsApi } from "~/lib/api";
+import { examsApi, usersApi, cheatLogsApi, attemptsApi } from "~/lib/api";
 import { getUserData, isAuthenticated, logout } from "~/lib/auth";
 import { exportToCSV } from "~/lib/export";
 import { Clock } from "~/components/ui/clock";
@@ -15,6 +15,7 @@ export default component$(() => {
   const exams = useSignal<any[]>([]);
   const users = useSignal<any[]>([]);
   const stats = useSignal<any>(null);
+  const forcedAttempts = useSignal<any[]>([]);
   const loading = useSignal(true);
   const activeTab = useSignal<"overview" | "exams" | "users">("overview");
   const searchQuery = useSignal("");
@@ -29,12 +30,13 @@ export default component$(() => {
     if (user.value?.role !== "ADMIN") { await nav("/"); return; }
 
     try {
-      const [examData, userData, statsData] = await Promise.all([
-        examsApi.list(), usersApi.list(), cheatLogsApi.stats(),
+      const [examData, userData, statsData, forcedData] = await Promise.all([
+        examsApi.list(), usersApi.list(), cheatLogsApi.stats(), attemptsApi.forced(12),
       ]);
       exams.value = examData.exams || [];
       users.value = userData.users || [];
       stats.value = statsData.stats;
+      forcedAttempts.value = forcedData.attempts || [];
     } catch { /* silently */ }
     loading.value = false;
   });
@@ -270,7 +272,7 @@ export default component$(() => {
                     { label: "Total Ujian",       value: exams.value.length,                        icon: "description",   from: "from-blue-500",    to: "to-indigo-600",   bg: "bg-blue-50",    border: "border-blue-100",   text: "text-blue-600"    },
                     { label: "Ujian Aktif",        value: exams.value.filter(e => e.active).length,  icon: "check_circle",  from: "from-emerald-500", to: "to-teal-600",     bg: "bg-emerald-50", border: "border-emerald-100", text: "text-emerald-600" },
                     { label: "Total User",         value: users.value.length,                        icon: "group",         from: "from-violet-500",  to: "to-purple-600",   bg: "bg-violet-50",  border: "border-violet-100",  text: "text-violet-600"  },
-                    { label: "Total Pelanggaran",  value: stats.value?.totalLogs || 0,               icon: "warning",       from: "from-rose-500",    to: "to-red-600",      bg: "bg-rose-50",    border: "border-rose-100",   text: "text-rose-600"    },
+                    { label: "Force Submit",       value: forcedAttempts.value.length,               icon: "gpp_bad",       from: "from-rose-500",    to: "to-red-600",      bg: "bg-rose-50",    border: "border-rose-100",   text: "text-rose-600"    },
                   ].map(s => (
                     <div key={s.label} class={`bg-white dark:bg-slate-800/80 rounded-2xl border ${s.border} dark:border-slate-700/50 p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 transition-all duration-300`}>
                       <div class={`w-11 h-11 rounded-xl ${s.bg} border ${s.border} flex items-center justify-center mb-4`}>
@@ -301,6 +303,58 @@ export default component$(() => {
                     </div>
                   </div>
                 )}
+
+                <div class="mt-6 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] p-6">
+                  <div class="flex items-center justify-between gap-3 mb-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-base text-rose-600">gpp_bad</span>
+                      </div>
+                      <h3 class="font-[800] tracking-tight text-slate-900 dark:text-white">Audit Force Submit Otomatis</h3>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[10px] font-bold text-rose-700 uppercase tracking-wider">
+                      {forcedAttempts.value.length} Sesi Terakhir
+                    </span>
+                  </div>
+
+                  {forcedAttempts.value.length === 0 ? (
+                    <div class="rounded-xl border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-700/40 p-6 text-center">
+                      <p class="text-sm font-semibold text-slate-500 dark:text-slate-300">Belum ada sesi force submit otomatis.</p>
+                    </div>
+                  ) : (
+                    <div class="overflow-x-auto">
+                      <table class="min-w-full">
+                        <thead>
+                          <tr class="border-b border-slate-100 dark:border-slate-700/50">
+                            <th class="px-3 py-2 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Siswa</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ujian</th>
+                            <th class="px-3 py-2 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pelanggaran</th>
+                            <th class="px-3 py-2 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dikumpulkan</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {forcedAttempts.value.map((item) => (
+                            <tr key={item.id} class="border-b border-slate-50 dark:border-slate-700/30">
+                              <td class="px-3 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200">{item.user?.fullName || "-"}</td>
+                              <td class="px-3 py-2.5">
+                                <div class="text-sm font-semibold text-slate-700 dark:text-slate-200">{item.exam?.title || "-"}</div>
+                                <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{item.exam?.subject || "-"}</div>
+                              </td>
+                              <td class="px-3 py-2.5 text-center">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[10px] font-bold text-rose-700">
+                                  {item._count?.cheatLogs || 0} / {item.exam?.maxCheatViolations ?? 5}
+                                </span>
+                              </td>
+                              <td class="px-3 py-2.5 text-center text-xs font-semibold text-slate-500 dark:text-slate-300">
+                                {item.submittedAt ? new Date(item.submittedAt).toLocaleString("id-ID") : "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
