@@ -1,5 +1,7 @@
 import { Elysia } from "elysia";
 import { db } from "../lib/db";
+import { env } from "../config/env";
+import { jwtVerify } from "jose";
 
 // ─── WebSocket Proctor Module ───────────────────────────
 // Handles realtime communication between students and proctors
@@ -121,6 +123,28 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
 
       // ── Proctor joins monitoring ────────────────────────
       case "proctor:join": {
+        const token = data.token;
+        if (!token) {
+          ws.send(JSON.stringify({ type: "error", message: "Authentication required" }));
+          ws.close();
+          break;
+        }
+
+        try {
+          const secretKey = new TextEncoder().encode(env.JWT_SECRET);
+          const { payload } = await jwtVerify(token, secretKey);
+          const role = payload.role as string | undefined;
+          if (role !== "ADMIN" && role !== "OPERATOR") {
+            ws.send(JSON.stringify({ type: "error", message: "Insufficient permissions" }));
+            ws.close();
+            break;
+          }
+        } catch {
+          ws.send(JSON.stringify({ type: "error", message: "Invalid or expired token" }));
+          ws.close();
+          break;
+        }
+
         proctorSockets.add(ws.id);
         connectionRoles.set(ws.id, "proctor");
         ws.subscribe("proctors");

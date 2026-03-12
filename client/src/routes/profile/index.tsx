@@ -62,6 +62,11 @@ export default component$(() => {
         payload.password = password.value;
       }
 
+      if (!user.value?.id) {
+        errorMessage.value = "Data pengguna tidak valid. Silakan muat ulang halaman.";
+        return;
+      }
+
       await usersApi.update(user.value.id, payload);
       
       // Update local storage if needed
@@ -145,7 +150,7 @@ export default component$(() => {
         
         <header class="text-center md:text-left flex flex-col md:flex-row items-center gap-6 mb-8">
           <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-500 to-blue-300 text-white flex items-center justify-center text-4xl font-black shadow-xl shadow-blue-500/30">
-            {user.value?.fullName?.charAt(0).toUpperCase() || "S"}
+            {(user.value?.fullName?.[0] ?? "S").toUpperCase()}
           </div>
           <div>
             <h1 class="text-3xl font-black text-slate-900 mb-1">Pengaturan Profil</h1>

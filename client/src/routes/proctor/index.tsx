@@ -46,7 +46,11 @@ export default component$(() => {
     const ws = getWsClient();
     ws.connect();
 
-    ws.on("connected", () => { connected.value = true; ws.send("proctor:join", {}); });
+    ws.on("connected", () => {
+      connected.value = true;
+      const token = localStorage.getItem("examinator_token") || "";
+      ws.send("proctor:join", { token });
+    });
     ws.on("disconnected", () => { connected.value = false; });
     ws.on("proctor:state", (data: any) => { students.value = data.students || []; });
     ws.on("student:joined", (data: any) => {
