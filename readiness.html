@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Examinator - Pre-Exam Readiness</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3b82f6", // Blue primary
+                        "accent": "#eab308",  // Yellow accent
+                        "success": "#22c55e",
+                        "background-light": "#f8fafd",
+                        "background-dark": "#0f172a",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-slate-200 dark:border-slate-800 px-10 py-4 bg-white/50 backdrop-blur-md sticky top-0 z-50">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-10 bg-primary rounded-xl text-white">
+<span class="material-symbols-outlined">assignment_turned_in</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">Examinator</h2>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center justify-center rounded-xl h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="flex items-center justify-center rounded-xl h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-200">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+</header>
+<main class="flex-1 flex flex-col items-center justify-center p-6 md:p-12 max-w-7xl mx-auto w-full">
+<!-- Hero Section -->
+<div class="w-full text-center mb-10">
+<h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-tight mb-2">Pre-Exam Readiness</h1>
+<p class="text-slate-600 dark:text-slate-400 text-lg">Pastikan semua sistem berfungsi dengan baik sebelum memulai ujian.</p>
+</div>
+<!-- Main Layout Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full">
+<!-- Left: Camera Preview & System Check -->
+<div class="lg:col-span-7 flex flex-col gap-6">
+<div class="glass-card rounded-xl p-6 shadow-sm">
+<h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">videocam</span>
+                                Webcam Preview
+                            </h3>
+<div class="relative aspect-video bg-slate-200 dark:bg-slate-800 rounded-xl overflow-hidden group">
+<img class="w-full h-full object-cover" data-alt="User webcam preview showing a person centered in the frame" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzybK3l3wBfS2OLtfQQYr9DLqHLAmdQUjpO9xyuBz6WUawC1_OJuYwdScQNrapMcw91BODex93oOy-cPiVbZhh7BGJyIWhcTe0gUc_1LowrmXFWUp-ZQ4jieFeZp7QWky3gyg8iJY_VVHaEzovDE1cDOwtvskyw0QecFt-AuoVVjuWu1lEecIKqguwEb152TNtesqbn6YhqOzQm4xCsbDebkyqT3PGjPiv_JygimXW-oQEB93wTp1OABRdAY-qkIDNDClzC47Z0poH"/>
+<div class="absolute inset-0 border-2 border-primary/30 rounded-xl pointer-events-none"></div>
+<div class="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs flex items-center gap-2">
+<span class="size-2 bg-success rounded-full animate-pulse"></span> Live Preview
+                                </div>
+</div>
+<p class="mt-4 text-sm text-slate-500 italic">Pastikan wajah terlihat jelas dan berada di tengah frame.</p>
+</div>
+<div class="glass-card rounded-xl p-6 shadow-sm border-l-4 border-l-accent">
+<h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">analytics</span>
+                                System Check Panel
+                            </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-success">check_circle</span>
+<span class="font-medium">Camera Active</span>
+</div>
+<span class="text-xs font-bold text-success uppercase">Ready</span>
+</div>
+<div class="flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-success">check_circle</span>
+<span class="font-medium">Microphone Active</span>
+</div>
+<span class="text-xs font-bold text-success uppercase">Ready</span>
+</div>
+<div class="flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-success">check_circle</span>
+<span class="font-medium">Connection Stable</span>
+</div>
+<span class="text-xs font-bold text-success uppercase">Ready</span>
+</div>
+<div class="flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-success">check_circle</span>
+<span class="font-medium">Fullscreen Ready</span>
+</div>
+<span class="text-xs font-bold text-success uppercase">Ready</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Rules & CTA -->
+<div class="lg:col-span-5 flex flex-col gap-6">
+<div class="glass-card rounded-xl p-8 shadow-sm h-full flex flex-col">
+<h3 class="text-xl font-bold mb-6 text-slate-900 dark:text-white">Tata Tertib &amp; Peraturan</h3>
+<ul class="space-y-6 flex-1">
+<li class="flex gap-4">
+<div class="flex-shrink-0 size-8 bg-accent/20 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-accent text-lg">tab_unselected</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-800 dark:text-slate-200">Dilarang berpindah tab</h4>
+<p class="text-sm text-slate-500">Sistem akan otomatis mendeteksi jika Anda membuka tab atau aplikasi lain.</p>
+</div>
+</li>
+<li class="flex gap-4">
+<div class="flex-shrink-0 size-8 bg-accent/20 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-accent text-lg">videocam</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-800 dark:text-slate-200">Kamera akan merekam</h4>
+<p class="text-sm text-slate-500">Aktifitas visual akan direkam selama durasi ujian untuk keperluan integritas.</p>
+</div>
+</li>
+<li class="flex gap-4">
+<div class="flex-shrink-0 size-8 bg-accent/20 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-accent text-lg">person_pin</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-800 dark:text-slate-200">Tetap berada di depan layar</h4>
+<p class="text-sm text-slate-500">Anda tidak diperkenankan meninggalkan area pengawasan kamera.</p>
+</div>
+</li>
+<li class="flex gap-4">
+<div class="flex-shrink-0 size-8 bg-accent/20 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-accent text-lg">record_voice_over</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-800 dark:text-slate-200">Suara akan dipantau</h4>
+<p class="text-sm text-slate-500">Mohon menjaga ketenangan dan tidak berbicara selama ujian berlangsung.</p>
+</div>
+</li>
+</ul>
+<div class="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
+<div class="flex items-start gap-3 mb-6 p-4 bg-primary/5 rounded-xl border border-primary/20">
+<input class="mt-1 rounded border-primary text-primary focus:ring-primary h-5 w-5 cursor-pointer" id="terms" type="checkbox"/>
+<label class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed cursor-pointer" for="terms">
+                                        Saya telah membaca semua aturan dan menyetujui perekaman sistem demi kelancaran ujian.
+                                    </label>
+</div>
+<button class="w-full flex items-center justify-center gap-2 rounded-xl h-14 bg-primary hover:bg-primary/90 text-white font-bold text-lg transition-all shadow-lg shadow-primary/25">
+<span>Saya Mengerti &amp; Mulai Ujian</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Simple Info -->
+<div class="mt-12 flex flex-col items-center gap-2 opacity-60">
+<p class="text-sm">Ujian: Matematika Dasar - Sesi Pagi</p>
+<p class="text-xs">ID Sesi: EX-992-001 | Versi Sistem 2.4.0</p>
+</div>
+</main>
+</div>
+</div>
+</body></html>

@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { authPlugin, requireAuth, requireRole } from "../middleware/auth";
 import { db } from "../lib/db";
 import { saveCapture } from "../lib/upload";
+import { env } from "../config/env";
 
 // ─── Cheat Log Routes ───────────────────────────────────
 
@@ -24,6 +25,13 @@ export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs",
       // Verify attempt belongs to user
       const attempt = await db.attempt.findUnique({
         where: { id: body.attemptId },
+        include: {
+          exam: {
+            select: {
+              maxCheatViolations: true,
+            },
+          },
+        },
       });
 
       if (!attempt || attempt.userId !== id) {
@@ -40,8 +48,33 @@ export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs",
         },
       });
 
+      const cheatCount = await db.cheatLog.count({
+        where: { attemptId: body.attemptId },
+      });
+
+      const threshold = Math.max(attempt.exam?.maxCheatViolations ?? env.CHEAT_AUTO_FORCE_THRESHOLD, 1);
+      const forceSubmitted = cheatCount >= threshold && attempt.status === "IN_PROGRESS";
+
+      if (forceSubmitted) {
+        await db.attempt.update({
+          where: { id: body.attemptId },
+          data: {
+            status: "FORCE_SUBMITTED",
+            submittedAt: new Date(),
+          },
+        });
+      }
+
       set.status = 201;
-      return { log };
+      return {
+        log,
+        guardrail: {
+          cheatCount,
+          threshold,
+          forceSubmitted,
+          reason: forceSubmitted ? "Ambang pelanggaran tercapai" : null,
+        },
+      };
     },
     {
       body: t.Object({
@@ -74,6 +107,13 @@ export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs",
 
       const attempt = await db.attempt.findUnique({
         where: { id: attemptId },
+        include: {
+          exam: {
+            select: {
+              maxCheatViolations: true,
+            },
+          },
+        },
       });
 
       if (!attempt || attempt.userId !== id) {
@@ -103,8 +143,33 @@ export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs",
         },
       });
 
+      const cheatCount = await db.cheatLog.count({
+        where: { attemptId },
+      });
+
+      const threshold = Math.max(attempt.exam?.maxCheatViolations ?? env.CHEAT_AUTO_FORCE_THRESHOLD, 1);
+      const forceSubmitted = cheatCount >= threshold && attempt.status === "IN_PROGRESS";
+
+      if (forceSubmitted) {
+        await db.attempt.update({
+          where: { id: attemptId },
+          data: {
+            status: "FORCE_SUBMITTED",
+            submittedAt: new Date(),
+          },
+        });
+      }
+
       set.status = 201;
-      return { log };
+      return {
+        log,
+        guardrail: {
+          cheatCount,
+          threshold,
+          forceSubmitted,
+          reason: forceSubmitted ? "Ambang pelanggaran tercapai" : null,
+        },
+      };
     },
     {
       body: t.Object({

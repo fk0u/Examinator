@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { authPlugin, requireAuth, requireRole } from "../middleware/auth";
 import { db } from "../lib/db";
+import { compare } from "bcryptjs";
 
 // ─── Attempt Routes ─────────────────────────────────────
 
@@ -77,6 +78,20 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
         return { error: "Exam already submitted" };
       }
 
+      if (exam.accessTokenHash) {
+        const providedToken = typeof body.accessToken === "string" ? body.accessToken.trim() : "";
+        if (!providedToken) {
+          set.status = 403;
+          return { error: "Exam token is required" };
+        }
+
+        const isTokenValid = await compare(providedToken, exam.accessTokenHash);
+        if (!isTokenValid) {
+          set.status = 403;
+          return { error: "Exam token is invalid" };
+        }
+      }
+
       // Create new attempt
       const attempt = await db.attempt.create({
         data: {
@@ -106,6 +121,7 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
       body: t.Object({
         examId: t.String(),
         cameraEnabled: t.Optional(t.Boolean()),
+        accessToken: t.Optional(t.String()),
       }),
     }
   )
@@ -265,6 +281,58 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
     return { attempts };
   })
 
+  // ── GET /api/attempts/forced ─────────────────────────
+  // Recent force-submitted attempts for audit dashboard (admin/proctor)
+  .get("/forced", async (context) => {
+    const { userId, userRole, query } = context as any;
+    requireAuth(userId);
+    requireRole(userRole, ["ADMIN", "OPERATOR"]);
+
+    const take = Math.min(Math.max(Number(query?.limit || 20), 1), 100);
+    const where: Record<string, unknown> = { status: "FORCE_SUBMITTED" };
+
+    if (query?.examId) {
+      where.examId = String(query.examId);
+    }
+
+    const fromDate = query?.from ? new Date(String(query.from)) : null;
+    const toDate = query?.to ? new Date(String(query.to)) : null;
+    const hasValidFrom = fromDate && !Number.isNaN(fromDate.getTime());
+    const hasValidTo = toDate && !Number.isNaN(toDate.getTime());
+
+    if (hasValidFrom || hasValidTo) {
+      where.submittedAt = {
+        ...(hasValidFrom ? { gte: fromDate } : {}),
+        ...(hasValidTo ? { lte: toDate } : {}),
+      };
+    }
+
+    const attempts = await db.attempt.findMany({
+      where,
+      include: {
+        user: {
+          select: { id: true, fullName: true, username: true, kelas: true, nisn: true },
+        },
+        exam: {
+          select: { id: true, title: true, subject: true, maxCheatViolations: true },
+        },
+        _count: { select: { cheatLogs: true, answers: true } },
+      },
+      orderBy: { submittedAt: "desc" },
+      take,
+    });
+
+    const totalFiltered = await db.attempt.count({ where });
+
+    return {
+      attempts,
+      summary: {
+        totalReturned: attempts.length,
+        totalFiltered,
+      },
+    };
+  })
+
   // ── GET /api/attempts/exam/:examId ────────────────────
   // All attempts for an exam (proctor/admin view)
   .get("/exam/:examId", async (context) => {
@@ -348,6 +416,7 @@ function buildAttemptPayload(attempt: any, resumed: boolean) {
       title: attempt.exam.title,
       subject: attempt.exam.subject,
       duration: attempt.exam.duration,
+      maxCheatViolations: attempt.exam.maxCheatViolations,
       questions: attempt.exam.questions,
     },
     answers,

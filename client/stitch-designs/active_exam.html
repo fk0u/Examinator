@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Examinator - Active Session</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3b82f6", // Blue accent
+                        "secondary": "#facc15", // Yellow accent
+                        "background-light": "#f8fafc",
+                        "background-dark": "#0f172a",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Public Sans', sans-serif; }
+        .scroll-hide::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-background-light text-slate-900 font-display">
+<!-- Sticky Top Navigation Bar -->
+<header class="sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-4">
+<div class="bg-primary p-1.5 rounded-lg text-white">
+<span class="material-symbols-outlined block">rocket_launch</span>
+</div>
+<div>
+<h2 class="text-slate-900 text-lg font-bold leading-tight">Examinator</h2>
+<p class="text-slate-500 text-xs font-medium uppercase tracking-wider">CBT Platform</p>
+</div>
+<div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">menu_book</span>
+<span class="text-slate-700 text-sm font-semibold">Matematika Lanjut</span>
+</div>
+</div>
+<div class="flex items-center gap-8">
+<!-- Large Bold Countdown Timer -->
+<div class="flex items-center gap-4 bg-slate-100 px-6 py-2 rounded-xl border border-slate-200">
+<div class="flex flex-col items-center">
+<span class="text-2xl font-bold text-slate-900 tabular-nums">01</span>
+<span class="text-[10px] text-slate-500 uppercase font-bold">Jam</span>
+</div>
+<span class="text-xl font-bold text-slate-300 mb-4">:</span>
+<div class="flex flex-col items-center">
+<span class="text-2xl font-bold text-slate-900 tabular-nums">45</span>
+<span class="text-[10px] text-slate-500 uppercase font-bold">Menit</span>
+</div>
+<span class="text-xl font-bold text-slate-300 mb-4">:</span>
+<div class="flex flex-col items-center">
+<span class="text-2xl font-bold text-primary tabular-nums">20</span>
+<span class="text-[10px] text-slate-500 uppercase font-bold">Detik</span>
+</div>
+</div>
+<button class="flex min-w-[120px] cursor-pointer items-center justify-center rounded-xl h-11 px-6 bg-red-500 hover:bg-red-600 text-white text-sm font-bold transition-colors shadow-lg shadow-red-500/20">
+                Selesai
+            </button>
+<div class="bg-slate-200 rounded-full size-10 border-2 border-primary overflow-hidden">
+<img alt="Student Profile" class="w-full h-full object-cover" data-alt="Student profile picture thumbnail" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBheT4QnVJYf2WQhMRYaA0YuN_W8AnJse0es4kJqEi5eT1xmtsvuPSaaFHzb38ZDDcCoYgK4mX2U7AxMLsOVM8kH_KLcUNVwJH7Mh6I9gLFVCe0G7RXZDOwI46iY0v7r52VplUcICtvAR_YdVz5_fz6oYIA3OMcxmlPi9LVXEn5JDkN-pLkK7IvfrDLyH3D19sAcOh2qfUjXFveDC2I9nIzJJj1PJyiBcvWiCDtaeVUC5cVmmFrxMB4hetDNWwCMzppnXrH4bBkg0tL"/>
+</div>
+</div>
+</header>
+<main class="flex h-[calc(100vh-73px)] overflow-hidden">
+<!-- Main Question Panel -->
+<section class="flex-1 overflow-y-auto p-8 lg:p-12 scroll-hide bg-white m-4 rounded-3xl shadow-sm border border-slate-100">
+<div class="max-w-3xl mx-auto">
+<div class="flex items-center justify-between mb-8">
+<span class="px-4 py-1.5 bg-primary/10 text-primary text-sm font-bold rounded-full border border-primary/20">
+                        Soal 1 dari 50
+                    </span>
+<button class="flex items-center gap-2 text-slate-500 hover:text-secondary font-medium transition-colors">
+<span class="material-symbols-outlined">bookmark</span>
+                        Ragu-ragu
+                    </button>
+</div>
+<!-- Question Text -->
+<div class="mb-12">
+<h1 class="text-2xl lg:text-3xl font-medium leading-relaxed text-slate-800">
+                        Jika f(x) = 2x + 3 dan g(x) = x², maka hasil dari komposisi fungsi (g ∘ f)(x) adalah...
+                    </h1>
+</div>
+<!-- Multiple Choice Options -->
+<div class="space-y-4">
+<!-- Option A (Selected State) -->
+<button class="w-full flex items-center gap-6 p-5 rounded-2xl border-2 border-primary bg-primary/5 text-left group transition-all">
+<div class="size-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-lg">A</div>
+<span class="text-lg font-medium text-slate-900">4x² + 12x + 9</span>
+<div class="ml-auto text-primary">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+</button>
+<!-- Option B -->
+<button class="w-full flex items-center gap-6 p-5 rounded-2xl border-2 border-slate-100 bg-slate-50 hover:border-slate-300 text-left group transition-all">
+<div class="size-10 rounded-xl bg-white border border-slate-200 text-slate-500 flex items-center justify-center font-bold text-lg group-hover:bg-slate-100">B</div>
+<span class="text-lg font-medium text-slate-700">4x² + 6x + 9</span>
+</button>
+<!-- Option C -->
+<button class="w-full flex items-center gap-6 p-5 rounded-2xl border-2 border-slate-100 bg-slate-50 hover:border-slate-300 text-left group transition-all">
+<div class="size-10 rounded-xl bg-white border border-slate-200 text-slate-500 flex items-center justify-center font-bold text-lg group-hover:bg-slate-100">C</div>
+<span class="text-lg font-medium text-slate-700">2x² + 3</span>
+</button>
+<!-- Option D -->
+<button class="w-full flex items-center gap-6 p-5 rounded-2xl border-2 border-slate-100 bg-slate-50 hover:border-slate-300 text-left group transition-all">
+<div class="size-10 rounded-xl bg-white border border-slate-200 text-slate-500 flex items-center justify-center font-bold text-lg group-hover:bg-slate-100">D</div>
+<span class="text-lg font-medium text-slate-700">2x² + 9</span>
+</button>
+<!-- Option E -->
+<button class="w-full flex items-center gap-6 p-5 rounded-2xl border-2 border-slate-100 bg-slate-50 hover:border-slate-300 text-left group transition-all">
+<div class="size-10 rounded-xl bg-white border border-slate-200 text-slate-500 flex items-center justify-center font-bold text-lg group-hover:bg-slate-100">E</div>
+<span class="text-lg font-medium text-slate-700">4x² + 9</span>
+</button>
+</div>
+<!-- Navigation Controls -->
+<div class="flex items-center justify-between mt-16 pt-8 border-t border-slate-100">
+<button class="flex items-center gap-2 px-6 py-3 rounded-xl border border-slate-200 font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+                        Sebelumnya
+                    </button>
+<button class="flex items-center gap-2 px-8 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-blue-600 transition-colors shadow-md shadow-blue-500/20">
+                        Berikutnya
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Right Sidebar: Question Navigator -->
+<aside class="w-80 bg-slate-50 border-l border-slate-200 flex flex-col">
+<div class="p-6 border-b border-slate-200 bg-white">
+<h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">grid_view</span>
+                    Navigasi Soal
+                </h3>
+<div class="flex flex-wrap gap-3">
+<div class="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase">
+<div class="size-3 bg-primary rounded-sm"></div>
+                        Dijawab
+                    </div>
+<div class="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase">
+<div class="size-3 bg-secondary rounded-sm"></div>
+                        Ragu
+                    </div>
+<div class="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase">
+<div class="size-3 bg-slate-300 rounded-sm"></div>
+                        Belum
+                    </div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 scroll-hide">
+<div class="grid grid-cols-5 gap-2">
+<!-- Nav Grid Items -->
+<!-- Active/Selected Answered -->
+<button class="aspect-square rounded-lg flex items-center justify-center text-sm font-bold border-2 border-primary bg-primary text-white shadow-sm ring-2 ring-primary/20">1</button>
+<button class="aspect-square rounded-lg flex items-center justify-center text-sm font-bold bg-primary text-white">2</button>
+<button class="aspect-square rounded-lg flex items-center justify-center text-sm font-bold bg-secondary text-white">3</button>
+<button class="aspect-square rounded-lg flex items-center justify-center text-sm font-bold bg-primary text-white">4</button>
+<button class="aspect-square rounded-lg flex items-center justify-center text-sm font-bold bg-primary text-white">5</button>
+<button class="aspect-square rounded-lg flex items-center justify-center text-sm font-bold bg-slate-300 text-slate-600">6</button>
+<button class="aspect-square rounded-lg flex items-center justify-center text-sm font-bold bg-slate-300 text-slate-600">7</button>
+<button class="aspect-square rounded-lg flex items-center justify-center text-sm font-bold bg-slate-300 text-slate-600">8</button>
+<button class="aspect-square rounded-lg flex items-center justify-center text-sm font-bold bg-slate-300 text-slate-600">9</button>
+<button class="aspect-square rounded-lg flex items-center justify-center text-sm font-bold bg-slate-300 text-slate-600">10</button>
+<!-- Repeat patterns for UI fill -->
+<script>
+                        for(let i=11; i<=50; i++) {
+                            document.write(`<button class="aspect-square rounded-lg flex items-center justify-center text-sm font-bold bg-slate-200 text-slate-500">${i}</button>`);
+                        }
+                    </script>
+</div>
+</div>
+<!-- Sidebar Footer -->
+<div class="p-6 bg-white border-t border-slate-200">
+<div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase mb-2">
+<span>Progress</span>
+<span>12%</span>
+</div>
+<div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[12%]"></div>
+</div>
+</div>
+</aside>
+</main>
+<!-- Floating Webcam Preview -->
+<div class="fixed bottom-6 right-6 w-40 h-52 bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 z-50">
+<div class="absolute top-3 left-3 flex items-center gap-2 px-2 py-1 bg-black/40 backdrop-blur-md rounded-full">
+<div class="size-2 bg-red-500 rounded-full animate-pulse"></div>
+<span class="text-[10px] text-white font-bold tracking-tighter uppercase">Live Monitoring</span>
+</div>
+<div class="w-full h-full flex items-center justify-center bg-slate-800">
+<img alt="Webcam Preview" class="w-full h-full object-cover opacity-80 grayscale" data-alt="Blurred webcam monitoring preview of a student" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1gv9RtUygQFztADQqoewg3yFnUUFPYurA3WNxa3319SWI0i9hoa0R6jj0pnQLu4DnhQsSwfEN6UNC1DVH6os6uB-_KttWe09mUjKk7ePl06OVQx41vG3gwNi8TEdKaXgtZYTpLzpKFeLrytcOjGYsseXAeXWabjUqIeUBTdpDM8J8IHXn1cFCLrZfIv7ZOyQvTNnvIGLQDf4t0zN2qPLqkgxCfpSFLX1DMw0sNTDpZRAnhDrobKMtCP6_Q5mmyH_zG8OovtetxOAw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+</div>
+</div>
+</body></html>
