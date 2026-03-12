@@ -35,6 +35,7 @@ export default component$(() => {
   const showWarning = useSignal(false);
   const warningMessage = useSignal("");
   const doubtfulAnswers = useSignal<Record<string, boolean>>({});
+  const maxCheatViolations = useSignal(5);
 
   // Kaitkan stream kamera ke elemen pratinjau video
   // eslint-disable-next-line qwik/no-use-visible-task
@@ -77,6 +78,7 @@ export default component$(() => {
     try {
       const data = await examsApi.get(examId);
       examData.value = data.exam;
+      maxCheatViolations.value = data.exam?.maxCheatViolations ?? 5;
     } catch (e: any) {
       console.error("Gagal mengambil data ujian:", e);
       alert("Gagal memuat info ujian.");
@@ -98,6 +100,7 @@ export default component$(() => {
       attempt.value = data.attempt;
       const examPayload = data.exam || data.attempt?.exam;
       questions.value = examPayload?.questions || [];
+      maxCheatViolations.value = examPayload?.maxCheatViolations ?? maxCheatViolations.value;
       timeLeft.value = typeof data.remainingSeconds === "number"
         ? data.remainingSeconds
         : examPayload?.duration * 60; // Ubah ke detik
@@ -115,6 +118,7 @@ export default component$(() => {
 
       // Tangani perintah kirim paksa dari pengawas
       ws.on("force:submit", async () => {
+        alert("Sesi ujian dihentikan oleh pengawas. Jawaban Anda telah dikumpulkan.");
         await submitExam();
       });
 
@@ -171,20 +175,41 @@ export default component$(() => {
   const logCheat = $(async (type: string, description: string) => {
     cheatCount.value++;
     showWarning.value = true;
-    warningMessage.value = `⚠️ Peringatan: ${description}. Pelanggaran ke-${cheatCount.value}`;
+    warningMessage.value = `⚠️ Peringatan: ${description}. Pelanggaran ke-${cheatCount.value} dari batas ${maxCheatViolations.value}.`;
 
     setTimeout(() => {
       showWarning.value = false;
     }, 3000);
 
     try {
-      await cheatLogsApi.log({
+      const logResult = await cheatLogsApi.log({
         attemptId: attempt.value.id,
         cheatType: type,
         description,
       });
+
+      if (logResult?.guardrail?.cheatCount) {
+        cheatCount.value = Math.max(cheatCount.value, logResult.guardrail.cheatCount);
+      }
+
       const ws = getWsClient();
-      ws.send("cheat:detected", { cheatType: type, description });
+      ws.send("cheat:detected", {
+        cheatType: type,
+        description,
+        forceSubmitted: Boolean(logResult?.guardrail?.forceSubmitted),
+        forceReason: logResult?.guardrail?.reason || null,
+      });
+
+      if (logResult?.guardrail?.forceSubmitted) {
+        if (document.fullscreenElement) {
+          await document.exitFullscreen();
+        }
+        ws.disconnect();
+        alert("Sesi dihentikan otomatis karena batas pelanggaran tercapai. Jawaban Anda telah dikumpulkan.");
+        await nav("/student/");
+        return;
+      }
+
       capturePhoto(type, description);
     } catch {
       // Abaikan jika gagal, agar ujian tetap berjalan
@@ -336,6 +361,10 @@ export default component$(() => {
                        <p class="text-sm font-bold text-blue-50 leading-relaxed">{rule.text}</p>
                     </li>
                   ))}
+                  <li class="flex gap-4 items-start">
+                    <span class="material-symbols-outlined text-blue-300 font-bold mt-0.5">gpp_maybe</span>
+                    <p class="text-sm font-bold text-blue-50 leading-relaxed">Ujian dihentikan otomatis bila pelanggaran mencapai {maxCheatViolations.value} kali.</p>
+                  </li>
                 </ul>
 
                 <div class="mt-10 pt-8 border-t border-white/10 relative z-10">

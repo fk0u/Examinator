@@ -20,7 +20,7 @@ export default component$(() => {
   const searchQuery = useSignal("");
 
   const showCreateExam = useSignal(false);
-  const newExam = useSignal({ title: "", subject: "", duration: 60, description: "", passingScore: 70, accessToken: "" });
+  const newExam = useSignal({ title: "", subject: "", duration: 60, description: "", passingScore: 70, accessToken: "", maxCheatViolations: 5 });
 
   useVisibleTask$(async () => {
     initTheme();
@@ -44,7 +44,7 @@ export default component$(() => {
       const data = await examsApi.create(newExam.value);
       exams.value = [data.exam, ...exams.value];
       showCreateExam.value = false;
-      newExam.value = { title: "", subject: "", duration: 60, description: "", passingScore: 70, accessToken: "" };
+      newExam.value = { title: "", subject: "", duration: 60, description: "", passingScore: 70, accessToken: "", maxCheatViolations: 5 };
     } catch (e: any) { alert("Gagal: " + e.message); }
   });
 
@@ -98,6 +98,7 @@ export default component$(() => {
       "Durasi (Menit)": e.duration, "Jumlah Soal": e._count?.questions || 0,
       "Nilai KKM": e.passingScore, "Status": e.active ? "Aktif" : "Nonaktif",
       "Proteksi Token": e.requiresToken ? "Aktif" : "Nonaktif",
+      "Batas Pelanggaran": e.maxCheatViolations ?? 5,
       "Dibuat Pada": new Date(e.createdAt).toLocaleString("id-ID")
     }));
     exportToCSV("examinator_exams.csv", exportData);
@@ -349,6 +350,7 @@ export default component$(() => {
                         { label: "Durasi (menit)", key: "duration", type: "number" },
                         { label: "KKM", key: "passingScore", type: "number" },
                         { label: "Token Ujian (Opsional)", key: "accessToken", type: "text" },
+                        { label: "Batas Pelanggaran", key: "maxCheatViolations", type: "number" },
                       ].map(f => (
                         <div key={f.key}>
                           <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">{f.label}</label>
@@ -410,6 +412,7 @@ export default component$(() => {
                             <div class="flex flex-col items-center gap-1">
                               <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-[10px] font-semibold text-slate-600 dark:text-slate-300">{exam._count?.questions || 0} Soal</span>
                               <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-bold text-blue-600">KKM {exam.passingScore}</span>
+                              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-100 text-[10px] font-bold text-rose-700">Batas {exam.maxCheatViolations ?? 5}</span>
                               <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${exam.requiresToken ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-500 border-slate-200"}`}>{exam.requiresToken ? "Token Aktif" : "Tanpa Token"}</span>
                             </div>
                           </td>

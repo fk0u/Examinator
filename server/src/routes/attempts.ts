@@ -364,6 +364,7 @@ function buildAttemptPayload(attempt: any, resumed: boolean) {
       title: attempt.exam.title,
       subject: attempt.exam.subject,
       duration: attempt.exam.duration,
+      maxCheatViolations: attempt.exam.maxCheatViolations,
       questions: attempt.exam.questions,
     },
     answers,

@@ -24,6 +24,8 @@ interface CheatAlert {
   cheatType: string;
   description: string;
   timestamp: string;
+  forceSubmitted?: boolean;
+  forceReason?: string | null;
 }
 
 export default component$(() => {
@@ -303,6 +305,12 @@ export default component$(() => {
                 </div>
                 <p class="text-xs font-[700] text-slate-700 dark:text-slate-200">{a.student.fullName}</p>
                 {a.description && <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">{a.description}</p>}
+                {a.forceSubmitted && (
+                  <p class="mt-1.5 text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-1 rounded-lg inline-flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[12px]">gpp_bad</span>
+                    Auto Force Submit{a.forceReason ? `: ${a.forceReason}` : ""}
+                  </p>
+                )}
               </div>
             ))}
           </div>
