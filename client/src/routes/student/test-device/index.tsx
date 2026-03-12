@@ -282,21 +282,41 @@ export default component$(() => {
           </div>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: "200ms" }}>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in [animation-delay:200ms]">
            {[
-             { label: 'Webcam', value: cameraEnabled.value ? 'Support' : 'Fail', color: cameraEnabled.value ? 'emerald' : 'red' },
-             { label: 'Mic', value: micEnabled.value ? 'Support' : 'Fail', color: micEnabled.value ? 'emerald' : 'red' },
-             { label: 'Latency', value: latency.value !== null ? `${latency.value}ms` : '---', color: 'blue' },
-             { label: 'Status', value: isOnline.value ? 'Online' : 'Offline', color: isOnline.value ? 'emerald' : 'red' }
+             {
+               label: 'Webcam',
+               value: cameraEnabled.value ? 'Dukungan Baik' : 'Gagal',
+               borderClass: cameraEnabled.value ? 'border-emerald-500' : 'border-red-500',
+               textClass: cameraEnabled.value ? 'text-emerald-600' : 'text-red-600',
+             },
+             {
+               label: 'Mikrofon',
+               value: micEnabled.value ? 'Dukungan Baik' : 'Gagal',
+               borderClass: micEnabled.value ? 'border-emerald-500' : 'border-red-500',
+               textClass: micEnabled.value ? 'text-emerald-600' : 'text-red-600',
+             },
+             {
+               label: 'Latensi',
+               value: latency.value !== null ? `${latency.value}ms` : '---',
+               borderClass: 'border-blue-500',
+               textClass: 'text-blue-600',
+             },
+             {
+               label: 'Status Jaringan',
+               value: isOnline.value ? 'Online' : 'Offline',
+               borderClass: isOnline.value ? 'border-emerald-500' : 'border-red-500',
+               textClass: isOnline.value ? 'text-emerald-600' : 'text-red-600',
+             }
            ].map((stat, i) => (
-             <div key={i} class={`glass-darker p-5 rounded-3xl text-center border-b-4 border-${stat.color}-500 shadow-sm`}>
+             <div key={i} class={`glass-darker p-5 rounded-3xl text-center border-b-4 shadow-sm ${stat.borderClass}`}>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                <p class={`text-lg font-bold text-${stat.color}-600`}>{stat.value}</p>
+                <p class={`text-lg font-bold ${stat.textClass}`}>{stat.value}</p>
              </div>
            ))}
         </div>
 
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 px-4 animate-fade-in" style={{ animationDelay: "300ms" }}>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 px-4 animate-fade-in [animation-delay:300ms]">
            <Link href="/student/" class="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 bg-blue-600 text-yellow-400 font-bold rounded-xl sm:rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-500/20 border-b-4 border-blue-800">
               <span class="material-symbols-outlined">home</span>
               Dashboard Utama
@@ -319,5 +339,5 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: "Advanced Diagnostic — Examinator",
+  title: "Diagnostik Perangkat — Examinator",
 };

@@ -16,6 +16,7 @@ export default component$(() => {
   const loading = useSignal(true);
   const nav = useNavigate();
 
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(async () => {
     if (!isAuthenticated()) {
       await nav("/");
@@ -30,7 +31,7 @@ export default component$(() => {
       ]);
       exams.value = examData.exams || [];
       attempts.value = attemptData.attempts || [];
-    } catch (err) {
+    } catch {
       logout();
       await nav("/");
     } finally {
@@ -86,7 +87,13 @@ export default component$(() => {
             </div>
             
             <Link href="/student/" class="size-11 rounded-2xl bg-blue-600 border-2 border-blue-500 shadow-xl shadow-blue-600/20 overflow-hidden group transition-transform hover:scale-105 active:scale-95">
-              <img alt="User" class="w-full h-full object-cover" src={`https://ui-avatars.com/api/?name=${user.value?.fullName || 'User'}&background=3b82f6&color=fff&bold=true`} />
+              <img
+                alt={`Avatar ${user.value?.fullName || "Siswa"}`}
+                class="w-full h-full object-cover"
+                src={`https://ui-avatars.com/api/?name=${user.value?.fullName || 'User'}&background=3b82f6&color=fff&bold=true`}
+                width={44}
+                height={44}
+              />
             </Link>
 
             <button 
@@ -153,7 +160,7 @@ export default component$(() => {
               </div>
            ) : (
              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-               {availableExams.map((exam, i) => {
+               {availableExams.map((exam) => {
                  const attempt = getAttemptForExam(exam.id);
                  const isInProgress = attempt?.status === "IN_PROGRESS";
                  return (
