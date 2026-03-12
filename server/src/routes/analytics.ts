@@ -42,7 +42,7 @@ export const analyticsRoutes = new Elysia({
             }),
             db.cheatLog.count(),
             db.attempt.findMany({
-                where: { cheatLogs: { some: {} } },
+                where: { status: "SUBMITTED", cheatLogs: { some: {} } },
                 select: { id: true },
                 distinct: ["id"],
             }),
@@ -57,7 +57,9 @@ export const analyticsRoutes = new Elysia({
                     submittedAt: true,
                     user: { select: { fullName: true, username: true, kelas: true } },
                     exam: { select: { title: true, subject: true } },
-                }
+                },
+                orderBy: { submittedAt: "desc" },
+                take: 20,
             }),
             db.cheatLog.findMany({
                 select: {

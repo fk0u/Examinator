@@ -193,12 +193,9 @@ export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs",
       select: { id: true, userId: true },
     });
 
-    if (!attempt) {
-      return { logs: [] };
-    }
-
     const canViewAllLogs = ["ADMIN", "OPERATOR"].includes(userRole ?? "");
-    if (!canViewAllLogs && attempt.userId !== id) {
+
+    if (!attempt || (!canViewAllLogs && attempt.userId !== id)) {
       context.set.status = 403;
       return { error: "Forbidden" };
     }

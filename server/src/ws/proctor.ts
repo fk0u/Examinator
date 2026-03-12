@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { db } from "../lib/db";
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { env } from "../config/env";
+import { jwtVerify } from "jose";
 
 // ─── WebSocket Proctor Module ───────────────────────────
 // Handles realtime communication between students and proctors
@@ -166,41 +166,24 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
 
       // ── Proctor joins monitoring ────────────────────────
       case "proctor:join": {
-        if (connectionRoles.get(ws.id) === "student") {
-          ws.send(
-            JSON.stringify({
-              type: "error",
-              message: "Student session cannot escalate to proctor",
-            })
-          );
+        const token = data.token;
+        if (!token) {
+          ws.send(JSON.stringify({ type: "error", message: "Authentication required" }));
           ws.close();
           break;
         }
 
-        const claims = verifyWsToken(data.token);
-        if (!claims) {
-          ws.send(
-            JSON.stringify({
-              type: "error",
-              message: "Unauthorized proctor session",
-            })
-          );
-          ws.close();
-          break;
-        }
-
-        const proctorUser = await db.user.findUnique({
-          where: { id: claims.sub },
-          select: { id: true, role: true, active: true },
-        });
-
-        if (!proctorUser || !proctorUser.active || !["ADMIN", "OPERATOR"].includes(proctorUser.role)) {
-          ws.send(
-            JSON.stringify({
-              type: "error",
-              message: "Forbidden proctor role",
-            })
-          );
+        try {
+          const secretKey = new TextEncoder().encode(env.JWT_SECRET);
+          const { payload } = await jwtVerify(token, secretKey);
+          const role = payload.role as string | undefined;
+          if (role !== "ADMIN" && role !== "OPERATOR") {
+            ws.send(JSON.stringify({ type: "error", message: "Insufficient permissions" }));
+            ws.close();
+            break;
+          }
+        } catch {
+          ws.send(JSON.stringify({ type: "error", message: "Invalid or expired token" }));
           ws.close();
           break;
         }
