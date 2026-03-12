@@ -99,10 +99,8 @@ export default component$(() => {
 
       {/* ── BACKGROUND BLOBS — identical to landing page ── */}
       <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden dark:opacity-40">
-        <div class="absolute top-[-15%] left-[-10%] w-[55vw] h-[55vw] rounded-full opacity-20 mix-blend-multiply filter blur-[100px]"
-          style={{ background: "radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 70%)" }} />
-        <div class="absolute bottom-[-15%] right-[-10%] w-[50vw] h-[50vw] rounded-full opacity-15 mix-blend-multiply filter blur-[120px]"
-          style={{ background: "radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)" }} />
+        <div class="absolute top-[-15%] left-[-10%] w-[55vw] h-[55vw] rounded-full opacity-20 mix-blend-multiply filter blur-[100px] bg-[radial-gradient(circle,rgba(59,130,246,0.25)_0%,transparent_70%)]" />
+        <div class="absolute bottom-[-15%] right-[-10%] w-[50vw] h-[50vw] rounded-full opacity-15 mix-blend-multiply filter blur-[120px] bg-[radial-gradient(circle,rgba(99,102,241,0.2)_0%,transparent_70%)]" />
       </div>
 
       {/* ══════════════════════════════════════════════════════════════
@@ -132,7 +130,7 @@ export default component$(() => {
               onClick$={() => nav("/proctor/")}
               class="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:border-blue-300 dark:hover:border-blue-600 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 transition-all"
             >
-              Proctor View
+              Tampilan Pengawas
               <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
             </button>
 
@@ -184,7 +182,7 @@ export default component$(() => {
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
               }`}
             >
-              {tab === "overview" ? "📊 Overview" : tab === "exams" ? "📝 Ujian" : "👥 Users"}
+              {tab === "overview" ? "Ringkasan" : tab === "exams" ? "Ujian" : "Pengguna"}
             </button>
           ))}
         </div>
@@ -201,22 +199,17 @@ export default component$(() => {
             {activeTab.value === "overview" && (
               <div>
                 {/* Welcome hero card */}
-                <div class="relative overflow-hidden mb-6 rounded-3xl shadow-[0_8px_32px_-8px_rgba(37,99,235,0.3)]"
-                  style="background: linear-gradient(135deg, #1d4ed8 0%, #4f46e5 55%, #7c3aed 100%)">
+                <div class="relative overflow-hidden mb-6 rounded-3xl shadow-[0_8px_32px_-8px_rgba(37,99,235,0.3)] bg-[linear-gradient(135deg,#1d4ed8_0%,#4f46e5_55%,#7c3aed_100%)]">
                   {/* Decorative orbs */}
-                  <div class="absolute -top-16 -right-16 w-64 h-64 rounded-full opacity-20 pointer-events-none"
-                    style="background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, transparent 70%)" />
-                  <div class="absolute -bottom-20 -left-8 w-52 h-52 rounded-full opacity-15 pointer-events-none"
-                    style="background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%)" />
+                  <div class="absolute -top-16 -right-16 w-64 h-64 rounded-full opacity-20 pointer-events-none bg-[radial-gradient(circle,rgba(255,255,255,0.5)_0%,transparent_70%)]" />
+                  <div class="absolute -bottom-20 -left-8 w-52 h-52 rounded-full opacity-15 pointer-events-none bg-[radial-gradient(circle,rgba(255,255,255,0.3)_0%,transparent_70%)]" />
                   {/* Grid texture */}
-                  <div class="absolute inset-0 opacity-[0.04] pointer-events-none"
-                    style="background-image: linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px); background-size: 32px 32px" />
+                  <div class="absolute inset-0 opacity-[0.04] pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.5)_1px,transparent_1px)] bg-[length:32px_32px]" />
 
                   <div class="relative z-10 p-7 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                     {/* Left: greeting text */}
                     <div>
-                      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/25 mb-4"
-                        style="background: rgba(255,255,255,0.12)">
+                      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/25 mb-4 bg-white/10">
                         <span class="relative flex h-1.5 w-1.5">
                           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                           <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
@@ -226,7 +219,7 @@ export default component$(() => {
                       <h1 class="text-2xl sm:text-3xl font-[900] tracking-tight text-white mb-2">
                         <Greeting name={user.value?.fullName} />
                       </h1>
-                      <p class="font-medium text-sm sm:text-base" style="color: rgba(191,219,254,0.9)">
+                      <p class="font-medium text-sm sm:text-base text-blue-100/90">
                         Ringkasan statistik sistem Examinator hari ini.
                       </p>
                     </div>
@@ -316,7 +309,7 @@ export default component$(() => {
                       <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
-                      Export
+                      Ekspor
                     </button>
                     <button onClick$={() => { showCreateExam.value = !showCreateExam.value; }}
                       class="group flex items-center gap-1.5 px-5 py-2 rounded-xl bg-blue-600 text-white text-sm font-[700] hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20 hover:-translate-y-0.5 active:scale-[0.98]">
@@ -340,6 +333,8 @@ export default component$(() => {
                           <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">{f.label}</label>
                           <input type={f.type}
                             class="w-full px-3 py-2.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all"
+                            placeholder={f.label}
+                            title={f.label}
                             value={(newExam.value as any)[f.key]}
                             onInput$={(e) => {
                               const val = (e.target as HTMLInputElement).value;
@@ -450,7 +445,7 @@ export default component$(() => {
                       <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
-                      Export CSV
+                      Ekspor CSV
                     </button>
                   </div>
                 </div>
