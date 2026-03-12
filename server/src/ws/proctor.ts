@@ -234,8 +234,14 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
 
         const cheatStudent = connectedStudents.get(ws.id);
         if (cheatStudent) {
+          const attemptState = await db.attempt.findUnique({
+            where: { id: cheatStudent.attemptId },
+            select: { status: true },
+          });
+          const forcedByServer = attemptState?.status === "FORCE_SUBMITTED";
+
           cheatStudent.cheatCount++;
-          cheatStudent.status = data.forceSubmitted ? "submitted" : "flagged";
+          cheatStudent.status = forcedByServer ? "submitted" : "flagged";
           cheatStudent.lastActivity = Date.now();
 
           // Broadcast to proctors
@@ -246,14 +252,14 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
               student: cheatStudent,
               cheatType: data.cheatType,
               description: data.description,
-              forceSubmitted: Boolean(data.forceSubmitted),
-              forceReason: data.forceReason || null,
+              forceSubmitted: forcedByServer,
+              forceReason: forcedByServer ? "Ambang pelanggaran tercapai" : null,
               timestamp: new Date().toISOString(),
               capturePath: data.capturePath,
             })
           );
 
-          if (data.forceSubmitted) {
+          if (forcedByServer) {
             ws.publish(
               "proctors",
               JSON.stringify({
@@ -261,7 +267,7 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
                 student: cheatStudent,
                 timestamp: new Date().toISOString(),
                 forced: true,
-                reason: data.forceReason || "Ambang pelanggaran tercapai",
+                reason: "Ambang pelanggaran tercapai",
               })
             );
           }

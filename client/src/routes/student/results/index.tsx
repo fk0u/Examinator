@@ -44,16 +44,18 @@ export default component$(() => {
       (a) => a.status === "SUBMITTED" || a.status === "TIMED_OUT" || a.status === "FORCE_SUBMITTED"
   ).sort((a, b) => new Date(b.endedAt || b.createdAt).getTime() - new Date(a.endedAt || a.createdAt).getTime());
 
-  const averageScore = historyAttempts.length > 0
+   const scoredAttempts = historyAttempts.filter((a) => typeof a.score === "number");
+
+   const averageScore = scoredAttempts.length > 0
     ? Math.round(
-        historyAttempts.reduce((acc, attempt) => acc + (attempt.score || 0), 0) /
-          historyAttempts.length
+            scoredAttempts.reduce((acc, attempt) => acc + (attempt.score as number), 0) /
+               scoredAttempts.length
       )
     : 0;
 
   const passedExamsCount = historyAttempts.filter((a) => {
     const exam = getExamForAttempt(a.examId);
-    return a.score !== null && exam.passingScore && a.score >= exam.passingScore;
+      return typeof a.score === "number" && typeof exam.passingScore === "number" && a.score >= exam.passingScore;
   }).length;
 
 

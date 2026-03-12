@@ -33,15 +33,23 @@ export default component$(() => {
     if (user.value?.role !== "ADMIN") { await nav("/"); return; }
 
     try {
-      const [examData, userData, statsData, forcedData] = await Promise.all([
-        examsApi.list(), usersApi.list(), cheatLogsApi.stats(), attemptsApi.forced({ limit: 12 }),
+      const [examData, userData, statsData] = await Promise.all([
+        examsApi.list(), usersApi.list(), cheatLogsApi.stats(),
       ]);
       exams.value = examData.exams || [];
       users.value = userData.users || [];
       stats.value = statsData.stats;
+    } catch { /* silently */ }
+
+    try {
+      const forcedData = await attemptsApi.forced({ limit: 12 });
       forcedAttempts.value = forcedData.attempts || [];
       forcedSummary.value = forcedData.summary || { totalReturned: 0, totalFiltered: 0 };
-    } catch { /* silently */ }
+    } catch {
+      forcedAttempts.value = [];
+      forcedSummary.value = { totalReturned: 0, totalFiltered: 0 };
+    }
+
     loading.value = false;
   });
 

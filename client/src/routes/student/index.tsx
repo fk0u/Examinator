@@ -32,8 +32,8 @@ export default component$(() => {
       exams.value = examData.exams || [];
       attempts.value = attemptData.attempts || [];
     } catch {
-      logout();
-      await nav("/");
+      exams.value = [];
+      attempts.value = [];
     } finally {
       loading.value = false;
     }
