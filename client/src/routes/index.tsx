@@ -15,7 +15,6 @@ export default component$(() => {
   const showLoader = useSignal(true);
   const loaderPhase = useSignal<"typing" | "done">("typing");
   const displayedText = useSignal("");
-  const currentGreetingIdx = useSignal(0);
   const lang = useSignal<Lang>("id");
   const langOpen = useSignal(false);
 
@@ -23,49 +22,92 @@ export default component$(() => {
   useVisibleTask$(async () => {
     initTheme();
 
+    let disposed = false;
+    const timeoutIds: number[] = [];
+    const intervalIds: number[] = [];
+    let observer: IntersectionObserver | null = null;
+
+    const trackedTimeout = (handler: () => void, ms: number) => {
+      const id = window.setTimeout(() => {
+        if (!disposed) handler();
+      }, ms);
+      timeoutIds.push(id);
+      return id;
+    };
+
     let gIdx = 0;
     const typeGreeting = (word: string) => {
       return new Promise<void>((resolve) => {
+        if (disposed) {
+          resolve();
+          return;
+        }
         let charIdx = 0;
         displayedText.value = "";
-        const typeInterval = setInterval(() => {
+        const typeInterval = window.setInterval(() => {
+          if (disposed) {
+            window.clearInterval(typeInterval);
+            resolve();
+            return;
+          }
           displayedText.value = word.slice(0, charIdx + 1);
           charIdx++;
-          if (charIdx >= word.length) { clearInterval(typeInterval); setTimeout(resolve, 400); }
+          if (charIdx >= word.length) {
+            window.clearInterval(typeInterval);
+            trackedTimeout(resolve, 400);
+          }
         }, 60);
+        intervalIds.push(typeInterval);
       });
     };
 
     const eraseGreeting = () => {
       return new Promise<void>((resolve) => {
+        if (disposed) {
+          resolve();
+          return;
+        }
         const word = displayedText.value;
         let charIdx = word.length;
-        const eraseInterval = setInterval(() => {
+        const eraseInterval = window.setInterval(() => {
+          if (disposed) {
+            window.clearInterval(eraseInterval);
+            resolve();
+            return;
+          }
           charIdx--;
           displayedText.value = word.slice(0, charIdx);
-          if (charIdx <= 0) { clearInterval(eraseInterval); setTimeout(resolve, 100); }
+          if (charIdx <= 0) {
+            window.clearInterval(eraseInterval);
+            trackedTimeout(resolve, 100);
+          }
         }, 35);
+        intervalIds.push(eraseInterval);
       });
     };
 
     for (let i = 0; i < 6; i++) {
-      currentGreetingIdx.value = gIdx;
+      if (disposed) break;
       await typeGreeting(GREETINGS[gIdx]);
       if (i < 5) await eraseGreeting();
       gIdx = (gIdx + 1) % GREETINGS.length;
     }
 
-    loaderPhase.value = "done";
-    setTimeout(() => { showLoader.value = false; }, 600);
+    if (disposed) return;
 
-    setTimeout(async () => {
+    loaderPhase.value = "done";
+    trackedTimeout(() => { showLoader.value = false; }, 600);
+
+    trackedTimeout(async () => {
+      if (disposed) return;
       const { animate, stagger } = await import("motion");
+      if (disposed) return;
       animate(".blob-1" as any, { scale: [1, 1.15], rotate: [0, 60], y: [0, -30] }, { duration: 14, repeat: Infinity, direction: "alternate", ease: "easeInOut" } as any);
       animate(".blob-2" as any, { scale: [0.9, 1.1], rotate: [0, -40], x: [0, 40] }, { duration: 18, repeat: Infinity, direction: "alternate", ease: "easeInOut" } as any);
       animate(".blob-3" as any, { scale: [1, 0.85], rotate: [0, 25], y: [0, 25] }, { duration: 20, repeat: Infinity, direction: "alternate", ease: "easeInOut" } as any);
       animate(".fade-up" as any, { opacity: [0, 1], y: [50, 0] }, { duration: 0.8, delay: stagger(0.12), ease: [0.16, 1, 0.3, 1] } as any);
       const sections = document.querySelectorAll(".section-reveal");
-      const observer = new IntersectionObserver((entries) => {
+      observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const children = entry.target.querySelectorAll(".reveal-item");
@@ -76,6 +118,13 @@ export default component$(() => {
       }, { threshold: 0.15 });
       sections.forEach((s) => observer.observe(s));
     }, 800);
+
+    return () => {
+      disposed = true;
+      timeoutIds.forEach((id) => window.clearTimeout(id));
+      intervalIds.forEach((id) => window.clearInterval(id));
+      observer?.disconnect();
+    };
   });
 
   const L = () => t[lang.value];
@@ -92,8 +141,12 @@ export default component$(() => {
           </p>
         </div>
         <div class="mt-10 flex items-center gap-1.5">
-          {[0, 150, 300].map((d) => (
-            <div key={d} class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: `${d}ms` }}></div>
+          {[
+            { key: 0, delayClass: "[animation-delay:0ms]" },
+            { key: 150, delayClass: "[animation-delay:150ms]" },
+            { key: 300, delayClass: "[animation-delay:300ms]" },
+          ].map((d) => (
+            <div key={d.key} class={`w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce ${d.delayClass}`}></div>
           ))}
         </div>
         <p class="mt-6 text-slate-500 text-sm font-medium tracking-wider uppercase">Examinator</p>
@@ -101,9 +154,9 @@ export default component$(() => {
 
       {/* ═══ BACKGROUND ═══ */}
       <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden dark:opacity-50">
-        <div class="blob-1 absolute top-[-15%] left-[-10%] w-[55vw] h-[55vw] rounded-full opacity-30 mix-blend-multiply dark:mix-blend-screen filter blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 70%)' }}></div>
-        <div class="blob-2 absolute bottom-[-15%] right-[-10%] w-[60vw] h-[60vw] rounded-full opacity-25 mix-blend-multiply dark:mix-blend-screen filter blur-[120px]" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.2) 0%, transparent 70%)' }}></div>
-        <div class="blob-3 absolute top-[40%] left-[50%] w-[40vw] h-[40vw] rounded-full opacity-20 mix-blend-multiply dark:mix-blend-screen filter blur-[90px]" style={{ background: 'radial-gradient(circle, rgba(234,179,8,0.15) 0%, transparent 70%)' }}></div>
+        <div class="blob-1 absolute top-[-15%] left-[-10%] w-[55vw] h-[55vw] rounded-full opacity-30 mix-blend-multiply dark:mix-blend-screen filter blur-[100px] bg-[radial-gradient(circle,rgba(59,130,246,0.25)_0%,transparent_70%)]"></div>
+        <div class="blob-2 absolute bottom-[-15%] right-[-10%] w-[60vw] h-[60vw] rounded-full opacity-25 mix-blend-multiply dark:mix-blend-screen filter blur-[120px] bg-[radial-gradient(circle,rgba(16,185,129,0.2)_0%,transparent_70%)]"></div>
+        <div class="blob-3 absolute top-[40%] left-[50%] w-[40vw] h-[40vw] rounded-full opacity-20 mix-blend-multiply dark:mix-blend-screen filter blur-[90px] bg-[radial-gradient(circle,rgba(234,179,8,0.15)_0%,transparent_70%)]"></div>
       </div>
 
       {/* ═══ NAVIGATION ═══ */}

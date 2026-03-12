@@ -42,6 +42,7 @@ export default component$(() => {
   useVisibleTask$(({ track }) => {
     // eslint-disable-next-line qwik/valid-lexical-scope
     track(() => stream.value);
+    track(() => videoPreviewRef.value);
     // eslint-disable-next-line qwik/valid-lexical-scope
     track(() => videoPreviewRef.value);
     // eslint-disable-next-line qwik/valid-lexical-scope
@@ -80,6 +81,7 @@ export default component$(() => {
     requestPermission();
 
     try {
+      await requestPermission();
       const data = await examsApi.get(examId);
       examData.value = data.exam;
       maxCheatViolations.value = data.exam?.maxCheatViolations ?? 5;
@@ -100,6 +102,10 @@ export default component$(() => {
     loading.value = true;
     
     try {
+      if (!cameraEnabled.value || !micEnabled.value) {
+        await requestPermission();
+      }
+
       const data = await attemptsApi.start(examId, cameraEnabled.value, accessToken.value.trim() || undefined);
       attempt.value = data.attempt;
       const examPayload = data.exam || data.attempt?.exam;

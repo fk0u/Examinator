@@ -78,7 +78,7 @@ export default component$(() => {
     track(() => isStarted.value);
     track(() => isFinished.value);
     let timer: any;
-    if (isStarted.value && !isFinished.value) {
+    if (started && !finished) {
       timer = setInterval(() => {
         if (timeLeft.value > 0) timeLeft.value--;
         else isFinished.value = true;
@@ -103,12 +103,6 @@ export default component$(() => {
       if (document.fullscreenElement) document.exitFullscreen();
     }
   });
-
-  const formatTime = (s: number) => {
-    const mins = Math.floor(s / 60);
-    const secs = s % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const score = useComputed$(() => {
     let correctCount = 0;

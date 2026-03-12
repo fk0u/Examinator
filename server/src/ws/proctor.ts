@@ -21,9 +21,52 @@ interface ConnectedStudent {
 
 type ConnectionRole = "student" | "proctor";
 
+type WsClaims = {
+  sub: string;
+  role: string;
+  exp?: number;
+};
+
 const connectedStudents = new Map<string, ConnectedStudent>();
 const proctorSockets = new Set<string>();
 const connectionRoles = new Map<string, ConnectionRole>();
+
+function decodeBase64Url(value: string) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padding = normalized.length % 4 === 0 ? "" : "=".repeat(4 - (normalized.length % 4));
+  return Buffer.from(normalized + padding, "base64").toString("utf8");
+}
+
+function verifyWsToken(token?: string): WsClaims | null {
+  if (!token || typeof token !== "string") return null;
+
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+
+  const [headerB64, payloadB64, signatureB64] = parts;
+
+  try {
+    const header = JSON.parse(decodeBase64Url(headerB64));
+    if (header.alg !== "HS256") return null;
+
+    const expectedSignature = createHmac("sha256", env.JWT_SECRET)
+      .update(`${headerB64}.${payloadB64}`)
+      .digest("base64url");
+
+    const signatureBuffer = Buffer.from(signatureB64);
+    const expectedBuffer = Buffer.from(expectedSignature);
+    if (signatureBuffer.length !== expectedBuffer.length) return null;
+    if (!timingSafeEqual(signatureBuffer, expectedBuffer)) return null;
+
+    const payload = JSON.parse(decodeBase64Url(payloadB64)) as WsClaims;
+    if (!payload?.sub || !payload?.role) return null;
+    if (typeof payload.exp === "number" && Date.now() >= payload.exp * 1000) return null;
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
   // ── Connection opened ─────────────────────────────────
@@ -174,8 +217,14 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
 
         const cheatStudent = connectedStudents.get(ws.id);
         if (cheatStudent) {
+          const attemptState = await db.attempt.findUnique({
+            where: { id: cheatStudent.attemptId },
+            select: { status: true },
+          });
+          const forcedByServer = attemptState?.status === "FORCE_SUBMITTED";
+
           cheatStudent.cheatCount++;
-          cheatStudent.status = data.forceSubmitted ? "submitted" : "flagged";
+          cheatStudent.status = forcedByServer ? "submitted" : "flagged";
           cheatStudent.lastActivity = Date.now();
 
           // Broadcast to proctors
@@ -186,14 +235,14 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
               student: cheatStudent,
               cheatType: data.cheatType,
               description: data.description,
-              forceSubmitted: Boolean(data.forceSubmitted),
-              forceReason: data.forceReason || null,
+              forceSubmitted: forcedByServer,
+              forceReason: forcedByServer ? "Ambang pelanggaran tercapai" : null,
               timestamp: new Date().toISOString(),
               capturePath: data.capturePath,
             })
           );
 
-          if (data.forceSubmitted) {
+          if (forcedByServer) {
             ws.publish(
               "proctors",
               JSON.stringify({
@@ -201,7 +250,7 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
                 student: cheatStudent,
                 timestamp: new Date().toISOString(),
                 forced: true,
-                reason: data.forceReason || "Ambang pelanggaran tercapai",
+                reason: "Ambang pelanggaran tercapai",
               })
             );
           }

@@ -77,6 +77,12 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
       requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
       const { accessToken, ...rest } = body;
+
+      if (typeof accessToken === "string" && accessToken.trim().length === 0) {
+        set.status = 400;
+        return { error: "Exam access token cannot be blank" };
+      }
+
       const normalizedToken = normalizeAccessToken(accessToken);
 
       if (normalizedToken !== null && normalizedToken.length < 4) {
@@ -121,6 +127,11 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
       requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
       const { accessToken, clearAccessToken, ...rest } = body;
+
+      if (typeof accessToken === "string" && accessToken.trim().length === 0 && !clearAccessToken) {
+        set.status = 400;
+        return { error: "Exam access token cannot be blank. Use clearAccessToken to remove it." };
+      }
 
       const data: Record<string, unknown> = {
         ...rest,

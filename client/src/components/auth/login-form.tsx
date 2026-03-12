@@ -6,8 +6,8 @@ import { getDashboardPath } from "~/lib/auth";
 // ─── Refined Awwwards-Level Login Form ───────────────────────────────
 
 export default component$(() => {
-  const username = useSignal("admin");
-  const password = useSignal("admin123");
+  const username = useSignal("");
+  const password = useSignal("");
   const error = useSignal("");
   const loading = useSignal(false);
   const showPassword = useSignal(false);

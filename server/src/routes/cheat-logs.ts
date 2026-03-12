@@ -56,8 +56,8 @@ export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs",
       const forceSubmitted = cheatCount >= threshold && attempt.status === "IN_PROGRESS";
 
       if (forceSubmitted) {
-        await db.attempt.update({
-          where: { id: body.attemptId },
+        await db.attempt.updateMany({
+          where: { id: body.attemptId, status: "IN_PROGRESS" },
           data: {
             status: "FORCE_SUBMITTED",
             submittedAt: new Date(),
@@ -151,8 +151,8 @@ export const cheatLogRoutes = new Elysia({ prefix: "/api/cheat-logs",
       const forceSubmitted = cheatCount >= threshold && attempt.status === "IN_PROGRESS";
 
       if (forceSubmitted) {
-        await db.attempt.update({
-          where: { id: attemptId },
+        await db.attempt.updateMany({
+          where: { id: attemptId, status: "IN_PROGRESS" },
           data: {
             status: "FORCE_SUBMITTED",
             submittedAt: new Date(),

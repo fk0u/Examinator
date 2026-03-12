@@ -56,7 +56,12 @@ export default component$(() => {
 
   // 2. Measure Latency (Ping)
   useVisibleTask$(() => {
+    const updateOnlineStatus = () => {
+      isOnline.value = navigator.onLine;
+    };
+
     const measurePing = async () => {
+      updateOnlineStatus();
       const start = Date.now();
       try {
         await fetch("/favicon.ico", { cache: 'no-store', mode: 'no-cors' });
@@ -67,8 +72,14 @@ export default component$(() => {
     };
     
     measurePing();
+    window.addEventListener("online", updateOnlineStatus);
+    window.addEventListener("offline", updateOnlineStatus);
     const interval = setInterval(measurePing, 5000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("online", updateOnlineStatus);
+      window.removeEventListener("offline", updateOnlineStatus);
+    };
   });
 
   // 3. Enumerate Hardware
@@ -120,6 +131,7 @@ export default component$(() => {
     audio.onended = () => {
       testSoundPlaying.value = false;
       addLog("Tes suara selesai.");
+      audioContext.close().catch(() => undefined);
     };
     audio.play().catch((e) => {
       testSoundPlaying.value = false;

@@ -292,7 +292,9 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
     requireAuth(userId);
     requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
-    const take = Math.min(Math.max(Number(query?.limit || 20), 1), 100);
+    const parsedLimit = Number.parseInt(String(query?.limit ?? "20"), 10);
+    const safeLimit = Number.isFinite(parsedLimit) ? parsedLimit : 20;
+    const take = Math.min(Math.max(safeLimit, 1), 100);
     const where: Record<string, unknown> = { status: "FORCE_SUBMITTED" };
 
     if (query?.examId) {
