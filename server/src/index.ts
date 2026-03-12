@@ -12,6 +12,7 @@ import { questionRoutes } from "./routes/questions";
 import { userRoutes } from "./routes/users";
 import { attemptRoutes } from "./routes/attempts";
 import { cheatLogRoutes } from "./routes/cheat-logs";
+import { analyticsRoutes } from "./routes/analytics";
 
 // ── WebSocket ───────────────────────────────────────────
 import { proctorWs, getActiveStudentCount } from "./ws/proctor";
@@ -95,6 +96,7 @@ const app = new Elysia()
   .use(userRoutes)
   .use(attemptRoutes)
   .use(cheatLogRoutes)
+  .use(analyticsRoutes)
 
   // ── Mount WebSocket ─────────────────────────────────
   .use(proctorWs)

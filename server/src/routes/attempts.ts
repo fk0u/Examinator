@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { authPlugin, requireAuth } from "../middleware/auth";
+import { authPlugin, requireAuth, requireRole } from "../middleware/auth";
 import { db } from "../lib/db";
 
 // ─── Attempt Routes ─────────────────────────────────────
@@ -16,7 +16,8 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
   // Student starts an exam attempt
   .post(
     "/start",
-    async ({ body, userId, request, set }) => {
+    async (context) => {
+      const { body, userId, request, set } = context as any;
       const id = requireAuth(userId);
 
       // Check if exam exists and is active
@@ -47,8 +48,30 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
 
       if (existing) {
         if (existing.status === "IN_PROGRESS") {
-          // Return existing attempt
-          return { attempt: existing, resumed: true };
+          const fullAttempt = await getAttemptWithRelations(existing.id);
+
+          if (!fullAttempt) {
+            set.status = 404;
+            return { error: "Attempt not found" };
+          }
+
+          const remainingSeconds = calculateRemainingSeconds(
+            fullAttempt.startedAt,
+            fullAttempt.exam.duration
+          );
+          if (remainingSeconds <= 0) {
+            await db.attempt.update({
+              where: { id: existing.id },
+              data: {
+                status: "TIMED_OUT",
+                submittedAt: new Date(),
+              },
+            });
+            set.status = 403;
+            return { error: "Exam time is up" };
+          }
+
+          return buildAttemptPayload(fullAttempt, true);
         }
         set.status = 409;
         return { error: "Exam already submitted" };
@@ -63,25 +86,21 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
           ipAddress: request.headers.get("x-forwarded-for") || "unknown",
           userAgent: request.headers.get("user-agent") || "unknown",
         },
-        include: {
-          exam: {
-            include: {
-              questions: {
-                include: { options: { select: { id: true, text: true, order: true } } },
-                orderBy: { order: "asc" },
-              },
-            },
-          },
-        },
       });
 
-      // Shuffle questions if enabled
-      if (exam.shuffle && attempt.exam.questions) {
-        attempt.exam.questions.sort(() => Math.random() - 0.5);
+      const fullAttempt = await getAttemptWithRelations(attempt.id);
+
+      if (!fullAttempt) {
+        set.status = 500;
+        return { error: "Failed to load attempt" };
+      }
+
+      if (exam.shuffle && fullAttempt.exam.questions) {
+        fullAttempt.exam.questions.sort(() => Math.random() - 0.5);
       }
 
       set.status = 201;
-      return { attempt };
+      return buildAttemptPayload(fullAttempt, false);
     },
     {
       body: t.Object({
@@ -95,7 +114,8 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
   // Save answer for a question
   .post(
     "/:id/answer",
-    async ({ params, body, userId, set }) => {
+    async (context) => {
+      const { params, body, userId, set } = context as any;
       const id = requireAuth(userId);
 
       const attempt = await db.attempt.findUnique({
@@ -145,7 +165,8 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
 
   // ── POST /api/attempts/:id/submit ─────────────────────
   // Submit exam and calculate score
-  .post("/:id/submit", async ({ params, userId, set }) => {
+  .post("/:id/submit", async (context) => {
+    const { params, userId, set } = context as any;
     const id = requireAuth(userId);
 
     const attempt = await db.attempt.findUnique({
@@ -226,7 +247,8 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
 
   // ── GET /api/attempts/my ──────────────────────────────
   // Student's own attempts
-  .get("/my", async ({ userId }) => {
+  .get("/my", async (context) => {
+    const { userId } = context as any;
     const id = requireAuth(userId);
 
     const attempts = await db.attempt.findMany({
@@ -245,8 +267,10 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
 
   // ── GET /api/attempts/exam/:examId ────────────────────
   // All attempts for an exam (proctor/admin view)
-  .get("/exam/:examId", async ({ params, userId, userRole }) => {
+  .get("/exam/:examId", async (context) => {
+    const { params, userId, userRole } = context as any;
     requireAuth(userId);
+    requireRole(userRole, ["ADMIN", "OPERATOR"]);
 
     const attempts = await db.attempt.findMany({
       where: { examId: params.examId },
@@ -261,3 +285,78 @@ export const attemptRoutes = new Elysia({ prefix: "/api/attempts",
 
     return { attempts };
   });
+
+  function calculateRemainingSeconds(startedAt: Date, durationMinutes: number) {
+    const durationSeconds = durationMinutes * 60;
+    const elapsedSeconds = Math.floor((Date.now() - startedAt.getTime()) / 1000);
+    return Math.max(durationSeconds - elapsedSeconds, 0);
+  }
+
+async function getAttemptWithRelations(attemptId: string) {
+  return db.attempt.findUnique({
+    where: { id: attemptId },
+    include: {
+      answers: {
+        select: {
+          questionId: true,
+          optionId: true,
+          textAnswer: true,
+          isCorrect: true,
+          points: true,
+        },
+      },
+      exam: {
+        include: {
+          questions: {
+            include: {
+              options: {
+                select: {
+                  id: true,
+                  text: true,
+                  order: true,
+                },
+              },
+            },
+            orderBy: { order: "asc" },
+          },
+        },
+      },
+    },
+  });
+}
+
+function buildAttemptPayload(attempt: any, resumed: boolean) {
+  const remainingSeconds = calculateRemainingSeconds(
+    attempt.startedAt,
+    attempt.exam.duration
+  );
+
+  const answers = attempt.answers ?? [];
+  const answeredCount = answers.length;
+  const totalQuestions = attempt.exam.questions.length;
+
+  return {
+    attempt: {
+      id: attempt.id,
+      status: attempt.status,
+      startedAt: attempt.startedAt,
+      submittedAt: attempt.submittedAt,
+      cameraEnabled: attempt.cameraEnabled,
+    },
+    exam: {
+      id: attempt.exam.id,
+      title: attempt.exam.title,
+      subject: attempt.exam.subject,
+      duration: attempt.exam.duration,
+      questions: attempt.exam.questions,
+    },
+    answers,
+    progress: {
+      answeredCount,
+      totalQuestions,
+    },
+    remainingSeconds,
+    resumed,
+  };
+} 
+

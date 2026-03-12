@@ -17,5 +17,10 @@
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "elysia": "^1.4.27",
+    "examinator": "."
   }
 }
