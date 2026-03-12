@@ -11,15 +11,16 @@ export const Greeting = component$(({ name }: { name?: string }) => {
       else if (hour >= 15 && hour < 18) greeting.value = "Selamat Sore";
       else greeting.value = "Selamat Malam";
     };
-    
+
     updateGreeting();
-    const interval = setInterval(updateGreeting, 60000); // Check every minute
+    const interval = setInterval(updateGreeting, 60000);
     return () => clearInterval(interval);
   });
 
   return (
-    <span class="text-sm text-surface-500">
-      {greeting.value}, <span class="text-surface-800 font-semibold">{name}</span>
+    <span class="text-white/80">
+      {greeting.value},{" "}
+      <span class="text-white font-[900]">{name}</span>
     </span>
   );
 });

@@ -1,0 +1,234 @@
+<!DOCTYPE html><html lang="id"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Examinator - Pengaturan Profil</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3b82f6",
+                        "secondary": "#fbbf24",
+                        "background-light": "#f8fafc",
+                        "background-dark": "#0f172a",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "2xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .mesh-gradient {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(251, 191, 36, 0.1) 0px, transparent 50%);
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light text-slate-900 min-h-screen mesh-gradient">
+<!-- Top Navigation Bar -->
+<nav class="sticky top-0 z-50 w-full glass-card border-b border-slate-200/50 px-6 py-3">
+<div class="max-w-7xl mx-auto flex items-center justify-between">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2">
+<div class="bg-primary p-1.5 rounded-lg">
+<span class="material-symbols-outlined text-white text-2xl" style="">school</span>
+</div>
+<h1 class="text-xl font-extrabold tracking-tight text-slate-900" style="">Examinator</h1>
+</div>
+<div class="hidden md:flex items-center gap-6">
+<a class="text-sm font-semibold text-slate-600 hover:text-primary transition-colors" href="#" style="">Dashboard</a>
+<a class="text-sm font-semibold text-slate-600 hover:text-primary transition-colors" href="#" style="">Ujian</a>
+<a class="text-sm font-semibold text-slate-600 hover:text-primary transition-colors text-primary border-b-2 border-primary pb-1" href="#" style="">Profil</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl" style="">search</span>
+<input class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50 w-64" placeholder="Cari bantuan..." type="text">
+</div>
+<button class="p-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-colors relative" style="">
+<span class="material-symbols-outlined" style="">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+</button>
+<div class="h-10 w-10 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="Avatar of a student with a friendly expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHz2rxsXrr6_E4qk-x0_M5H4ErcoSKDNrh-OcC3f-JYlOsiNQrbt9o5TwnLOoLUrESEau5E1xigaOsMIfaTxXt6CtudiEa2THn7DXAbqxYzJcqkLrSM6CS8DPtFBbpVh8qsQtxYZH-N9zZ0ZSA_Ykn6TTBmw_P8flvyTVmtTzlINlXTK89PUbsPhqql0AlYWqk6xupruhs0juXLdvPtPGNPVFzLso-kiPtNOBWgz-xGRNZlhixjvYCDGYxKsGhwbPf5n9pkVAZIZdP" style="">
+</div>
+</div>
+</div>
+</nav>
+<main class="max-w-7xl mx-auto px-6 py-8">
+<!-- Breadcrumbs & Header -->
+<div class="mb-8">
+<nav class="flex items-center gap-2 text-sm text-slate-500 mb-2">
+<a class="hover:text-primary transition-colors" href="#" style="">Beranda</a>
+<span class="material-symbols-outlined text-xs" style="">chevron_right</span>
+<span class="text-slate-900 font-medium" style="">Pengaturan Profil</span>
+</nav>
+<h2 class="text-3xl font-black text-slate-900 tracking-tight" style="">Pengaturan Profil</h2>
+<p class="text-slate-500" style="">Kelola identitas dan keamanan akun CBT Anda</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Left Column: Profile Card -->
+<div class="lg:col-span-4 space-y-6">
+<div class="glass-card rounded-2xl p-8 flex flex-col items-center text-center shadow-sm">
+<div class="relative group">
+<div class="w-40 h-40 rounded-full border-4 border-white shadow-xl overflow-hidden bg-slate-100 mb-6 ring-4 ring-primary/5">
+<img alt="Profile Large" class="w-full h-full object-cover" data-alt="Large student avatar profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIy7wby-OvEBu82QnqEYFWtemCqC9Twuk3909vwjD5R2bR5eqlady46qirf9wPJ3sBtqafJGbtc3z3nPyRcDHXouXAFXluWIUIfJOiUUDpPKA_YWx83-RkT6DfFhdEvv9UGbTaQJMCouU7L9Ur-xm9pCV1ffYOnjw7dUuqs5q5M7iE7Eg1CoMovN5JgO-lSHMoCRHTIwdWVRsdtpet1XYVJEI5IYJTh0mVHofYaJjJIbMk-vCo-jMaYqGAiX29crUhtQL7NNOoB3Ph" style="">
+</div>
+<button class="absolute bottom-6 right-2 bg-primary text-white p-2.5 rounded-full shadow-lg hover:scale-105 transition-transform" style="">
+<span class="material-symbols-outlined text-sm" style="">photo_camera</span>
+</button>
+</div>
+<h3 class="text-2xl font-bold text-slate-900" style="">Ghani Desta</h3>
+<p class="text-primary font-semibold text-sm mb-4" style="">NISN: 3081286115</p>
+<div class="w-full space-y-3 pt-4 border-t border-slate-100">
+<div class="flex items-center gap-3 text-left">
+<div class="bg-secondary/20 p-2 rounded-lg text-secondary">
+<span class="material-symbols-outlined text-xl" style="">class</span>
+</div>
+<div>
+<p class="text-xs text-slate-400 font-medium uppercase tracking-wider" style="">Kelas</p>
+<p class="text-sm font-bold text-slate-700" style="">XII-PPLG-1</p>
+</div>
+</div>
+<div class="flex items-center gap-3 text-left">
+<div class="bg-primary/10 p-2 rounded-lg text-primary">
+<span class="material-symbols-outlined text-xl" style="">account_balance</span>
+</div>
+<div>
+<p class="text-xs text-slate-400 font-medium uppercase tracking-wider" style="">Sekolah</p>
+<p class="text-sm font-bold text-slate-700" style="">SMK Negeri 7 Samarinda</p>
+</div>
+</div>
+</div>
+</div>
+<div class="glass-card rounded-2xl p-6 shadow-sm">
+<h4 class="font-bold text-slate-900 mb-4 flex items-center gap-2" style="">
+<span class="material-symbols-outlined text-slate-400" style="">tune</span>
+                        Preferensi Aplikasi
+                    </h4>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-700" style="">Mode Gelap</span>
+<span class="text-xs text-slate-400" style="">Aktifkan tema gelap</span>
+</div>
+<button class="w-12 h-6 bg-slate-200 rounded-full relative transition-colors" style="">
+<div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></div>
+</button>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-700" style="">Notifikasi Email</span>
+<span class="text-xs text-slate-400" style="">Info ujian via email</span>
+</div>
+<button class="w-12 h-6 bg-primary rounded-full relative transition-colors" style="">
+<div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></div>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Form Fields -->
+<div class="lg:col-span-8 space-y-6">
+<div class="glass-card rounded-2xl p-8 shadow-sm">
+<h4 class="text-xl font-bold text-slate-900 mb-6" style="">Informasi Kontak &amp; Keamanan</h4>
+<form class="space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="text-sm font-bold text-slate-700" style="">Email Address</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" style="">mail</span>
+<input class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" type="email" value="felix.ramadhan@student.sch.id" placeholder="p23-ghani115@smkn7-smr.sch.id">
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-bold text-slate-700" style="">Nomor Telepon</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" style="">phone_iphone</span>
+<input class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" type="text" value="+62 812 3456 7890">
+</div>
+</div>
+</div>
+<div class="pt-6 border-t border-slate-100 space-y-6">
+<h5 class="text-lg font-bold text-slate-800 flex items-center gap-2" style="">
+<span class="material-symbols-outlined text-secondary" style="">lock</span>
+                                Ubah Kata Sandi
+                            </h5>
+<div class="space-y-4">
+<div class="space-y-2">
+<label class="text-sm font-bold text-slate-700" style="">Kata Sandi Saat Ini</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" style="">key</span>
+<input class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="••••••••" type="password">
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="text-sm font-bold text-slate-700" style="">Kata Sandi Baru</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" style="">password</span>
+<input class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Buat sandi baru" type="password">
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-bold text-slate-700" style="">Konfirmasi Sandi Baru</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" style="">verified_user</span>
+<input class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Ulangi sandi baru" type="password">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-end gap-4 pt-4">
+<button class="px-6 py-3 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-colors" type="button" style="">Batalkan</button>
+<button class="px-8 py-3 bg-primary text-white text-sm font-bold rounded-xl shadow-lg shadow-primary/30 hover:bg-blue-600 hover:translate-y-[-2px] transition-all flex items-center gap-2" type="submit" style="">
+<span class="material-symbols-outlined text-base" style="">save</span>
+                                Simpan Perubahan
+                            </button>
+</div>
+</form>
+</div>
+<!-- Danger Zone Card -->
+<div class="glass-card rounded-2xl p-6 border-red-100 bg-red-50/30">
+<div class="flex items-start gap-4">
+<div class="bg-red-100 p-2 rounded-lg text-red-600">
+<span class="material-symbols-outlined" style="">warning</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-slate-900" style="">Tutup Akun</h4>
+<p class="text-sm text-slate-500 mb-4" style="">Menutup akun akan menghapus seluruh data riwayat ujian Anda secara permanen.</p>
+<button class="text-red-600 text-sm font-bold hover:underline underline-offset-4" style="">Ajukan Penutupan Akun</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="max-w-7xl mx-auto px-6 py-12 mt-8 border-t border-slate-200/50 text-center">
+<p class="text-slate-400 text-sm" style="">© 2024 Examinator CBT Platform • Build v2.4.1</p>
+</footer>
+</body></html>

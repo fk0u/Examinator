@@ -1,0 +1,250 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Examinator | Student Overview</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3b82f6", // Electric Blue
+                        "secondary": "#facc15", // Vibrant Yellow
+                        "background-light": "#f8fafc",
+                        "background-dark": "#0f172a",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "1rem",
+                        "2xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .mesh-gradient {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(250, 204, 21, 0.1) 0px, transparent 50%);
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark mesh-gradient min-h-screen">
+<!-- Sticky Glassmorphic Navbar -->
+<nav class="sticky top-0 z-50 px-6 py-3">
+<div class="max-w-7xl mx-auto glass rounded-2xl px-6 py-2 flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2">
+<div class="bg-primary p-2 rounded-xl flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-2xl" style="">rocket_launch</span>
+</div>
+<h2 class="text-slate-900 dark:text-slate-100 text-xl font-bold tracking-tight" style="">Examinator</h2>
+</div>
+<div class="hidden md:flex items-center gap-6">
+<a class="text-primary font-semibold text-sm" href="#" style="">Dashboard</a>
+<a class="text-slate-500 hover:text-primary transition-colors font-medium text-sm" href="#" style="">Ujian Saya</a>
+<a class="text-slate-500 hover:text-primary transition-colors font-medium text-sm" href="#" style="">Hasil</a>
+<a class="text-slate-500 hover:text-primary transition-colors font-medium text-sm" href="#" style="">Materi</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<!-- Clock Widget -->
+<div class="hidden lg:flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-sm" style="">schedule</span>
+<span class="text-xs font-bold uppercase tracking-wider" style="">10:45 AM</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-transform" style="">
+                        Selamat Pagi, Ghani</button>
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors relative" style="">
+<span class="material-symbols-outlined" style="">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full border-2 border-white"></span>
+</button>
+</div>
+<div class="h-10 w-10 rounded-full border-2 border-white shadow-sm overflow-hidden bg-slate-200">
+<img class="w-full h-full object-cover" data-alt="User avatar of a smiling male student" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDr1cTUn_Lyzr7Vi7Hc2POo1ov2rYhhIGeYRf7n_q3Xty6tw296HBjBEh0pOnSBRIsj0okzc4Zi6VwZVtCgPErgY3nBAaLixvpOtvk5vaXAOoSrE3LAZ4u8WTLqnD7AKCLeJS_WBVVtg0M2huk5CzcmBFuC5UwokRoa6N4m8EzR4uXbrXgvbnB3S988yBdIVNrNos3Bwm8B_aHaKUKVJL_qM7-w5TbKooHrW2_Ee2X6U06BI1DCG4kVeJCG8IU8WWlkhNCsdIYGgqRE" style="">
+</div>
+</div>
+</div>
+</nav>
+<main class="max-w-7xl mx-auto px-6 py-8 space-y-10">
+<!-- Hero Section: Statistik Ujian -->
+<section>
+<div class="relative overflow-hidden glass rounded-3xl p-8 md:p-12 shadow-xl border border-white/50">
+<!-- Decorative Gradients -->
+<div class="absolute -top-24 -right-24 w-64 h-64 bg-secondary/20 blur-3xl rounded-full"></div>
+<div class="absolute -bottom-24 -left-24 w-64 h-64 bg-primary/10 blur-3xl rounded-full"></div>
+<div class="relative z-10 grid md:grid-cols-2 gap-12 items-center">
+<div>
+<h1 class="text-slate-900 dark:text-slate-100 text-4xl md:text-5xl font-black leading-tight mb-4" style="">
+                            Statistik <span class="text-primary" style="">Ujian</span> Anda
+                        </h1>
+<p class="text-slate-500 text-lg max-w-md" style="">
+                            Terus tingkatkan performa akademik Anda. Lihat ringkasan pencapaian terbaik Anda bulan ini.
+                        </p>
+</div>
+<div class="flex flex-wrap gap-6 justify-center md:justify-end">
+<div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-100 w-full sm:w-56 text-center hover:shadow-lg transition-shadow">
+<span class="material-symbols-outlined text-primary text-4xl mb-4" style="">task_alt</span>
+<p class="text-slate-400 text-sm font-bold uppercase tracking-widest mb-1" style="">Ujian Selesai</p>
+<p class="text-slate-900 dark:text-slate-100 text-5xl font-black" style="">24</p>
+<div class="mt-4 inline-flex items-center gap-1 text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg text-xs font-bold" style="">
+<span class="material-symbols-outlined text-xs" style="">trending_up</span> +12%
+                            </div>
+</div>
+<div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-100 w-full sm:w-56 text-center hover:shadow-lg transition-shadow">
+<span class="material-symbols-outlined text-secondary text-4xl mb-4" style="">auto_awesome</span>
+<p class="text-slate-400 text-sm font-bold uppercase tracking-widest mb-1" style="">Nilai Rata-rata</p>
+<p class="text-slate-900 dark:text-slate-100 text-5xl font-black" style="">88%</p>
+<div class="mt-4 inline-flex items-center gap-1 text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg text-xs font-bold" style="">
+<span class="material-symbols-outlined text-xs" style="">trending_up</span> +5%
+                            </div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Active/Upcoming Exams Grid -->
+<section>
+<div class="flex items-center justify-between mb-8">
+<div>
+<h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100" style="">Ujian Mendatang</h2>
+<p class="text-slate-500" style="">Pilih ujian yang sudah dijadwalkan hari ini.</p>
+</div>
+<button class="flex items-center gap-2 text-primary font-bold hover:underline" style="">
+                    Lihat Semua Jadwal <span class="material-symbols-outlined" style="">chevron_right</span>
+</button>
+</div>
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Exam Card 1 -->
+<div class="group bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 hover:border-primary/30 transition-all hover:shadow-xl hover:-translate-y-1">
+<div class="flex items-start justify-between mb-6">
+<div class="bg-blue-50 text-primary p-3 rounded-2xl">
+<span class="material-symbols-outlined text-3xl" style="">calculate</span>
+</div>
+<div class="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full uppercase" style="">Aktif Sekarang</div>
+</div>
+<h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2" style="">Matematika Lanjut</h3>
+<p class="text-slate-500 text-sm mb-6" style="">Analisis kalkulus dan teori himpunan tingkat menengah.</p>
+<div class="flex items-center gap-4 mb-8">
+<div class="flex items-center gap-1 text-slate-500 text-xs font-medium" style="">
+<span class="material-symbols-outlined text-lg" style="">timer</span> 90 Menit
+                        </div>
+<div class="flex items-center gap-1 text-slate-500 text-xs font-medium" style="">
+<span class="material-symbols-outlined text-lg" style="">quiz</span> 40 Soal
+                        </div>
+</div>
+<button class="w-full bg-primary text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 group-hover:shadow-lg group-hover:shadow-primary/30 transition-all" style="">
+                        Mulai Ujian <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" style="">arrow_forward</span>
+</button>
+</div>
+<!-- Exam Card 2 -->
+<div class="group bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 hover:border-primary/30 transition-all hover:shadow-xl hover:-translate-y-1">
+<div class="flex items-start justify-between mb-6">
+<div class="bg-amber-50 text-secondary p-3 rounded-2xl">
+<span class="material-symbols-outlined text-3xl" style="">language</span>
+</div>
+<div class="px-3 py-1 bg-slate-100 text-slate-500 text-xs font-bold rounded-full uppercase" style="">13:00 WIB</div>
+</div>
+<h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2" style="">Bahasa Inggris</h3>
+<p class="text-slate-500 text-sm mb-6" style="">Reading comprehension dan Advanced Grammar Structure.</p>
+<div class="flex items-center gap-4 mb-8">
+<div class="flex items-center gap-1 text-slate-500 text-xs font-medium" style="">
+<span class="material-symbols-outlined text-lg" style="">timer</span> 60 Menit
+                        </div>
+<div class="flex items-center gap-1 text-slate-500 text-xs font-medium" style="">
+<span class="material-symbols-outlined text-lg" style="">quiz</span> 50 Soal
+                        </div>
+</div>
+<button class="w-full bg-slate-100 text-slate-400 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 cursor-not-allowed" style="">
+                        Belum Dibuka <span class="material-symbols-outlined" style="">lock</span>
+</button>
+</div>
+<!-- Exam Card 3 -->
+<div class="group bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 hover:border-primary/30 transition-all hover:shadow-xl hover:-translate-y-1">
+<div class="flex items-start justify-between mb-6">
+<div class="bg-indigo-50 text-indigo-500 p-3 rounded-2xl">
+<span class="material-symbols-outlined text-3xl" style="">science</span>
+</div>
+<div class="px-3 py-1 bg-slate-100 text-slate-500 text-xs font-bold rounded-full uppercase" style="">Besok</div>
+</div>
+<h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2" style="">Fisika Quantum</h3>
+<p class="text-slate-500 text-sm mb-6" style="">Pengantar mekanika kuantum dan struktur atom dasar.</p>
+<div class="flex items-center gap-4 mb-8">
+<div class="flex items-center gap-1 text-slate-500 text-xs font-medium" style="">
+<span class="material-symbols-outlined text-lg" style="">timer</span> 120 Menit
+                        </div>
+<div class="flex items-center gap-1 text-slate-500 text-xs font-medium" style="">
+<span class="material-symbols-outlined text-lg" style="">quiz</span> 25 Soal
+                        </div>
+</div>
+<button class="w-full bg-slate-100 text-slate-400 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 cursor-not-allowed" style="">
+                        Belum Dibuka <span class="material-symbols-outlined" style="">lock</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Quick Tips Sidebar / Banner Alternative -->
+<section class="grid lg:grid-cols-3 gap-8">
+<div class="lg:col-span-2 bg-gradient-to-br from-primary to-blue-700 rounded-3xl p-8 text-white flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-64 h-64 bg-white/10 -mr-20 -mt-20 rounded-full blur-2xl"></div>
+<div class="z-10">
+<h3 class="text-2xl font-bold mb-2" style="">Ingin meningkatkan skormu?</h3>
+<p class="text-blue-100 max-w-sm mb-6" style="">Buka bank soal terbaru dan coba simulasi ujian mandiri sekarang!</p>
+<button class="bg-white text-primary px-8 py-3 rounded-xl font-bold hover:scale-105 transition-transform" style="">Pelajari Materi</button>
+</div>
+<div class="z-10 hidden md:block">
+<span class="material-symbols-outlined text-[120px] opacity-30" style="">school</span>
+</div>
+</div>
+<div class="glass rounded-3xl p-8 border border-white/50 shadow-sm">
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2" style="">
+<span class="material-symbols-outlined text-primary" style="">event</span> Riwayat Terakhir
+                </h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-3 rounded-2xl bg-white/50 border border-slate-100">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold" style="">A</div>
+<div>
+<p class="text-sm font-bold text-slate-800" style="">Sejarah Dunia</p>
+<p class="text-[10px] text-slate-400" style="">20 Okt 2023</p>
+</div>
+</div>
+<span class="text-emerald-500 font-bold" style="">95/100</span>
+</div>
+<div class="flex items-center justify-between p-3 rounded-2xl bg-white/50 border border-slate-100">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold" style="">B</div>
+<div>
+<p class="text-sm font-bold text-slate-800" style="">Biologi Sel</p>
+<p class="text-[10px] text-slate-400" style="">18 Okt 2023</p>
+</div>
+</div>
+<span class="text-blue-500 font-bold" style="">82/100</span>
+</div>
+<button class="w-full py-2 text-primary font-bold text-sm hover:underline" style="">Lihat Semua Nilai</button>
+</div>
+</div>
+</section>
+</main>
+<footer class="max-w-7xl mx-auto px-6 py-12 text-center text-slate-400 text-sm">
+<p class="" style="">© 2026 Examinator CBT Platform. All rights reserved.</p>
+</footer>
+</body></html>
