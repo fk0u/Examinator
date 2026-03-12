@@ -19,7 +19,7 @@ export default component$(() => {
   const answers = useSignal<Record<string, string>>({});
   const timeLeft = useSignal(0);
   
-  const { cameraEnabled, micEnabled, capturePhoto, stream } = useCamera(attempt);
+  const { cameraEnabled, micEnabled, capturePhoto, stream, requestPermission } = useCamera(attempt);
   const videoPreviewRef = useSignal<HTMLVideoElement>();
   
   const isOnline = useSignal(typeof navigator !== 'undefined' ? navigator.onLine : true);
@@ -42,6 +42,8 @@ export default component$(() => {
   useVisibleTask$(({ track }) => {
     // eslint-disable-next-line qwik/valid-lexical-scope
     track(() => stream.value);
+    // eslint-disable-next-line qwik/valid-lexical-scope
+    track(() => videoPreviewRef.value);
     // eslint-disable-next-line qwik/valid-lexical-scope
     if (stream.value && videoPreviewRef.value) {
       // eslint-disable-next-line qwik/valid-lexical-scope
@@ -74,6 +76,8 @@ export default component$(() => {
       return;
     }
     user.value = getUserData();
+
+    requestPermission();
 
     try {
       const data = await examsApi.get(examId);
@@ -306,7 +310,7 @@ export default component$(() => {
 
                 <div class="relative aspect-video bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden group shadow-inner">
                   {stream.value ? (
-                    <video autoplay playsInline ref={videoPreviewRef} class="w-full h-full object-cover scale-x-[-1] opacity-90" />
+                    <video autoplay playsInline muted ref={videoPreviewRef} class="w-full h-full object-cover scale-x-[-1] opacity-90" />
                   ) : (
                     <div class="w-full h-full flex flex-col items-center justify-center text-slate-600 bg-slate-950">
                       <span class="material-symbols-outlined text-4xl sm:text-6xl mb-4 opacity-20">videocam_off</span>

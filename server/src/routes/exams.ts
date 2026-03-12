@@ -79,6 +79,11 @@ export const examRoutes = new Elysia({ prefix: "/api/exams", detail: {
       const { accessToken, ...rest } = body;
       const normalizedToken = normalizeAccessToken(accessToken);
 
+      if (normalizedToken !== null && normalizedToken.length < 4) {
+        set.status = 400;
+        return { error: "Access token must be at least 4 characters" };
+      }
+
       const examRaw = await db.exam.create({
         data: {
           ...rest,

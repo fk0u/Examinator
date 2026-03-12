@@ -23,7 +23,7 @@ export default component$(() => {
   const warningMessage = useSignal("");
   
   const dummyAttempt = useSignal({ id: null });
-  const { cameraEnabled, micEnabled, audioLevel, capturePhoto, stream } = useCamera(dummyAttempt);
+  const { cameraEnabled, micEnabled, audioLevel, capturePhoto, stream, requestPermission } = useCamera(dummyAttempt);
   const videoRef = useSignal<HTMLVideoElement>();
   
   const isFullscreen = useSignal(false);
@@ -31,9 +31,15 @@ export default component$(() => {
   const doubtfulAnswers = useSignal<Record<string, boolean>>({});
   const agreedToTerms = useSignal(false);
 
+  // ─── Inisialisasi kamera ───
+  useVisibleTask$(() => {
+    requestPermission();
+  });
+
   // ─── Verifikasi & pelacakan ───
   useVisibleTask$(({ track }) => {
     track(() => stream.value);
+    track(() => videoRef.value);
     if (stream.value && videoRef.value) {
       videoRef.value.srcObject = stream.value;
     }
@@ -68,7 +74,9 @@ export default component$(() => {
     };
   });
 
-  useVisibleTask$(() => {
+  useVisibleTask$(({ track }) => {
+    track(() => isStarted.value);
+    track(() => isFinished.value);
     let timer: any;
     if (isStarted.value && !isFinished.value) {
       timer = setInterval(() => {

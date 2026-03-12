@@ -23,6 +23,18 @@ export default component$(() => {
   const hasCheckedDevices = useSignal(false);
   const testSoundPlaying = useSignal(false);
 
+  // 0. Keep isOnline reactive
+  useVisibleTask$(() => {
+    const setOnline = () => { isOnline.value = true; };
+    const setOffline = () => { isOnline.value = false; };
+    window.addEventListener('online', setOnline);
+    window.addEventListener('offline', setOffline);
+    return () => {
+      window.removeEventListener('online', setOnline);
+      window.removeEventListener('offline', setOffline);
+    };
+  });
+
   // 1. Detect OS and Browser
   useVisibleTask$(() => {
     const ua = navigator.userAgent;
@@ -105,11 +117,15 @@ export default component$(() => {
     testSoundPlaying.value = true;
     addLog("Memulai tes suara...");
     const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
-    audio.play();
     audio.onended = () => {
       testSoundPlaying.value = false;
       addLog("Tes suara selesai.");
     };
+    audio.play().catch((e) => {
+      testSoundPlaying.value = false;
+      addLog(`GAGAL memutar suara: ${e.message}`);
+      console.error("Audio play error:", e);
+    });
   });
 
   const latencyColor = useComputed$(() => {
