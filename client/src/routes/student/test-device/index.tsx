@@ -120,46 +120,53 @@ export default component$(() => {
   });
 
   return (
-    <div class="font-sans min-h-screen bg-slate-50 text-slate-900 bg-gradient-mesh flex flex-col pt-8">
-      <nav class="sticky top-0 z-50 px-6 py-3">
-        <div class="max-w-7xl mx-auto glass rounded-2xl px-6 py-2 flex items-center justify-between shadow-sm">
-          <div class="flex items-center gap-3">
-            <div class="flex items-center justify-center size-10 bg-blue-500 rounded-xl text-white">
-              <span class="material-symbols-outlined">analytics</span>
+    <div class="font-['Public_Sans',sans-serif] min-h-screen bg-[#f8fafd] text-slate-900 pb-20">
+      {/* ═══ iOS 27 Inspired Top Navigation ═══ */}
+      <header class="sticky top-0 z-50 px-4 sm:px-6 py-3 sm:py-4 bg-white/70 backdrop-blur-xl border-b border-white/40 mb-6 sm:mb-8">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+          <div class="flex items-center gap-5">
+            <div class="size-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20 rotate-3">
+              <span class="material-symbols-outlined text-2xl font-bold">rocket_launch</span>
             </div>
-            <h2 class="text-slate-900 text-xl font-bold tracking-tight">System Diagnostic</h2>
+            <div>
+              <h1 class="text-xl font-bold text-slate-900 leading-tight">Examinator</h1>
+              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 italic">Device Calibration v3.0</p>
+            </div>
           </div>
-          <Link href="/student/" class="flex items-center justify-center rounded-xl h-10 w-10 bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200">
-            <span class="material-symbols-outlined">close</span>
-          </Link>
+
+          <div class="flex items-center gap-4">
+            <Link href="/student/" class="size-11 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center transition-all hover:bg-slate-200 active:scale-95">
+               <span class="material-symbols-outlined font-bold text-xl">close</span>
+            </Link>
+          </div>
         </div>
-      </nav>
+      </header>
 
       <main class="flex-1 max-w-6xl mx-auto w-full p-6 space-y-8 pb-20">
-        <div class="text-center space-y-2 animate-fade-in">
-          <h1 class="text-3xl font-black text-slate-900">Advanced System Check</h1>
-          <p class="text-slate-500">Pemeriksaan mendalam untuk memastikan integritas dan performa perangkat Anda.</p>
+        <div class="text-center space-y-4 animate-fade-in-up">
+          <h2 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter mb-2 italic">Advanced <span class="text-blue-600">Diagnostics</span></h2>
+          <p class="text-slate-500 font-semibold text-sm sm:text-lg max-w-2xl mx-auto px-4">Pemeriksaan integritas hardware dan optimasi jaringan untuk pengalaman ujian yang tanpa kendala.</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div class="lg:col-span-2 space-y-8 animate-fade-in-left">
-            <div class="glass-darker rounded-[2.5rem] p-8 shadow-xl flex flex-col space-y-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-xl font-black text-slate-900 flex items-center gap-2">
+            <div class="glass-darker rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-xl flex flex-col space-y-6">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
                   <span class="material-symbols-outlined text-blue-600">videocam</span>
                   Pratinjau Hardware
                 </h3>
                 <div class="flex gap-2">
-                   <div class={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${cameraEnabled.value ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
-                      Kamera: {cameraEnabled.value ? 'OK' : 'FAIL'}
+                   <div class={`px-2 sm:px-3 py-1 rounded-full text-[8px] sm:text-[10px] font-bold uppercase tracking-widest ${cameraEnabled.value ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+                      Cam: {cameraEnabled.value ? 'OK' : 'FAIL'}
                    </div>
-                   <div class={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${micEnabled.value ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+                   <div class={`px-2 sm:px-3 py-1 rounded-full text-[8px] sm:text-[10px] font-bold uppercase tracking-widest ${micEnabled.value ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
                       Mic: {micEnabled.value ? 'OK' : 'FAIL'}
                    </div>
                 </div>
               </div>
               
-              <div class="relative aspect-video bg-slate-900 rounded-[2rem] overflow-hidden border border-white/20 shadow-2xl">
+              <div class="relative aspect-video bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border border-white/20 shadow-2xl">
                 {stream.value ? (
                   <video autoplay playsInline muted ref={videoRef} class="w-full h-full object-cover scale-x-[-1]" />
                 ) : (
@@ -169,13 +176,13 @@ export default component$(() => {
                          <span class="material-symbols-outlined text-4xl text-blue-500">lock_open</span>
                        </div>
                        <div class="text-center">
-                         <p class="text-sm font-black uppercase tracking-widest text-white">Izin Diperlukan</p>
+                         <p class="text-sm font-bold uppercase tracking-widest text-white">Izin Diperlukan</p>
                          <p class="text-xs text-slate-400 mt-1 max-w-[200px]">Klik tombol di bawah untuk meminta izin kamera & mikrofon</p>
                        </div>
                        <button 
                          onClick$={handleStartDiagnostics}
                          disabled={isRequesting.value}
-                         class="px-8 py-3 bg-yellow-400 text-slate-900 font-black rounded-xl hover:bg-yellow-500 transition-all shadow-xl shadow-yellow-500/20 active:scale-95 z-20 border-b-4 border-yellow-600"
+                         class="px-8 py-3 bg-yellow-400 text-slate-900 font-bold rounded-xl hover:bg-yellow-500 transition-all shadow-xl shadow-yellow-500/20 active:scale-95 z-20 border-b-4 border-yellow-600"
                        >
                          {isRequesting.value ? 'Meminta Izin...' : 'Beri Izin Sekarang'}
                        </button>
@@ -186,7 +193,7 @@ export default component$(() => {
                 {cameraEnabled.value && (
                   <div class="absolute top-6 left-6 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
                      <div class="size-2 bg-red-500 rounded-full animate-pulse"></div>
-                     <span class="text-[10px] text-white font-black tracking-widest">PROCTOR_FEED</span>
+                     <span class="text-[10px] text-white font-bold tracking-widest">PROCTOR_FEED</span>
                   </div>
                 )}
               </div>
@@ -194,7 +201,7 @@ export default component$(() => {
               <div class="grid sm:grid-cols-2 gap-6 pt-4">
                  <div class="space-y-4">
                     <div class="flex items-center justify-between">
-                       <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Daftar Kamera</p>
+                       <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Daftar Kamera</p>
                        <span class="text-[10px] font-bold text-slate-500">{devices.value.cameras.length} ditemukan</span>
                     </div>
                     <div class="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
@@ -209,7 +216,7 @@ export default component$(() => {
                  </div>
                  <div class="space-y-4">
                     <div class="flex items-center justify-between">
-                       <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Daftar Mikrofon</p>
+                       <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Daftar Mikrofon</p>
                        <span class="text-[10px] font-bold text-slate-500">{devices.value.mics.length} ditemukan</span>
                     </div>
                     <div class="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
@@ -227,8 +234,8 @@ export default component$(() => {
           </div>
 
           <div class="space-y-8 animate-fade-in-right">
-            <div class="glass-darker rounded-[2.5rem] p-8 shadow-xl space-y-6">
-               <h3 class="text-xl font-black text-slate-900 flex items-center gap-2">
+            <div class="glass-darker rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-xl space-y-6">
+               <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
                  <span class="material-symbols-outlined text-blue-600">terminal</span>
                  Informasi Sistem
                </h3>
@@ -238,20 +245,20 @@ export default component$(() => {
                        <span class="material-symbols-outlined text-slate-500">desktop_windows</span>
                        <p class="text-sm font-bold text-slate-600">OS</p>
                     </div>
-                    <p class="text-sm font-black text-slate-900">{osInfo.value}</p>
+                    <p class="text-sm font-bold text-slate-900">{osInfo.value}</p>
                  </div>
                  <div class="flex items-center justify-between p-4 bg-white/40 rounded-2xl border border-white/50">
                     <div class="flex items-center gap-3">
                        <span class="material-symbols-outlined text-slate-500">language</span>
                        <p class="text-sm font-bold text-slate-600">Browser</p>
                     </div>
-                    <p class="text-sm font-black text-slate-900">{browserInfo.value}</p>
+                    <p class="text-sm font-bold text-slate-900">{browserInfo.value}</p>
                  </div>
                </div>
             </div>
 
-            <div class="glass-darker rounded-[2.5rem] p-8 shadow-xl space-y-6 border-l-4 border-blue-500">
-              <h3 class="text-xl font-black text-slate-900 flex items-center gap-2">
+            <div class="glass-darker rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-xl space-y-6 border-l-4 border-blue-500">
+              <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
                 <span class="material-symbols-outlined text-blue-600">list_alt</span>
                 Log Aktivitas
               </h3>
@@ -267,7 +274,7 @@ export default component$(() => {
             <button 
               onClick$={playTestSound}
               disabled={testSoundPlaying.value}
-              class="w-full py-4 rounded-2xl font-black bg-blue-600 text-yellow-400 shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-2 border-b-4 border-blue-800"
+              class="w-full py-4 rounded-2xl font-bold bg-blue-600 text-yellow-400 shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-2 border-b-4 border-blue-800"
             >
               <span class="material-symbols-outlined">volume_up</span>
               Tes Audio Sistem
@@ -283,20 +290,20 @@ export default component$(() => {
              { label: 'Status', value: isOnline.value ? 'Online' : 'Offline', color: isOnline.value ? 'emerald' : 'red' }
            ].map((stat, i) => (
              <div key={i} class={`glass-darker p-5 rounded-3xl text-center border-b-4 border-${stat.color}-500 shadow-sm`}>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                <p class={`text-lg font-black text-${stat.color}-600`}>{stat.value}</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                <p class={`text-lg font-bold text-${stat.color}-600`}>{stat.value}</p>
              </div>
            ))}
         </div>
 
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 animate-fade-in" style={{ animationDelay: "300ms" }}>
-           <Link href="/student/" class="px-10 py-4 bg-blue-600 text-yellow-400 font-black rounded-2xl hover:bg-blue-700 hover:-translate-y-1 transition-all flex items-center gap-2 shadow-xl shadow-blue-500/20 border-b-4 border-blue-800">
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 px-4 animate-fade-in" style={{ animationDelay: "300ms" }}>
+           <Link href="/student/" class="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 bg-blue-600 text-yellow-400 font-bold rounded-xl sm:rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-500/20 border-b-4 border-blue-800">
               <span class="material-symbols-outlined">home</span>
               Dashboard Utama
            </Link>
            <button 
              onClick$={() => window.location.reload()}
-             class="px-10 py-4 glass-darker text-slate-700 font-black rounded-2xl border-2 border-slate-200 hover:border-yellow-400 hover:text-slate-900 transition-all flex items-center gap-2 active:scale-95"
+             class="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 glass-darker text-slate-700 font-bold rounded-xl sm:rounded-2xl border-2 border-slate-200 hover:border-yellow-400 hover:text-slate-900 transition-all flex items-center justify-center gap-2 active:scale-95"
            >
               <span class="material-symbols-outlined">refresh</span>
               Ulangi Diagnostik

@@ -28,6 +28,8 @@ export default component$(() => {
   
   const isFullscreen = useSignal(false);
   const isOnline = useSignal(true);
+  const doubtfulAnswers = useSignal<Record<string, boolean>>({});
+  const agreedToTerms = useSignal(false);
 
   // ─── Verification & Tracking ───
   useVisibleTask$(({ track }) => {
@@ -113,33 +115,48 @@ export default component$(() => {
   // ──────────────────────────────────────────────────────
   if (isFinished.value) {
     return (
-      <div class="min-h-screen bg-slate-50 bg-gradient-mesh flex items-center justify-center p-6">
-        <div class="glass-darker rounded-[3rem] p-12 max-w-2xl w-full text-center space-y-8 animate-scale-up">
-          <div class="size-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-xl">
-            <span class="material-symbols-outlined text-5xl">task_alt</span>
-          </div>
-          <div class="space-y-2">
-            <h2 class="text-4xl font-black text-slate-900">Simulasi Selesai!</h2>
-            <p class="text-slate-500 text-lg">Anda telah berhasil mencoba sistem ujian kami.</p>
+      <div class="min-h-screen bg-[#f8fafd] flex items-center justify-center p-6 relative overflow-hidden font-sans">
+        <div class="absolute inset-0 bg-gradient-mesh opacity-30"></div>
+        
+        <div class="bg-white border border-white/40 shadow-2xl rounded-[3rem] p-12 max-w-2xl w-full text-center space-y-8 animate-scale-up relative z-10">
+          <div class="size-24 bg-emerald-50 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto shadow-xl rotate-3">
+            <span class="material-symbols-outlined text-5xl font-bold">verified</span>
           </div>
           
-          <div class="grid grid-cols-2 gap-4">
-            <div class="bg-white/50 border border-white p-6 rounded-3xl shadow-sm">
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Skor Simulasi</p>
-              <p class="text-4xl font-black text-blue-600">{score.value}%</p>
+          <div class="space-y-2">
+            <h2 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter mb-2 italic">Ready for <span class="text-blue-600">Battle?</span></h2>
+          <p class="text-slate-500 font-semibold text-sm sm:text-lg max-w-2xl mx-auto px-4">Ini adalah ruang simulasi. Semua fitur bekerja persis seperti ujian asli.</p>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-6">
+            <div class="bg-blue-50/50 border border-blue-100 p-8 rounded-[2rem] shadow-inner">
+              <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">Skor Akhir</p>
+              <p class="text-5xl font-bold text-blue-600">{score.value}<span class="text-xl ml-1">%</span></p>
             </div>
-            <div class="bg-white/50 border border-white p-6 rounded-3xl shadow-sm">
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pelanggaran</p>
-              <p class={`text-4xl font-black ${cheatCount.value === 0 ? 'text-emerald-500' : 'text-red-500'}`}>{cheatCount.value}</p>
+            <div class="bg-red-50/30 border border-red-100 p-8 rounded-[2rem] shadow-inner">
+              <p class="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-2">Pelanggaran</p>
+              <p class={`text-5xl font-bold ${cheatCount.value === 0 ? 'text-emerald-500' : 'text-red-600'}`}>{cheatCount.value}</p>
             </div>
           </div>
 
-          <div class="flex flex-col sm:flex-row gap-4">
-             <button onClick$={() => window.location.reload()} class="flex-1 py-4 bg-yellow-400 text-slate-900 font-black rounded-2xl hover:bg-yellow-500 transition-all shadow-lg border-b-4 border-yellow-600">
-               Coba Lagi
+          <div class="bg-slate-50 rounded-2xl p-4 text-xs text-slate-500 font-medium flex items-center gap-3 justify-center">
+            <span class="material-symbols-outlined text-blue-600">info</span>
+            Hasil ini hanya simulasi dan tidak tercatat di database akademik.
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-4 pt-4">
+             <button 
+               onClick$={() => window.location.reload()} 
+               class="flex-1 py-5 bg-yellow-400 text-slate-900 font-bold rounded-2xl hover:bg-yellow-500 transition-all shadow-xl shadow-yellow-500/20 border-b-4 border-yellow-600 active:scale-95"
+             >
+               Ulangi Simulasi
              </button>
-             <Link href="/student/" class="flex-1 py-4 bg-blue-600 text-yellow-400 font-black rounded-2xl hover:bg-blue-700 transition-all shadow-lg border-b-4 border-blue-800">
-               Kembali ke Dashboard
+             <Link 
+               href="/student/" 
+               class="flex-1 py-5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 border-b-4 border-blue-800 active:scale-95 flex items-center justify-center gap-2"
+             >
+               Ke Dashboard
+               <span class="material-symbols-outlined font-bold">home</span>
              </Link>
           </div>
         </div>
@@ -152,105 +169,138 @@ export default component$(() => {
   // ──────────────────────────────────────────────────────
   if (!isStarted.value) {
     return (
-      <div class="min-h-screen bg-slate-50 bg-gradient-mesh flex flex-col pt-8">
-        <nav class="max-w-7xl mx-auto w-full px-6 py-3">
-          <div class="glass rounded-2xl px-6 py-2 flex items-center justify-between shadow-sm border-b-2 border-yellow-400/30">
-             <div class="flex items-center gap-2">
-                <div class="bg-blue-600 text-yellow-400 p-1.5 rounded-lg flex items-center justify-center">
-                  <span class="material-symbols-outlined text-lg font-black">science</span>
+      <div class="min-h-screen bg-[#f8fafd] text-slate-900 font-sans flex flex-col">
+        {/* Top Navigation Bar */}
+        <header class="flex items-center justify-between border-b border-slate-200 px-4 sm:px-10 py-3 sm:py-4 bg-white/50 backdrop-blur-md sticky top-0 z-50">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center justify-center size-10 bg-blue-600 rounded-xl text-white">
+              <span class="material-symbols-outlined">assignment_turned_in</span>
+            </div>
+            <h2 class="text-slate-900 text-xl font-bold leading-tight tracking-tight">Examinator</h2>
+          </div>
+          <div class="flex gap-3">
+            <button class="flex items-center justify-center rounded-xl h-10 w-10 bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200">
+              <span class="material-symbols-outlined">settings</span>
+            </button>
+            <Link href="/student/" class="flex items-center justify-center rounded-xl h-10 w-10 bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200">
+              <span class="material-symbols-outlined">close</span>
+            </Link>
+          </div>
+        </header>
+
+        <main class="flex-1 flex flex-col items-center justify-center p-6 md:p-12 max-w-7xl mx-auto w-full">
+          {/* Hero Section */}
+          <div class="w-full text-center mb-10">
+            <h1 class="text-slate-900 text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-2">Pre-Exam Readiness</h1>
+            <p class="text-slate-600 text-base sm:text-lg">Pastikan semua sistem berfungsi dengan baik sebelum memulai ujian.</p>
+          </div>
+
+          {/* Main Layout Grid */}
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full">
+            {/* Left: Camera Preview & System Check */}
+            <div class="lg:col-span-7 flex flex-col gap-6">
+              <div class="bg-white/70 backdrop-blur-xl border border-white/30 rounded-3xl p-6 shadow-sm">
+                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-blue-600">videocam</span>
+                  Webcam Preview
+                </h3>
+                <div class="relative aspect-video bg-slate-200 rounded-2xl overflow-hidden group border border-slate-100">
+                  {stream.value ? (
+                    <video autoplay playsInline ref={videoRef} class="w-full h-full object-cover scale-x-[-1]" />
+                  ) : (
+                    <div class="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
+                      <span class="material-symbols-outlined text-6xl">videocam_off</span>
+                    </div>
+                  )}
+                  <div class="absolute inset-0 border-2 border-blue-600/30 rounded-2xl pointer-events-none"></div>
+                  <div class="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs flex items-center gap-2">
+                    <span class={`size-2 rounded-full ${cameraEnabled.value ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></span>
+                    {cameraEnabled.value ? 'Live Preview' : 'Camera Offline'}
+                  </div>
                 </div>
-                <h2 class="font-black text-slate-900">Simulasi Ujian</h2>
-             </div>
-             <Link href="/student/" class="flex items-center justify-center size-10 rounded-xl bg-slate-100 text-slate-500 hover:bg-yellow-400 hover:text-slate-900 transition-all active:scale-95">
-                <span class="material-symbols-outlined">close</span>
-             </Link>
+                <p class="mt-4 text-sm text-slate-500 italic">Pastikan wajah terlihat jelas dan berada di tengah frame.</p>
+              </div>
+
+              <div class="bg-white/70 backdrop-blur-xl border border-white/30 rounded-3xl p-6 shadow-sm border-l-4 border-l-yellow-500">
+                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-blue-600">analytics</span>
+                  System Check Panel
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { label: 'Camera Active', ok: cameraEnabled.value, icon: 'videocam' },
+                    { label: 'Microphone Active', ok: micEnabled.value, icon: 'mic' },
+                    { label: 'Connection Stable', ok: isOnline.value, icon: 'wifi' },
+                    { label: 'Fullscreen Ready', ok: isFullscreen.value, icon: 'fullscreen' }
+                  ].map((sys, i) => (
+                    <div key={i} class="flex items-center justify-between p-4 bg-white/50 rounded-2xl border border-slate-100">
+                      <div class="flex items-center gap-3">
+                        <span class={`material-symbols-outlined ${sys.ok ? 'text-emerald-500' : 'text-red-400'}`}>
+                          {sys.ok ? 'check_circle' : 'cancel'}
+                        </span>
+                        <span class="font-bold text-slate-700 text-sm">{sys.label}</span>
+                      </div>
+                      <span class={`text-[10px] font-bold uppercase tracking-widest ${sys.ok ? 'text-emerald-500' : 'text-red-400'}`}>
+                        {sys.ok ? 'Ready' : 'Not Ready'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Rules & CTA */}
+            <div class="lg:col-span-5 flex flex-col gap-6">
+              <div class="bg-white/70 backdrop-blur-xl border border-white/30 rounded-3xl p-8 shadow-sm h-full flex flex-col">
+                <h3 class="text-xl font-bold text-slate-900 mb-6">Tata Tertib & Peraturan</h3>
+                <ul class="space-y-6 flex-1">
+                  {[
+                    { icon: 'tab_unselected', title: 'Dilarang berpindah tab', desc: 'Sistem akan otomatis mendeteksi jika Anda membuka tab atau aplikasi lain.' },
+                    { icon: 'videocam', title: 'Kamera akan merekam', desc: 'Aktifitas visual akan direkam selama durasi ujian untuk keperluan integritas.' },
+                    { icon: 'person_pin', title: 'Tetap berada di depan layar', desc: 'Anda tidak diperkenankan meninggalkan area pengawasan kamera.' },
+                    { icon: 'record_voice_over', title: 'Suara akan dipantau', desc: 'Mohon menjaga ketenangan dan tidak berbicara selama ujian berlangsung.' }
+                  ].map((rule, i) => (
+                    <li key={i} class="flex gap-4">
+                      <div class="flex-shrink-0 size-10 bg-yellow-500/10 rounded-xl flex items-center justify-center">
+                        <span class="material-symbols-outlined text-yellow-600 font-bold">{rule.icon}</span>
+                      </div>
+                      <div>
+                        <h4 class="font-bold text-slate-800 text-sm">{rule.title}</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed mt-1">{rule.desc}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                <div class="mt-8 pt-6 border-t border-slate-100">
+                  <div class="flex items-start gap-3 mb-6 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                    <input 
+                      type="checkbox" 
+                      id="terms"
+                      checked={agreedToTerms.value}
+                      onChange$={(e, el) => agreedToTerms.value = el.checked}
+                      class="mt-1 size-5 rounded border-blue-300 text-blue-600 focus:ring-blue-500 cursor-pointer" 
+                    />
+                    <label for="terms" class="text-xs text-slate-600 leading-relaxed font-medium cursor-pointer">
+                      Saya telah membaca semua aturan dan menyetujui perekaman sistem demi kelancaran ujian.
+                    </label>
+                  </div>
+                  <button 
+                    onClick$={startSimulation}
+                    disabled={!agreedToTerms.value}
+                    class="w-full flex items-center justify-center gap-2 rounded-2xl h-16 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:grayscale text-white font-bold text-lg transition-all shadow-xl shadow-blue-600/20 border-b-4 border-blue-800 active:scale-[0.98]"
+                  >
+                    <span>Mulai Ujian Simulasi</span>
+                    <span class="material-symbols-outlined font-bold">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </nav>
 
-        <main class="flex-1 max-w-6xl mx-auto w-full p-6 grid lg:grid-cols-5 gap-8 items-start">
-          <div class="lg:col-span-3 space-y-6 animate-fade-in-left">
-            {/* Mock Camera Preview */}
-            <div class="glass-darker rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group">
-               <div class="flex items-center justify-between mb-6">
-                 <h3 class="text-xl font-black text-slate-900 flex items-center gap-2">
-                   <span class="material-symbols-outlined text-blue-600">videocam</span>
-                   Pratinjau Kamera Proktor
-                 </h3>
-                 <div class="flex items-center gap-2">
-                    <div class={`size-2 rounded-full ${cameraEnabled.value ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
-                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">{cameraEnabled.value ? 'Online' : 'Offline'}</span>
-                 </div>
-               </div>
-               
-               <div class="aspect-video bg-black rounded-3xl overflow-hidden shadow-inner border border-white/20 relative">
-                 {stream.value ? (
-                   <video autoplay playsInline ref={videoRef} class="w-full h-full object-cover scale-x-[-1]" />
-                 ) : (
-                   <div class="w-full h-full flex items-center justify-center bg-slate-900 group-hover:bg-slate-800 transition-colors">
-                      <span class="material-symbols-outlined text-6xl text-slate-700">no_photography</span>
-                   </div>
-                 )}
-               </div>
-
-               {/* Audio Visualizer Mock */}
-               <div class="mt-6 space-y-2">
-                  <div class="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    <span>Input Suara Simulasi</span>
-                    <span class={micEnabled.value ? 'text-blue-600' : 'text-slate-400'}>{audioLevel.value}%</span>
-                  </div>
-                  <div class="h-2 bg-slate-200 rounded-full overflow-hidden border border-white">
-                    <div class="h-full bg-blue-600 transition-all duration-75 shadow-[0_0_10px_rgba(37,99,235,0.4)]" style={{ width: `${audioLevel.value}%` }} />
-                  </div>
-               </div>
-            </div>
-
-            <div class="grid sm:grid-cols-2 gap-4">
-               <div class="glass rounded-3xl p-6 border border-white/50 flex items-center gap-4">
-                  <div class="size-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
-                    <span class="material-symbols-outlined">quiz</span>
-                  </div>
-                  <div>
-                    <p class="text-[10px] text-slate-600 font-black uppercase tracking-widest">Jumlah Soal</p>
-                    <p class="font-bold text-slate-800">{MOCK_QUESTIONS.length} Pertanyaan</p>
-                  </div>
-               </div>
-               <div class="glass rounded-3xl p-6 border border-white/50 flex items-center gap-4">
-                  <div class="size-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
-                    <span class="material-symbols-outlined">timer</span>
-                  </div>
-                  <div>
-                    <p class="text-[10px] text-slate-600 font-black uppercase tracking-widest">Waktu Estimasi</p>
-                    <p class="font-bold text-slate-800">5 Menit</p>
-                  </div>
-               </div>
-            </div>
-          </div>
-
-          <div class="lg:col-span-2 space-y-6 animate-fade-in-right">
-            <div class="glass-darker rounded-[2.5rem] p-8 shadow-2xl space-y-8">
-              <h3 class="text-2xl font-black text-slate-900">Peraturan Simulasi</h3>
-              <ul class="space-y-4">
-                 {[
-                   { icon: 'fullscreen', text: 'Simulasi akan berjalan dalam mode layar penuh.' },
-                   { icon: 'tab_unselected', text: 'Meninggalkan tab akan memicu peringatan kecurangan.' },
-                   { icon: 'videocam', text: 'Kamera akan tetap ON untuk simulasi proctoring.' },
-                   { icon: 'lock', text: 'Skor ini bersifat edukatif dan tidak mempengaruhi nilai rapor.' }
-                 ].map((rule, i) => (
-                   <li key={i} class="flex items-start gap-3">
-                     <span class="material-symbols-outlined text-blue-500 bg-blue-50 p-1.5 rounded-lg text-lg">{rule.icon}</span>
-                     <p class="text-slate-600 text-sm leading-relaxed">{rule.text}</p>
-                   </li>
-                 ))}
-              </ul>
-
-              <button 
-                onClick$={startSimulation}
-                class="w-full py-5 bg-yellow-400 text-slate-900 font-black rounded-3xl shadow-xl shadow-yellow-500/30 hover:bg-yellow-500 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 text-lg border-b-4 border-yellow-600 mt-4 active:scale-95"
-              >
-                Mulai Simulasi Sekarang
-                <span class="material-symbols-outlined font-black">arrow_forward</span>
-              </button>
-            </div>
+          <div class="mt-12 flex flex-col items-center gap-2 opacity-40">
+            <p class="text-xs font-bold uppercase tracking-widest text-slate-500">Mata Pelajaran: Matematika Lanjut - Simulasi</p>
+            <p class="text-[10px] font-bold text-slate-400 tracking-tighter">SESSION ID: SIM-992-001 | V2.4.0-ADV</p>
           </div>
         </main>
       </div>
@@ -263,101 +313,248 @@ export default component$(() => {
   const currentQ = MOCK_QUESTIONS[currentQuestionIndex.value];
 
   return (
-    <div class="min-h-screen bg-slate-50 bg-gradient-mesh text-slate-800 select-none flex flex-col pt-12">
+    <div class="min-h-screen bg-[#f8fafc] text-slate-900 font-sans select-none flex flex-col">
       {/* Anti-cheat Overlay */}
       {showWarning.value && (
         <div class="fixed inset-0 z-[100] flex items-center justify-center bg-red-500/10 backdrop-blur-md animate-fade-in">
-           <div class="glass-darker border-2 border-red-500 rounded-[2rem] p-8 max-w-md text-center animate-shake shadow-2xl shadow-red-500/20">
+           <div class="bg-white border-2 border-red-500 rounded-[2rem] p-8 max-w-md text-center animate-shake shadow-2xl shadow-red-500/20">
               <div class="size-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                <span class="material-symbols-outlined text-4xl">warning</span>
+                <span class="material-symbols-outlined text-4xl font-bold">warning</span>
               </div>
-              <p class="text-red-600 font-black text-2xl mb-2">Simulasi: Pelanggaran!</p>
-              <p class="text-slate-600 font-medium">{warningMessage.value}</p>
+              <p class="text-red-600 font-bold text-2xl mb-2">Simulasi: Pelanggaran!</p>
+              <p class="text-slate-600 font-bold">{warningMessage.value}</p>
            </div>
         </div>
       )}
 
-      <div class="fixed top-0 left-0 right-0 glass-darker border-b-2 border-yellow-400/30 px-6 py-4 flex items-center justify-between z-50">
-        <div class="flex items-center gap-3">
-           <div class="bg-blue-600 text-yellow-400 p-2 rounded-xl shadow-lg shadow-blue-500/20">
-             <span class="material-symbols-outlined font-black">science</span>
-           </div>
-           <div>
-             <h1 class="font-black text-slate-900">SIMULASI UJIAN</h1>
-             <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Latihan System Check</p>
-           </div>
+      {/* Sticky Top Navigation Bar */}
+      <header class="sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-4 sm:px-6 py-2 sm:py-3 flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-2 sm:gap-4">
+          <div class="bg-blue-600 p-1.5 rounded-lg text-white">
+            <span class="material-symbols-outlined block font-bold text-sm sm:text-base">rocket_launch</span>
+          </div>
+          <div>
+            <h2 class="text-slate-900 text-sm sm:text-lg font-bold leading-tight">Examinator</h2>
+            <p class="text-slate-500 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest leading-none">Simulation</p>
+          </div>
+          <div class="h-6 sm:h-8 w-[1px] bg-slate-200 mx-1 sm:mx-2"></div>
         </div>
-
-        <div class={`flex items-center gap-3 px-6 py-2.5 rounded-xl font-mono text-xl font-black shadow-sm border-2 ${timeLeft.value < 60 ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' : 'bg-white text-blue-600 border-blue-100'}`}>
-          <span class="material-symbols-outlined font-black">timer</span>
-          {formatTime(timeLeft.value)}
+        
+        <div class="flex items-center gap-3 sm:gap-8">
+          {/* Countdown Timer */}
+          <div class="flex items-center gap-2 sm:gap-3 bg-slate-100 px-3 sm:px-6 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl border border-slate-200">
+             {(() => {
+                const hours = Math.floor(timeLeft.value / 3600);
+                const minutes = Math.floor((timeLeft.value % 3600) / 60);
+                const seconds = timeLeft.value % 60;
+                const isUrgent = timeLeft.value < 60;
+                return (
+                  <>
+                    <div class="flex flex-col items-center">
+                      <span class={`text-sm sm:text-xl font-bold tabular-nums leading-none ${isUrgent ? 'text-red-600' : 'text-slate-900'}`}>{hours.toString().padStart(2, '0')}</span>
+                    </div>
+                    <span class="text-sm sm:text-xl font-bold text-slate-300">:</span>
+                    <div class="flex flex-col items-center">
+                      <span class={`text-sm sm:text-xl font-bold tabular-nums leading-none ${isUrgent ? 'text-red-600' : 'text-slate-900'}`}>{minutes.toString().padStart(2, '0')}</span>
+                    </div>
+                    <span class="text-sm sm:text-xl font-bold text-slate-300">:</span>
+                    <div class="flex flex-col items-center">
+                      <span class={`text-sm sm:text-xl font-bold tabular-nums leading-none ${isUrgent ? 'text-red-600' : 'text-blue-600'}`}>{seconds.toString().padStart(2, '0')}</span>
+                    </div>
+                  </>
+                );
+             })()}
+          </div>
+          
+          <button 
+            onClick$={() => isFinished.value = true}
+            class="flex items-center justify-center rounded-xl sm:rounded-2xl h-10 sm:h-12 px-4 sm:px-6 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95 border-b-2 sm:border-b-4 border-red-800"
+          >
+            Selesai
+          </button>
         </div>
+      </header>
 
-        <div class="flex items-center gap-2">
-           <div class="text-right hidden sm:block">
-              <p class="text-xs font-black text-slate-400 uppercase">Pelanggaran</p>
-              <p class="font-black text-red-500">{cheatCount.value}</p>
-           </div>
-           <div class="size-10 bg-slate-100 rounded-full overflow-hidden border border-slate-200 ml-2">
-              <video autoplay playsInline ref={videoRef} class="w-full h-full object-cover scale-x-[-1]" />
-           </div>
-        </div>
-      </div>
+      <main class="flex flex-col lg:flex-row h-[calc(100vh-60px)] sm:h-[calc(100vh-73px)] overflow-hidden">
+        {/* Main Question Panel */}
+        <section class="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 bg-white m-2 sm:m-4 rounded-[1.5rem] sm:rounded-[2.5rem] shadow-sm border border-slate-100 custom-scrollbar-hidden order-2 lg:order-1">
+          <div class="max-w-3xl mx-auto">
+            <div class="flex items-center justify-between mb-8">
+              <span class="px-4 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full border border-blue-100 uppercase tracking-widest">
+                Soal {currentQuestionIndex.value + 1} dari {MOCK_QUESTIONS.length}
+              </span>
+              <button 
+                onClick$={() => doubtfulAnswers.value = { ...doubtfulAnswers.value, [currentQ.id]: !doubtfulAnswers.value[currentQ.id] }}
+                class={`flex items-center gap-2 font-bold text-xs uppercase tracking-widest transition-all px-4 py-2 rounded-xl border-2 ${doubtfulAnswers.value[currentQ.id] ? 'bg-yellow-400 border-yellow-500 text-slate-900 shadow-lg' : 'text-slate-400 border-slate-100 hover:border-yellow-200 hover:text-yellow-600'}`}
+              >
+                <span class="material-symbols-outlined text-lg">{doubtfulAnswers.value[currentQ.id] ? 'bookmark_added' : 'bookmark'}</span>
+                Ragu-ragu
+              </button>
+            </div>
 
-      <main class="flex-1 max-w-4xl mx-auto w-full px-6 py-20">
-         <div class="glass-darker rounded-[3rem] p-10 shadow-2xl border border-white animate-fade-in" key={currentQ.id}>
-            <div class="space-y-8">
-               <div class="space-y-4">
-                  <span class="px-4 py-1.5 bg-blue-100 text-blue-600 rounded-full font-black text-[10px] uppercase tracking-widest">
-                    Pertanyaan {currentQuestionIndex.value + 1} dari {MOCK_QUESTIONS.length}
-                  </span>
-                  <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">
-                    {currentQ.text}
-                  </h2>
-               </div>
+            {/* Question Text */}
+            <div class="mb-12">
+              <h1 class="text-2xl lg:text-3xl font-bold leading-relaxed text-slate-800">
+                {currentQ.text}
+              </h1>
+            </div>
 
-               <div class="grid gap-3">
-                  {currentQ.options.map((opt, idx) => (
-                    <button
-                      key={idx}
-                      onClick$={() => {
-                        const newAnswers = { ...answers.value };
-                        newAnswers[currentQ.id] = idx;
-                        answers.value = newAnswers;
-                      }}
-                      class={`w-full p-6 text-left rounded-[1.5rem] border-2 transition-all font-medium flex items-center justify-between group ${
-                        answers.value[currentQ.id] === idx 
-                          ? 'border-blue-500 bg-blue-50/50 text-blue-800 shadow-md ring-4 ring-blue-500/10' 
-                          : 'border-slate-100 bg-slate-50/50 hover:border-slate-300 hover:bg-white text-slate-600'
-                      }`}
-                    >
-                      <span>{opt}</span>
-                      <div class={`size-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                        answers.value[currentQ.id] === idx ? 'bg-blue-500 border-blue-500' : 'border-slate-200 group-hover:border-slate-300'
-                      }`}>
-                         {answers.value[currentQ.id] === idx && <span class="material-symbols-outlined text-white text-sm">check</span>}
+            {/* Multiple Choice Options */}
+            <div class="space-y-4">
+              {currentQ.options.map((opt, idx) => {
+                const label = String.fromCharCode(65 + idx);
+                const isSelected = answers.value[currentQ.id] === idx;
+                return (
+                  <button 
+                    key={idx}
+                    onClick$={() => answers.value = { ...answers.value, [currentQ.id]: idx }}
+                    class={`w-full flex items-center gap-6 p-5 rounded-3xl border-2 transition-all group text-left ${isSelected ? 'border-blue-600 bg-blue-50/50 shadow-md ring-4 ring-blue-500/10' : 'border-slate-50 bg-slate-50 hover:border-slate-200 hover:bg-white'}`}
+                  >
+                    <div class={`size-12 rounded-2xl flex items-center justify-center font-bold text-lg transition-all ${isSelected ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-white border border-slate-200 text-slate-500 group-hover:bg-slate-100'}`}>
+                       {label}
+                    </div>
+                    <span class={`text-lg font-bold flex-1 ${isSelected ? 'text-blue-900' : 'text-slate-700'}`}>{opt}</span>
+                    {isSelected && (
+                      <div class="text-blue-600">
+                        <span class="material-symbols-outlined font-bold text-3xl">check_circle</span>
                       </div>
-                    </button>
-                  ))}
-               </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
-            <div class="mt-12 flex justify-between items-center gap-4">
-               <div class="h-2.5 flex-1 bg-slate-100 rounded-full overflow-hidden max-w-[200px] border border-white">
-                 <div class="h-full bg-blue-600 transition-all duration-500" style={{ width: `${((currentQuestionIndex.value + 1) / MOCK_QUESTIONS.length) * 100}%` }} />
-               </div>
-               
-               <button 
-                 onClick$={nextQuestion}
-                 disabled={answers.value[currentQ.id] === undefined}
-                 class="px-10 py-4 bg-yellow-400 text-slate-900 font-black rounded-2xl hover:bg-yellow-500 transition-all shadow-xl shadow-yellow-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border-b-4 border-yellow-600 active:scale-95"
-               >
-                 {currentQuestionIndex.value === MOCK_QUESTIONS.length - 1 ? 'Selesaikan Simulasi' : 'Selanjutnya'}
-                 <span class="material-symbols-outlined font-black">{currentQuestionIndex.value === MOCK_QUESTIONS.length - 1 ? 'done_all' : 'arrow_forward'}</span>
-               </button>
+            {/* Navigation Controls */}
+            <div class="flex items-center justify-between mt-16 pt-8 border-t border-slate-100">
+              <button 
+                disabled={currentQuestionIndex.value === 0}
+                onClick$={() => currentQuestionIndex.value > 0 && currentQuestionIndex.value--}
+                class="flex items-center gap-2 px-8 py-4 rounded-2xl border-2 border-slate-100 font-bold text-slate-600 hover:bg-slate-50 transition-all disabled:opacity-20 active:scale-95"
+              >
+                <span class="material-symbols-outlined font-bold">arrow_back</span>
+                Sebelumnya
+              </button>
+              <button 
+                onClick$={nextQuestion}
+                class="flex items-center gap-2 px-10 py-4 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95 border-b-4 border-blue-800"
+              >
+                {currentQuestionIndex.value === MOCK_QUESTIONS.length - 1 ? 'Selesai' : 'Berikutnya'}
+                <span class="material-symbols-outlined font-bold">arrow_forward</span>
+              </button>
             </div>
-         </div>
+          </div>
+        </section>
+
+        {/* Right Sidebar: Question Navigator */}
+        <aside class="w-full lg:w-80 bg-[#f8fafc] border-b lg:border-l border-slate-200 flex flex-col order-1 lg:order-2">
+          <div class="p-4 sm:p-6 border-b border-slate-200 bg-white">
+            <h3 class="font-bold text-slate-900 mb-2 sm:mb-6 flex items-center gap-2 uppercase tracking-tighter">
+              <span class="material-symbols-outlined text-blue-600 font-bold">grid_view</span>
+              Navigasi Soal
+            </h3>
+            <div class="hidden sm:flex flex-wrap gap-4">
+              <div class="flex items-center gap-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                <div class="size-3 bg-blue-600 rounded-sm"></div>
+                Dijawab
+              </div>
+              <div class="flex items-center gap-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                <div class="size-3 bg-yellow-400 rounded-sm"></div>
+                Ragu
+              </div>
+              <div class="flex items-center gap-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                <div class="size-3 bg-slate-200 rounded-sm"></div>
+                Kosong
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar-hidden">
+            <div class="grid grid-cols-5 sm:grid-cols-5 gap-2 sm:gap-3">
+              {MOCK_QUESTIONS.map((q, i) => {
+                const isAnswered = answers.value[q.id] !== undefined;
+                const isDoubtful = doubtfulAnswers.value[q.id];
+                const isActive = currentQuestionIndex.value === i;
+                
+                let bgColor = "bg-slate-100 text-slate-400";
+                if (isAnswered) bgColor = "bg-blue-600 text-white shadow-lg shadow-blue-500/20";
+                if (isDoubtful) bgColor = "bg-yellow-400 text-slate-900 shadow-lg shadow-yellow-500/20";
+                
+                return (
+                  <button 
+                    key={i}
+                    onClick$={() => currentQuestionIndex.value = i}
+                    class={`aspect-square rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 border-2 ${isActive ? 'border-slate-900 ring-2 ring-slate-900/10' : 'border-transparent'} ${bgColor}`}
+                  >
+                    {i + 1}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div class="p-8 bg-white border-t border-slate-200">
+            <div class="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+              <span>Progress</span>
+              <span>{Math.round(((Object.keys(answers.value).length) / MOCK_QUESTIONS.length) * 100)}%</span>
+            </div>
+            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-50 shadow-inner">
+              <div 
+                class="h-full bg-blue-600 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(37,99,235,0.3)]" 
+                style={{ width: `${(Object.keys(answers.value).length / MOCK_QUESTIONS.length) * 100}%` }} 
+              />
+            </div>
+          </div>
+        </aside>
       </main>
+
+      {/* Floating Webcam Monitoring */}
+      <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-24 h-32 sm:w-40 sm:h-52 bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 sm:border-4 border-white z-50 group hover:scale-110 transition-all duration-300 ring-4 sm:ring-8 ring-blue-600/10">
+        <div class="absolute top-2 left-2 sm:top-4 sm:left-4 flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-black/50 backdrop-blur-md rounded-full border border-white/10">
+          <div class="size-1.5 sm:size-2 bg-red-500 rounded-full animate-pulse"></div>
+          <span class="text-[7px] sm:text-[9px] text-white font-bold tracking-widest uppercase">Live</span>
+        </div>
+        <div class="w-full h-full bg-slate-800">
+           {stream.value ? (
+             <video autoplay playsInline muted ref={videoRef} class="w-full h-full object-cover scale-x-[-1] grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+           ) : (
+             <div class="w-full h-full flex items-center justify-center">
+               <span class="material-symbols-outlined text-slate-600 text-3xl">videocam_off</span>
+             </div>
+           )}
+           <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent"></div>
+         </div>
+      </div>
+      {/* ═══ iOS 27 Inspired Floating Bottom Navigation (Mobile Only) ═══ */}
+      <div class="md:hidden fixed bottom-10 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-sm bg-white/70 backdrop-blur-3xl border border-white/40 rounded-[3rem] px-5 py-4 shadow-[0_30px_90px_rgba(0,0,0,0.15)] flex items-center justify-between z-50 animate-fade-in-up ring-1 ring-black/5">
+        <button 
+          onClick$={() => currentQuestionIndex.value > 0 && currentQuestionIndex.value--}
+          disabled={currentQuestionIndex.value === 0}
+          class="flex flex-col items-center gap-1.5 group disabled:opacity-20 transition-opacity"
+        >
+           <div class="size-11 rounded-2xl flex items-center justify-center text-slate-400 group-active:bg-slate-100 transition-all">
+              <span class="material-symbols-outlined font-bold text-2xl">chevron_left</span>
+           </div>
+           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Prev</span>
+        </button>
+
+        <div class="relative flex flex-col items-center group">
+           <div class="size-16 -mt-10 bg-blue-600 text-white rounded-[1.75rem] flex flex-col items-center justify-center shadow-2xl shadow-blue-500/40 ring-[6px] ring-white transition-all scale-110">
+              <span class="text-[9px] font-bold uppercase tracking-tighter opacity-70 leading-none">Simulasi</span>
+              <span class="text-2xl font-bold">{currentQuestionIndex.value + 1}</span>
+           </div>
+           <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Active</span>
+        </div>
+
+        <button 
+          onClick$={nextQuestion}
+          class="flex flex-col items-center gap-1.5 group transition-opacity"
+        >
+           <div class="size-11 rounded-2xl flex items-center justify-center text-slate-400 group-active:bg-slate-100 transition-all">
+              <span class="material-symbols-outlined font-bold text-2xl">chevron_right</span>
+           </div>
+           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Next</span>
+        </button>
+      </div>
     </div>
   );
 });

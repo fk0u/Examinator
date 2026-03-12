@@ -60,191 +60,203 @@ export default component$(() => {
 
   if (loading.value) {
     return (
-      <div class="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <div class="min-h-screen bg-[#f8fafd] flex flex-col items-center justify-center font-['Public_Sans',sans-serif]">
+        <div class="relative">
+          <div class="size-16 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin" />
+          <div class="absolute inset-0 flex items-center justify-center">
+             <span class="material-symbols-outlined text-blue-600 animate-pulse">rocket_launch</span>
+          </div>
+        </div>
+        <p class="mt-6 text-slate-400 font-bold uppercase tracking-[0.3em] text-[10px]">Sinkronisasi Data...</p>
       </div>
     );
   }
 
   return (
-    <div class="font-sans min-h-screen bg-slate-50 text-slate-800 mesh-gradient pb-12">
-      {/* ═══ Sticky Glassmorphic Navbar ═══ */}
-      <nav class="sticky top-0 z-50 px-6 py-3">
-        <div class="max-w-7xl mx-auto glass rounded-2xl px-6 py-2 flex items-center justify-between shadow-sm">
-          <div class="flex items-center gap-8">
-            <Link href="/student/" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <div class="bg-blue-500 p-2 rounded-xl flex items-center justify-center text-white">
-                <span class="material-symbols-outlined text-2xl">rocket_launch</span>
-              </div>
-              <h2 class="text-slate-900 text-xl font-bold tracking-tight hidden sm:block">
-                Examinator
-              </h2>
-            </Link>
-            <div class="hidden md:flex items-center gap-6">
-              <Link href="/student/" class="text-slate-500 hover:text-blue-500 transition-colors font-medium text-sm cursor-pointer py-4">
-                Dashboard
-              </Link>
-              <Link href="/student/" class="text-slate-500 hover:text-blue-500 transition-colors font-medium text-sm cursor-pointer py-4">
-                Ujian Saya
-              </Link>
-              <span class="text-blue-500 font-semibold text-sm cursor-pointer border-b-2 border-blue-500 py-4">
-                Hasil
-              </span>
+    <div class="font-['Public_Sans',sans-serif] min-h-screen bg-[#f8fafd] text-slate-900 pb-32">
+      {/* ═══ iOS 27 Inspired Top Navigation ═══ */}
+      <header class="sticky top-0 z-50 px-4 sm:px-6 py-3 sm:py-4 bg-white/70 backdrop-blur-xl border-b border-white/40 mb-6 sm:mb-8">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+          <div class="flex items-center gap-5">
+            <div class="size-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20 rotate-3">
+              <span class="material-symbols-outlined text-2xl font-bold">rocket_launch</span>
             </div>
+            <div>
+              <h1 class="text-xl font-bold text-slate-900 leading-tight">Examinator</h1>
+              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 italic">Student Analytics Portfolio</p>
+            </div>
+          </div>
+
+          <div class="hidden md:flex items-center gap-2 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200/50 shadow-inner">
+             <Link href="/student/" class="px-5 py-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all">Dashboard</Link>
+             <button class="px-5 py-2 text-xs font-bold uppercase tracking-widest bg-white text-blue-600 rounded-xl shadow-sm border border-slate-100">Hasil & Riwayat</button>
           </div>
 
           <div class="flex items-center gap-4">
-            {/* Clock Widget */}
-            <div class="hidden lg:flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl text-slate-600">
-              <span class="material-symbols-outlined text-sm">schedule</span>
-              <span class="text-xs font-bold uppercase tracking-wider">
-                <Clock />
-              </span>
+            <div class="hidden lg:flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-slate-100 shadow-sm text-slate-600">
+               <span class="material-symbols-outlined text-lg">calendar_today</span>
+               <span class="text-[10px] font-bold uppercase tracking-widest leading-none mt-0.5">
+                  {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+               </span>
             </div>
-
-            <div class="flex items-center gap-2">
-              <Link
-                href="/profile/"
-                class="bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform truncate max-w-[150px] sm:max-w-none"
-              >
-                Hai, {user.value?.fullName?.split(" ")[0] || "Siswa"}
-              </Link>
-              <button
-                onClick$={() => {
-                  logout();
-                  nav("/");
-                }}
-                class="p-2 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors relative"
-                title="Keluar"
-              >
-                <span class="material-symbols-outlined">logout</span>
-              </button>
-            </div>
+            <Link href="/student/" class="size-11 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center transition-all hover:bg-slate-200 active:scale-95">
+               <span class="material-symbols-outlined font-bold text-xl">close</span>
+            </Link>
           </div>
         </div>
-      </nav>
+      </header>
 
-      <main class="max-w-7xl mx-auto px-6 py-8 space-y-10">
-        <header class="flex flex-col md:flex-row md:items-end justify-between gap-4 animate-fade-in">
-          <div>
-            <h1 class="text-3xl md:text-4xl font-black text-slate-900 mb-2">
-              Hasil & Riwayat <span class="text-blue-500">Ujian</span>
-            </h1>
-            <p class="text-slate-500">
-              Lihat performa dan evaluasi hasil belajarmu dari waktu ke waktu.
-            </p>
-          </div>
+      <main class="max-w-7xl mx-auto px-6 space-y-12">
+        <header class="animate-fade-in-up">
+            <h1 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter mb-2 italic">Hasil & <span class="text-blue-600">Progres</span></h1>
+            <p class="text-slate-500 font-semibold text-base sm:text-lg">Jurnal pencapaian akademik dan riwayat evaluasimu.</p>
         </header>
 
-        {/* ═══ Stats Overview Grid ═══ */}
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in [animation-delay:100ms]">
-          <div class="glass rounded-3xl p-6 border border-white/50 shadow-sm flex items-center gap-6 hover:-translate-y-1 transition-transform">
-             <div class="w-16 h-16 rounded-2xl bg-blue-100 text-blue-500 flex items-center justify-center shrink-0">
-               <span class="material-symbols-outlined text-3xl">task</span>
-             </div>
-             <div>
-               <p class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Total Ujian</p>
-               <p class="text-3xl font-black text-slate-900">{historyAttempts.length}</p>
-             </div>
-          </div>
-          
-          <div class="glass rounded-3xl p-6 border border-white/50 shadow-sm flex items-center gap-6 hover:-translate-y-1 transition-transform">
-             <div class="w-16 h-16 rounded-2xl bg-yellow-100 text-yellow-600 flex items-center justify-center shrink-0">
-               <span class="material-symbols-outlined text-3xl">military_tech</span>
-             </div>
-             <div>
-               <p class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Rata-Rata Nilai</p>
-               <p class="text-3xl font-black text-slate-900">{averageScore}<span class="text-xl text-slate-400 font-medium">/100</span></p>
-             </div>
-          </div>
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: "100ms" }}>
+           <div class="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden group hover:border-blue-200 transition-all duration-500">
+              <div class="absolute -top-6 -right-6 text-blue-500/5 rotate-12 group-hover:rotate-0 transition-transform duration-700">
+                 <span class="material-symbols-outlined text-[100px] sm:text-[140px]">task</span>
+              </div>
+              <div class="size-14 sm:size-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 sm:mb-8 shadow-inner border border-blue-100 group-hover:scale-110 transition-transform duration-500">
+                 <span class="material-symbols-outlined text-2xl sm:text-3xl font-bold">assignment</span>
+              </div>
+              <p class="text-slate-400 text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.2em] mb-2 sm:mb-3">Total Penugasan</p>
+              <h3 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter">{historyAttempts.length}<span class="text-[12px] sm:text-lg text-slate-300 ml-3 font-bold uppercase tracking-widest">Exams</span></h3>
+           </div>
+           
+           <div class="bg-blue-600 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 text-white shadow-2xl shadow-blue-600/30 relative overflow-hidden group hover:scale-[1.02] transition-all duration-500 ring-1 ring-white/20">
+              <div class="absolute -top-6 -right-6 text-white/10 rotate-12 group-hover:rotate-0 transition-transform duration-700">
+                 <span class="material-symbols-outlined text-[100px] sm:text-[140px]">military_tech</span>
+              </div>
+              <div class="size-14 sm:size-16 rounded-2xl bg-white/10 text-white flex items-center justify-center mb-6 sm:mb-8 shadow-inner border border-white/10 backdrop-blur-md group-hover:bg-white/20 transition-colors">
+                 <span class="material-symbols-outlined text-2xl sm:text-3xl font-bold">avg_pace</span>
+              </div>
+              <p class="text-blue-200 text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.2em] mb-2 sm:mb-3">Rata-rata Skor</p>
+              <h3 class="text-3xl sm:text-5xl font-bold text-white tracking-tighter">{averageScore}<span class="text-[12px] sm:text-lg text-blue-300 ml-3 font-bold uppercase tracking-widest text-white/40">Avg</span></h3>
+           </div>
 
-          <div class="glass rounded-3xl p-6 border border-white/50 shadow-sm flex items-center gap-6 hover:-translate-y-1 transition-transform">
-             <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-500 flex items-center justify-center shrink-0">
-               <span class="material-symbols-outlined text-3xl">verified</span>
-             </div>
-             <div>
-               <p class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Ujian Lulus</p>
-               <p class="text-3xl font-black text-slate-900">{passedExamsCount}<span class="text-xl text-slate-400 font-medium">/{historyAttempts.length}</span></p>
-             </div>
-          </div>
+           <div class="bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 text-white shadow-2xl shadow-slate-900/40 relative overflow-hidden group hover:scale-[1.02] transition-all duration-500 border border-white/5 sm:col-span-2 lg:col-span-1">
+              <div class="absolute -top-6 -right-6 text-white/5 rotate-12 group-hover:rotate-0 transition-transform duration-700">
+                 <span class="material-symbols-outlined text-[100px] sm:text-[140px]">verified</span>
+              </div>
+              <div class="size-14 sm:size-16 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-6 sm:mb-8 shadow-inner border border-emerald-500/20 backdrop-blur-sm group-hover:bg-emerald-500/30 transition-colors">
+                 <span class="material-symbols-outlined text-2xl sm:text-3xl font-bold">check_circle</span>
+              </div>
+              <p class="text-slate-400 text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.2em] mb-2 sm:mb-3">Status Kelulusan</p>
+              <h3 class="text-3xl sm:text-5xl font-bold text-white tracking-tighter">{passedExamsCount}<span class="text-[12px] sm:text-lg text-emerald-500/50 ml-3 font-bold uppercase tracking-widest italic">Success</span></h3>
+           </div>
         </section>
 
-        {/* ═══ History List ═══ */}
-        <section class="animate-fade-in [animation-delay:200ms]">
-          <div class="glass rounded-3xl overflow-hidden border border-white/50 shadow-sm">
-            <div class="p-6 md:p-8 border-b border-slate-100/50 bg-white/30 backdrop-blur-md">
-              <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <span class="material-symbols-outlined text-blue-500">history</span>
-                Riwayat Lengkap
-              </h2>
-            </div>
-            
-            <div class="p-6 md:p-8">
-              {historyAttempts.length === 0 ? (
-                <div class="text-center py-12">
-                  <span class="material-symbols-outlined text-6xl text-slate-300 mb-4 block">receipt_long</span>
-                  <h3 class="text-lg font-bold text-slate-700 mb-1">Belum ada riwayat hasil</h3>
-                  <p class="text-slate-500">Hasil ujianmu akan muncul di sini setelah kamu menyelesaikan ujian.</p>
-                </div>
-              ) : (
-                <div class="space-y-4">
+        {/* ═══ Timeline History ═══ */}
+        <section class="animate-fade-in" style={{ animationDelay: "200ms" }}>
+           <div class="flex items-center justify-between mb-8">
+              <h3 class="text-2xl font-bold text-slate-900 italic">Academic <span class="text-blue-600">Journal</span></h3>
+              <div class="flex gap-2">
+                 <button class="size-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm hover:text-blue-600"><span class="material-symbols-outlined font-bold">filter_list</span></button>
+                 <button class="size-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm hover:text-blue-600"><span class="material-symbols-outlined font-bold">file_download</span></button>
+              </div>
+           </div>
+
+           {historyAttempts.length === 0 ? (
+              <div class="bg-white rounded-[3rem] p-20 text-center border-4 border-dashed border-slate-100 flex flex-col items-center">
+                 <div class="size-24 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-6">
+                    <span class="material-symbols-outlined text-5xl font-bold">article</span>
+                 </div>
+                 <h4 class="text-2xl font-bold text-slate-900 mb-2">Hening...</h4>
+                 <p class="text-slate-400 font-bold max-w-sm">Jurnal akademikmu masih kosong. Selesaikan ujian pertamamu sekarang.</p>
+                 <Link href="/student/" class="mt-8 px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-xl shadow-blue-500/20 active:scale-95 transition-all">Go to Dashboard</Link>
+              </div>
+           ) : (
+              <div class="grid grid-cols-1 gap-8">
                   {historyAttempts.map((attempt) => {
                     const exam = getExamForAttempt(attempt.examId);
                     const isPassed = attempt.score !== null && exam.passingScore !== undefined && attempt.score >= exam.passingScore;
-                    const durationInMinutes = attempt.endedAt && attempt.startedAt 
-                      ? Math.max(1, Math.round((new Date(attempt.endedAt).getTime() - new Date(attempt.startedAt).getTime()) / 60000))
-                      : '-';
-
+                    
                     return (
-                      <div key={attempt.id} class="flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl bg-white/60 border border-slate-100 hover:border-blue-200 transition-colors gap-4">
-                        
-                        <div class="flex items-center gap-4">
-                          <div class={`w-12 h-12 shrink-0 rounded-xl flex items-center justify-center font-bold text-xl ${isPassed ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
-                            {exam.subject?.charAt(0).toUpperCase() || 'E'}
-                          </div>
-                          <div>
-                            <h3 class="font-bold text-slate-900 text-lg line-clamp-1">{exam.title || "Ujian Tidak Diketahui"}</h3>
-                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500 mt-1">
-                              <span class="flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[16px]">calendar_today</span>
-                                {new Date(attempt.startedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                              </span>
-                              <span class="flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[16px]">timer</span>
-                                {durationInMinutes} Menit
-                              </span>
+                         <div key={attempt.id} class="bg-white rounded-[2.5rem] p-6 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/30 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-10 group hover:border-blue-400/30 transition-all duration-500 hover:-translate-y-1 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-bl-[4rem] -mr-10 -mt-10 group-hover:bg-blue-100/50 transition-colors duration-500"></div>
+                            
+                            <div class={`size-20 sm:size-24 rounded-[2rem] flex items-center justify-center text-3xl sm:text-4xl font-bold shrink-0 shadow-lg italic relative z-10 transition-transform duration-500 group-hover:scale-110 ${
+                               isPassed 
+                                 ? 'bg-emerald-50 text-emerald-600 shadow-emerald-500/10' 
+                                 : 'bg-blue-50 text-blue-600 shadow-blue-500/10'
+                            }`}>
+                               {exam.subject?.charAt(0).toUpperCase() || 'E'}
                             </div>
-                          </div>
-                        </div>
 
-                        <div class="flex items-center justify-between md:justify-end gap-6 md:min-w-[200px] border-t md:border-t-0 border-slate-200/50 pt-4 md:pt-0">
-                          <div class="flex flex-col items-start md:items-end">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Status</span>
-                            {isPassed ? (
-                              <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">LULUS</span>
-                            ) : (
-                              <span class="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">TIDAK LULUS</span>
-                            )}
-                          </div>
-                          
-                          <div class="text-right">
-                             <span class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 block">Nilai</span>
-                             <div class="text-3xl font-black text-slate-900 -mt-2">
-                               {attempt.score !== null ? Math.round(attempt.score) : <span class="text-slate-300">-</span>}
-                             </div>
-                          </div>
-                        </div>
+                           <div class="flex-1 space-y-2 relative z-10">
+                              <div class="flex flex-wrap items-center gap-4 mb-2">
+                                 <span class={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] ${isPassed ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'}`}>
+                                    {isPassed ? 'Mastered' : 'Re-Attempt Required'}
+                                 </span>
+                                 <span class="text-[11px] font-bold text-slate-300 uppercase tracking-widest italic flex items-center gap-2">
+                                    <span class="size-1.5 bg-slate-200 rounded-full"></span>
+                                    {exam.code || 'EXM-2024'}
+                                 </span>
+                              </div>
+                              <h4 class="text-2xl sm:text-3xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-tight tracking-tight">{exam.title || "Academic Assessment"}</h4>
+                              
+                              {/* Progress bar visual aid */}
+                              <div class="w-full h-1.5 bg-slate-100 rounded-full mt-4 overflow-hidden">
+                                <div 
+                                  class={`h-full rounded-full transition-all duration-1000 ${isPassed ? 'bg-emerald-500' : 'bg-blue-500'}`} 
+                                  style={{ width: `${attempt.score || 0}%` }}
+                                ></div>
+                              </div>
 
-                      </div>
+                              <div class="flex items-center gap-8 mt-4 text-[12px] font-bold text-slate-400 italic">
+                                 <div class="flex items-center gap-2.5">
+                                    <span class="material-symbols-outlined text-[18px] text-blue-500">calendar_month</span>
+                                    {new Date(attempt.startedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                 </div>
+                                 <div class="flex items-center gap-2.5">
+                                    <span class="material-symbols-outlined text-[18px] text-blue-500">schedule</span>
+                                    {attempt.endedAt && attempt.startedAt ? Math.round((new Date(attempt.endedAt).getTime() - new Date(attempt.startedAt).getTime()) / 60000) : '--'} Mins
+                                 </div>
+                              </div>
+                           </div>
+
+                            <div class="flex items-center justify-between sm:justify-end gap-10 sm:pl-10 sm:border-l sm:border-slate-100 w-full sm:w-auto pt-6 sm:pt-0 border-t sm:border-t-0 relative z-10">
+                               <div class="text-left sm:text-right">
+                                  <p class="text-[10px] font-bold text-slate-300 uppercase tracking-[0.3em] mb-2">Final Performance</p>
+                                  <div class="flex items-baseline justify-start sm:justify-end gap-2">
+                                     <span class={`text-4xl sm:text-6xl font-bold tracking-tighter ${isPassed ? 'text-emerald-600' : 'text-blue-600'}`}>{attempt.score !== null ? Math.round(attempt.score) : '--'}</span>
+                                     <span class="text-sm font-bold text-slate-300 opacity-60">/ 100</span>
+                                  </div>
+                               </div>
+                               <button class="size-14 sm:size-16 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all duration-500 shadow-sm hover:shadow-xl hover:shadow-blue-500/20 active:scale-95">
+                                  <span class="material-symbols-outlined font-bold text-2xl group-hover:rotate-45 transition-transform duration-500">arrow_outward</span>
+                               </button>
+                            </div>
+                        </div>
                     );
                   })}
-                </div>
-              )}
-            </div>
-          </div>
+              </div>
+           )}
         </section>
-
       </main>
+
+      {/* ═══ Floating Bottom Navigation (iOS 27 Inspired) ═══ */}
+      <div class="md:hidden fixed bottom-10 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-sm bg-white/70 backdrop-blur-3xl border border-white/40 rounded-[3rem] px-5 py-4 shadow-[0_30px_90px_rgba(0,0,0,0.15)] flex items-center justify-between z-50 animate-fade-in-up ring-1 ring-black/5">
+        <Link href="/student/" class="flex flex-col items-center gap-1.5 group">
+           <div class="size-11 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-50 transition-all duration-300">
+              <span class="material-symbols-outlined font-bold text-2xl">grid_view</span>
+           </div>
+           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-blue-600 transition-colors">Home</span>
+        </Link>
+        <div class="relative flex flex-col items-center gap-1.5 group">
+           <div class="size-16 -mt-10 bg-blue-600 text-white rounded-[1.75rem] flex items-center justify-center shadow-2xl shadow-blue-500/40 ring-[6px] ring-white transition-all duration-500 group-active:scale-95 group-hover:rotate-6">
+              <span class="material-symbols-outlined font-bold text-3xl">analytics</span>
+           </div>
+           <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Portfolio</span>
+        </div>
+        <Link href="/student/test-device/" class="flex flex-col items-center gap-1.5 group">
+           <div class="size-11 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-amber-500 group-hover:bg-amber-50 transition-all duration-300">
+              <span class="material-symbols-outlined font-bold text-2xl">on_device_training</span>
+           </div>
+           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-amber-500 transition-colors">Device</span>
+        </Link>
+      </div>
     </div>
   );
 });
