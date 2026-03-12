@@ -3,7 +3,7 @@ import type { DocumentHead } from "@builder.io/qwik-city";
 import { Link } from "@builder.io/qwik-city";
 import { useCamera } from "~/hooks/use-camera";
 
-// Mock Data for Simulation
+// Data contoh untuk simulasi
 const MOCK_QUESTIONS = [
   { id: "q1", text: "Apa kepanjangan dari CBT dalam konteks ujian?", options: ["Computer Based Test", "Common Basic Training", "Central Business Tool", "Creative Binary Type"], correct: 0 },
   { id: "q2", text: "Manakah yang merupakan fitur anti-cheating di platform ini?", options: ["Kamera proctoring", "Deteksi pindah tab", "Mode Fullscreen wajib", "Semua benar"], correct: 3 },
@@ -17,7 +17,7 @@ export default component$(() => {
   const isFinished = useSignal(false);
   const currentQuestionIndex = useSignal(0);
   const answers = useSignal<Record<string, number>>({});
-  const timeLeft = useSignal(300); // 5 minutes
+  const timeLeft = useSignal(300); // 5 menit
   const cheatCount = useSignal(0);
   const showWarning = useSignal(false);
   const warningMessage = useSignal("");
@@ -31,7 +31,7 @@ export default component$(() => {
   const doubtfulAnswers = useSignal<Record<string, boolean>>({});
   const agreedToTerms = useSignal(false);
 
-  // ─── Verification & Tracking ───
+  // ─── Verifikasi & pelacakan ───
   useVisibleTask$(({ track }) => {
     track(() => stream.value);
     if (stream.value && videoRef.value) {
@@ -79,7 +79,7 @@ export default component$(() => {
     return () => clearInterval(timer);
   });
 
-  // ─── Actions ───
+  // ─── Aksi ───
   const startSimulation = $(() => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(e => console.error(e));
@@ -111,7 +111,7 @@ export default component$(() => {
   });
 
   // ──────────────────────────────────────────────────────
-  // 1. Result State
+  // 1. Kondisi hasil
   // ──────────────────────────────────────────────────────
   if (isFinished.value) {
     return (
@@ -124,7 +124,7 @@ export default component$(() => {
           </div>
           
           <div class="space-y-2">
-            <h2 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter mb-2 italic">Ready for <span class="text-blue-600">Battle?</span></h2>
+            <h2 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter mb-2 italic">Simulasi <span class="text-blue-600">Selesai</span></h2>
           <p class="text-slate-500 font-semibold text-sm sm:text-lg max-w-2xl mx-auto px-4">Ini adalah ruang simulasi. Semua fitur bekerja persis seperti ujian asli.</p>
           </div>
           
@@ -155,7 +155,7 @@ export default component$(() => {
                href="/student/" 
                class="flex-1 py-5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 border-b-4 border-blue-800 active:scale-95 flex items-center justify-center gap-2"
              >
-               Ke Dashboard
+               Ke Beranda
                <span class="material-symbols-outlined font-bold">home</span>
              </Link>
           </div>
@@ -165,12 +165,12 @@ export default component$(() => {
   }
 
   // ──────────────────────────────────────────────────────
-  // 2. Readiness Room (Before Start)
+  // 2. Ruang persiapan (sebelum mulai)
   // ──────────────────────────────────────────────────────
   if (!isStarted.value) {
     return (
       <div class="min-h-screen bg-[#f8fafd] text-slate-900 font-sans flex flex-col">
-        {/* Top Navigation Bar */}
+        {/* Bilah navigasi atas */}
         <header class="flex items-center justify-between border-b border-slate-200 px-4 sm:px-10 py-3 sm:py-4 bg-white/50 backdrop-blur-md sticky top-0 z-50">
           <div class="flex items-center gap-3">
             <div class="flex items-center justify-center size-10 bg-blue-600 rounded-xl text-white">
@@ -191,18 +191,18 @@ export default component$(() => {
         <main class="flex-1 flex flex-col items-center justify-center p-6 md:p-12 max-w-7xl mx-auto w-full">
           {/* Hero Section */}
           <div class="w-full text-center mb-10">
-            <h1 class="text-slate-900 text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-2">Pre-Exam Readiness</h1>
+            <h1 class="text-slate-900 text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-2">Persiapan Sebelum Ujian</h1>
             <p class="text-slate-600 text-base sm:text-lg">Pastikan semua sistem berfungsi dengan baik sebelum memulai ujian.</p>
           </div>
 
-          {/* Main Layout Grid */}
+          {/* Tata letak utama */}
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full">
-            {/* Left: Camera Preview & System Check */}
+            {/* Kiri: Pratinjau kamera & cek sistem */}
             <div class="lg:col-span-7 flex flex-col gap-6">
               <div class="bg-white/70 backdrop-blur-xl border border-white/30 rounded-3xl p-6 shadow-sm">
                 <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                   <span class="material-symbols-outlined text-blue-600">videocam</span>
-                  Webcam Preview
+                  Pratinjau Kamera
                 </h3>
                 <div class="relative aspect-video bg-slate-200 rounded-2xl overflow-hidden group border border-slate-100">
                   {stream.value ? (
@@ -215,7 +215,7 @@ export default component$(() => {
                   <div class="absolute inset-0 border-2 border-blue-600/30 rounded-2xl pointer-events-none"></div>
                   <div class="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs flex items-center gap-2">
                     <span class={`size-2 rounded-full ${cameraEnabled.value ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></span>
-                    {cameraEnabled.value ? 'Live Preview' : 'Camera Offline'}
+                    {cameraEnabled.value ? 'Pratinjau Langsung' : 'Kamera Nonaktif'}
                   </div>
                 </div>
                 <p class="mt-4 text-sm text-slate-500 italic">Pastikan wajah terlihat jelas dan berada di tengah frame.</p>
@@ -224,14 +224,14 @@ export default component$(() => {
               <div class="bg-white/70 backdrop-blur-xl border border-white/30 rounded-3xl p-6 shadow-sm border-l-4 border-l-yellow-500">
                 <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                   <span class="material-symbols-outlined text-blue-600">analytics</span>
-                  System Check Panel
+                  Panel Pemeriksaan Sistem
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
-                    { label: 'Camera Active', ok: cameraEnabled.value, icon: 'videocam' },
-                    { label: 'Microphone Active', ok: micEnabled.value, icon: 'mic' },
-                    { label: 'Connection Stable', ok: isOnline.value, icon: 'wifi' },
-                    { label: 'Fullscreen Ready', ok: isFullscreen.value, icon: 'fullscreen' }
+                    { label: 'Kamera Aktif', ok: cameraEnabled.value, icon: 'videocam' },
+                    { label: 'Mikrofon Aktif', ok: micEnabled.value, icon: 'mic' },
+                    { label: 'Koneksi Stabil', ok: isOnline.value, icon: 'wifi' },
+                    { label: 'Layar Penuh Siap', ok: isFullscreen.value, icon: 'fullscreen' }
                   ].map((sys, i) => (
                     <div key={i} class="flex items-center justify-between p-4 bg-white/50 rounded-2xl border border-slate-100">
                       <div class="flex items-center gap-3">
@@ -241,7 +241,7 @@ export default component$(() => {
                         <span class="font-bold text-slate-700 text-sm">{sys.label}</span>
                       </div>
                       <span class={`text-[10px] font-bold uppercase tracking-widest ${sys.ok ? 'text-emerald-500' : 'text-red-400'}`}>
-                        {sys.ok ? 'Ready' : 'Not Ready'}
+                        {sys.ok ? 'Siap' : 'Belum Siap'}
                       </span>
                     </div>
                   ))}
@@ -249,7 +249,7 @@ export default component$(() => {
               </div>
             </div>
 
-            {/* Right: Rules & CTA */}
+            {/* Kanan: Aturan & tombol aksi */}
             <div class="lg:col-span-5 flex flex-col gap-6">
               <div class="bg-white/70 backdrop-blur-xl border border-white/30 rounded-3xl p-8 shadow-sm h-full flex flex-col">
                 <h3 class="text-xl font-bold text-slate-900 mb-6">Tata Tertib & Peraturan</h3>
@@ -300,7 +300,7 @@ export default component$(() => {
 
           <div class="mt-12 flex flex-col items-center gap-2 opacity-40">
             <p class="text-xs font-bold uppercase tracking-widest text-slate-500">Mata Pelajaran: Matematika Lanjut - Simulasi</p>
-            <p class="text-[10px] font-bold text-slate-400 tracking-tighter">SESSION ID: SIM-992-001 | V2.4.0-ADV</p>
+            <p class="text-[10px] font-bold text-slate-400 tracking-tighter">ID SESI: SIM-992-001 | V2.4.0-ADV</p>
           </div>
         </main>
       </div>
@@ -308,7 +308,7 @@ export default component$(() => {
   }
 
   // ──────────────────────────────────────────────────────
-  // 3. Active Simulation State
+  // 3. Kondisi simulasi aktif
   // ──────────────────────────────────────────────────────
   const currentQ = MOCK_QUESTIONS[currentQuestionIndex.value];
 
@@ -327,7 +327,7 @@ export default component$(() => {
         </div>
       )}
 
-      {/* Sticky Top Navigation Bar */}
+      {/* Bilah navigasi atas tetap */}
       <header class="sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-4 sm:px-6 py-2 sm:py-3 flex items-center justify-between shadow-sm">
         <div class="flex items-center gap-2 sm:gap-4">
           <div class="bg-blue-600 p-1.5 rounded-lg text-white">
@@ -335,13 +335,13 @@ export default component$(() => {
           </div>
           <div>
             <h2 class="text-slate-900 text-sm sm:text-lg font-bold leading-tight">Examinator</h2>
-            <p class="text-slate-500 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest leading-none">Simulation</p>
+            <p class="text-slate-500 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest leading-none">Simulasi</p>
           </div>
           <div class="h-6 sm:h-8 w-[1px] bg-slate-200 mx-1 sm:mx-2"></div>
         </div>
         
         <div class="flex items-center gap-3 sm:gap-8">
-          {/* Countdown Timer */}
+          {/* Hitung mundur */}
           <div class="flex items-center gap-2 sm:gap-3 bg-slate-100 px-3 sm:px-6 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl border border-slate-200">
              {(() => {
                 const hours = Math.floor(timeLeft.value / 3600);
@@ -376,7 +376,7 @@ export default component$(() => {
       </header>
 
       <main class="flex flex-col lg:flex-row h-[calc(100vh-60px)] sm:h-[calc(100vh-73px)] overflow-hidden">
-        {/* Main Question Panel */}
+        {/* Panel soal utama */}
         <section class="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 bg-white m-2 sm:m-4 rounded-[1.5rem] sm:rounded-[2.5rem] shadow-sm border border-slate-100 custom-scrollbar-hidden order-2 lg:order-1">
           <div class="max-w-3xl mx-auto">
             <div class="flex items-center justify-between mb-8">
@@ -392,14 +392,14 @@ export default component$(() => {
               </button>
             </div>
 
-            {/* Question Text */}
+            {/* Teks soal */}
             <div class="mb-12">
               <h1 class="text-2xl lg:text-3xl font-bold leading-relaxed text-slate-800">
                 {currentQ.text}
               </h1>
             </div>
 
-            {/* Multiple Choice Options */}
+            {/* Pilihan jawaban */}
             <div class="space-y-4">
               {currentQ.options.map((opt, idx) => {
                 const label = String.fromCharCode(65 + idx);
@@ -424,7 +424,7 @@ export default component$(() => {
               })}
             </div>
 
-            {/* Navigation Controls */}
+            {/* Kontrol navigasi */}
             <div class="flex items-center justify-between mt-16 pt-8 border-t border-slate-100">
               <button 
                 disabled={currentQuestionIndex.value === 0}
@@ -445,7 +445,7 @@ export default component$(() => {
           </div>
         </section>
 
-        {/* Right Sidebar: Question Navigator */}
+        {/* Sidebar kanan: navigasi soal */}
         <aside class="w-full lg:w-80 bg-[#f8fafc] border-b lg:border-l border-slate-200 flex flex-col order-1 lg:order-2">
           <div class="p-4 sm:p-6 border-b border-slate-200 bg-white">
             <h3 class="font-bold text-slate-900 mb-2 sm:mb-6 flex items-center gap-2 uppercase tracking-tighter">
@@ -494,24 +494,25 @@ export default component$(() => {
 
           <div class="p-8 bg-white border-t border-slate-200">
             <div class="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
-              <span>Progress</span>
+              <span>Kemajuan</span>
               <span>{Math.round(((Object.keys(answers.value).length) / MOCK_QUESTIONS.length) * 100)}%</span>
             </div>
             <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-50 shadow-inner">
-              <div 
-                class="h-full bg-blue-600 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(37,99,235,0.3)]" 
-                style={{ width: `${(Object.keys(answers.value).length / MOCK_QUESTIONS.length) * 100}%` }} 
+              <progress
+                value={Math.round((Object.keys(answers.value).length / MOCK_QUESTIONS.length) * 100)}
+                max={100}
+                class="h-full w-full [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-blue-600 [&::-moz-progress-bar]:bg-blue-600"
               />
             </div>
           </div>
         </aside>
       </main>
 
-      {/* Floating Webcam Monitoring */}
+      {/* Pemantauan webcam mengambang */}
       <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-24 h-32 sm:w-40 sm:h-52 bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 sm:border-4 border-white z-50 group hover:scale-110 transition-all duration-300 ring-4 sm:ring-8 ring-blue-600/10">
         <div class="absolute top-2 left-2 sm:top-4 sm:left-4 flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-black/50 backdrop-blur-md rounded-full border border-white/10">
           <div class="size-1.5 sm:size-2 bg-red-500 rounded-full animate-pulse"></div>
-          <span class="text-[7px] sm:text-[9px] text-white font-bold tracking-widest uppercase">Live</span>
+          <span class="text-[7px] sm:text-[9px] text-white font-bold tracking-widest uppercase">Langsung</span>
         </div>
         <div class="w-full h-full bg-slate-800">
            {stream.value ? (
@@ -524,7 +525,7 @@ export default component$(() => {
            <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent"></div>
          </div>
       </div>
-      {/* ═══ iOS 27 Inspired Floating Bottom Navigation (Mobile Only) ═══ */}
+      {/* ═══ Navigasi bawah mengambang (khusus mobile) ═══ */}
       <div class="md:hidden fixed bottom-10 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-sm bg-white/70 backdrop-blur-3xl border border-white/40 rounded-[3rem] px-5 py-4 shadow-[0_30px_90px_rgba(0,0,0,0.15)] flex items-center justify-between z-50 animate-fade-in-up ring-1 ring-black/5">
         <button 
           onClick$={() => currentQuestionIndex.value > 0 && currentQuestionIndex.value--}
@@ -534,7 +535,7 @@ export default component$(() => {
            <div class="size-11 rounded-2xl flex items-center justify-center text-slate-400 group-active:bg-slate-100 transition-all">
               <span class="material-symbols-outlined font-bold text-2xl">chevron_left</span>
            </div>
-           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Prev</span>
+           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sebelumnya</span>
         </button>
 
         <div class="relative flex flex-col items-center group">
@@ -542,7 +543,7 @@ export default component$(() => {
               <span class="text-[9px] font-bold uppercase tracking-tighter opacity-70 leading-none">Simulasi</span>
               <span class="text-2xl font-bold">{currentQuestionIndex.value + 1}</span>
            </div>
-           <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Active</span>
+           <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Aktif</span>
         </div>
 
         <button 
@@ -552,7 +553,7 @@ export default component$(() => {
            <div class="size-11 rounded-2xl flex items-center justify-center text-slate-400 group-active:bg-slate-100 transition-all">
               <span class="material-symbols-outlined font-bold text-2xl">chevron_right</span>
            </div>
-           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Next</span>
+           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Berikutnya</span>
         </button>
       </div>
     </div>
