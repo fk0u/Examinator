@@ -44,7 +44,12 @@ export default component$(() => {
 
   // 2. Measure Latency (Ping)
   useVisibleTask$(() => {
+    const updateOnlineStatus = () => {
+      isOnline.value = navigator.onLine;
+    };
+
     const measurePing = async () => {
+      updateOnlineStatus();
       const start = Date.now();
       try {
         await fetch("/favicon.ico", { cache: 'no-store', mode: 'no-cors' });
@@ -55,8 +60,14 @@ export default component$(() => {
     };
     
     measurePing();
+    window.addEventListener("online", updateOnlineStatus);
+    window.addEventListener("offline", updateOnlineStatus);
     const interval = setInterval(measurePing, 5000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("online", updateOnlineStatus);
+      window.removeEventListener("offline", updateOnlineStatus);
+    };
   });
 
   // 3. Enumerate Hardware
@@ -104,11 +115,26 @@ export default component$(() => {
   const playTestSound = $(() => {
     testSoundPlaying.value = true;
     addLog("Memulai tes suara...");
-    const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
-    audio.play();
-    audio.onended = () => {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    const audioContext = new AudioCtx();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.001, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.25, audioContext.currentTime + 0.05);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.6);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.65);
+
+    oscillator.onended = () => {
       testSoundPlaying.value = false;
       addLog("Tes suara selesai.");
+      audioContext.close().catch(() => undefined);
     };
   });
 

@@ -14,18 +14,44 @@ export function useCamera(attemptIdSignal: any) {
 
   useVisibleTask$(({ cleanup }) => {
     cleanup(() => {
-      if (animationIdRef.value) cancelAnimationFrame(animationIdRef.value);
-      if (audioContextRef.value) audioContextRef.value.close();
-      if (stream.value) {
-        stream.value.getTracks().forEach(track => track.stop());
-      }
+      disposeMediaResources();
     });
   });
+
+  const disposeMediaResources = () => {
+    if (animationIdRef.value) {
+      cancelAnimationFrame(animationIdRef.value);
+      animationIdRef.value = null;
+    }
+
+    if (audioContextRef.value) {
+      audioContextRef.value.close().catch(() => undefined);
+      audioContextRef.value = null;
+    }
+
+    if (videoRef.value) {
+      videoRef.value.pause();
+      videoRef.value.srcObject = null;
+      videoRef.value = null;
+    }
+
+    if (stream.value) {
+      stream.value.getTracks().forEach((track) => track.stop());
+      stream.value = null;
+    }
+
+    audioLevel.value = 0;
+    cameraEnabled.value = false;
+    micEnabled.value = false;
+  };
 
   const requestPermission = $(async () => {
     if (isRequesting.value) return;
     isRequesting.value = true;
     error.value = null;
+
+    // Dispose older stream/analyser loops before creating new media resources.
+    disposeMediaResources();
     
     console.log("[useCamera] Requesting getUserMedia...");
     
@@ -85,8 +111,7 @@ export function useCamera(attemptIdSignal: any) {
     } catch (e: any) {
       console.error("[useCamera] Error:", e);
       error.value = e.message || String(e);
-      cameraEnabled.value = false;
-      micEnabled.value = false;
+      disposeMediaResources();
       return false;
     } finally {
       isRequesting.value = false;

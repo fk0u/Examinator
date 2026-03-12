@@ -45,6 +45,11 @@ export default component$(() => {
   const handleSave = $(async () => {
     errorMessage.value = "";
     successMessage.value = "";
+
+    if (!user.value?.id) {
+      errorMessage.value = "Sesi pengguna tidak valid. Muat ulang halaman lalu coba lagi.";
+      return;
+    }
     
     if (password.value && password.value !== confirmPassword.value) {
       errorMessage.value = "Password baru dan konfirmasi tidak cocok.";

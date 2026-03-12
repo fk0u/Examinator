@@ -1,4 +1,6 @@
 // ─── Environment Configuration ─────────────────────────
+const parsedCheatThreshold = Number.parseInt(process.env.CHEAT_AUTO_FORCE_THRESHOLD || "5", 10);
+
 export const env = {
   PORT: parseInt(process.env.PORT || "5000"),
   HOST: process.env.HOST || "0.0.0.0",
@@ -7,7 +9,9 @@ export const env = {
   UPLOAD_DIR: process.env.UPLOAD_DIR || "./uploads",
   NODE_ENV: process.env.NODE_ENV || "development",
   DATABASE_URL: process.env.DATABASE_URL || "",
-  CHEAT_AUTO_FORCE_THRESHOLD: parseInt(process.env.CHEAT_AUTO_FORCE_THRESHOLD || "5"),
+  CHEAT_AUTO_FORCE_THRESHOLD: Number.isFinite(parsedCheatThreshold) && parsedCheatThreshold > 0
+    ? parsedCheatThreshold
+    : 5,
 };
 
 // Validate required env vars
