@@ -1,7 +1,7 @@
 import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 import { useNavigate } from "@builder.io/qwik-city";
-import { getUserData, isAuthenticated, logout } from "~/lib/auth";
+import { getAuthToken, getUserData, isAuthenticated, logout } from "~/lib/auth";
 import { getWsClient } from "~/lib/ws";
 import { Clock } from "~/components/ui/clock";
 import { ThemeToggle } from "~/components/ui/theme-toggle";
@@ -46,7 +46,10 @@ export default component$(() => {
     const ws = getWsClient();
     ws.connect();
 
-    ws.on("connected", () => { connected.value = true; ws.send("proctor:join", {}); });
+    ws.on("connected", () => {
+      connected.value = true;
+      ws.send("proctor:join", { token: getAuthToken() });
+    });
     ws.on("disconnected", () => { connected.value = false; });
     ws.on("proctor:state", (data: any) => { students.value = data.students || []; });
     ws.on("student:joined", (data: any) => {

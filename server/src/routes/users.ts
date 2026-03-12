@@ -7,7 +7,7 @@ import { hash } from "bcryptjs";
 
 export const userRoutes = new Elysia({ prefix: "/api/users", detail: {
   tags: ["Users"],
-  description: "Endpoints for managing users (Admin/Operator only)",
+  description: "Endpoints pengguna: baca oleh Admin/Operator, mutasi (create/update/delete) hanya Admin",
   }})
   .use(authPlugin)
 

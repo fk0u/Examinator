@@ -1,5 +1,7 @@
 import { Elysia } from "elysia";
 import { db } from "../lib/db";
+import { createHmac, timingSafeEqual } from "node:crypto";
+import { env } from "../config/env";
 
 // ─── WebSocket Proctor Module ───────────────────────────
 // Handles realtime communication between students and proctors
@@ -19,9 +21,52 @@ interface ConnectedStudent {
 
 type ConnectionRole = "student" | "proctor";
 
+type WsClaims = {
+  sub: string;
+  role: string;
+  exp?: number;
+};
+
 const connectedStudents = new Map<string, ConnectedStudent>();
 const proctorSockets = new Set<string>();
 const connectionRoles = new Map<string, ConnectionRole>();
+
+function decodeBase64Url(value: string) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padding = normalized.length % 4 === 0 ? "" : "=".repeat(4 - (normalized.length % 4));
+  return Buffer.from(normalized + padding, "base64").toString("utf8");
+}
+
+function verifyWsToken(token?: string): WsClaims | null {
+  if (!token || typeof token !== "string") return null;
+
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+
+  const [headerB64, payloadB64, signatureB64] = parts;
+
+  try {
+    const header = JSON.parse(decodeBase64Url(headerB64));
+    if (header.alg !== "HS256") return null;
+
+    const expectedSignature = createHmac("sha256", env.JWT_SECRET)
+      .update(`${headerB64}.${payloadB64}`)
+      .digest("base64url");
+
+    const signatureBuffer = Buffer.from(signatureB64);
+    const expectedBuffer = Buffer.from(expectedSignature);
+    if (signatureBuffer.length !== expectedBuffer.length) return null;
+    if (!timingSafeEqual(signatureBuffer, expectedBuffer)) return null;
+
+    const payload = JSON.parse(decodeBase64Url(payloadB64)) as WsClaims;
+    if (!payload?.sub || !payload?.role) return null;
+    if (typeof payload.exp === "number" && Date.now() >= payload.exp * 1000) return null;
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
   // ── Connection opened ─────────────────────────────────
@@ -121,6 +166,45 @@ export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
 
       // ── Proctor joins monitoring ────────────────────────
       case "proctor:join": {
+        if (connectionRoles.get(ws.id) === "student") {
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: "Student session cannot escalate to proctor",
+            })
+          );
+          ws.close();
+          break;
+        }
+
+        const claims = verifyWsToken(data.token);
+        if (!claims) {
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: "Unauthorized proctor session",
+            })
+          );
+          ws.close();
+          break;
+        }
+
+        const proctorUser = await db.user.findUnique({
+          where: { id: claims.sub },
+          select: { id: true, role: true, active: true },
+        });
+
+        if (!proctorUser || !proctorUser.active || !["ADMIN", "OPERATOR"].includes(proctorUser.role)) {
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: "Forbidden proctor role",
+            })
+          );
+          ws.close();
+          break;
+        }
+
         proctorSockets.add(ws.id);
         connectionRoles.set(ws.id, "proctor");
         ws.subscribe("proctors");

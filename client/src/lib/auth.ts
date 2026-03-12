@@ -27,6 +27,11 @@ export function getUserData(): any | null {
   }
 }
 
+export function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("examinator_token");
+}
+
 export function logout() {
   localStorage.removeItem("examinator_token");
   localStorage.removeItem("examinator_user");
