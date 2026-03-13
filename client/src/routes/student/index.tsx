@@ -1,6 +1,6 @@
 import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
-import { Link, useNavigate } from "@builder.io/qwik-city";
+import { Link, useLocation, useNavigate } from "@builder.io/qwik-city";
 import { examsApi, attemptsApi } from "~/lib/api";
 import { getUserData, isAuthenticated, logout } from "~/lib/auth";
 import { Clock } from "~/components/ui/clock";
@@ -10,9 +10,11 @@ import { Clock } from "~/components/ui/clock";
 // ─── Dashboard Siswa ────────────────────────────────────
 
 export default component$(() => {
+  const loc = useLocation();
   const user = useSignal<any>(null);
   const exams = useSignal<any[]>([]);
   const attempts = useSignal<any[]>([]);
+  const flash = useSignal<{ type: "success" | "info"; message: string } | null>(null);
   const loading = useSignal(true);
   const nav = useNavigate();
 
@@ -31,6 +33,29 @@ export default component$(() => {
       ]);
       exams.value = examData.exams || [];
       attempts.value = attemptData.attempts || [];
+
+      const flashResult = loc.url.searchParams.get("flashResult");
+      if (flashResult === "submitted") {
+        const score = loc.url.searchParams.get("score") || "-";
+        const passed = loc.url.searchParams.get("passed") === "1";
+        flash.value = {
+          type: "success",
+          message: `Ujian berhasil dikumpulkan. Nilai ${score} (${passed ? "Lulus" : "Belum Lulus"}).`,
+        };
+      }
+
+      if (flashResult === "force") {
+        flash.value = {
+          type: "info",
+          message: "Sesi ujian dihentikan otomatis oleh sistem keamanan.",
+        };
+      }
+
+      if (flash.value) {
+        setTimeout(() => {
+          flash.value = null;
+        }, 3800);
+      }
     } catch {
       exams.value = [];
       attempts.value = [];
@@ -166,6 +191,11 @@ export default component$(() => {
       </nav>
 
       <main class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-8 sm:space-y-12">
+        {flash.value && (
+          <div class={`rounded-2xl border px-4 py-3 text-sm font-bold shadow-lg ${flash.value.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-blue-50 border-blue-200 text-blue-700"}`}>
+            {flash.value.message}
+          </div>
+        )}
         
       {/* ═══ Bagian Header ═══ */}
         <header class="flex flex-col lg:flex-row lg:items-end justify-between gap-8">

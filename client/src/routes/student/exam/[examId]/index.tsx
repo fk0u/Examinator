@@ -5,6 +5,7 @@ import { attemptsApi, cheatLogsApi, examsApi } from "~/lib/api";
 import { getUserData, isAuthenticated } from "~/lib/auth";
 import { getWsClient } from "~/lib/ws";
 import { useCamera } from "~/hooks/use-camera";
+import { FlashToast } from "~/components/ui/flash-toast";
 
 export default component$(() => {
   const loc = useLocation();
@@ -248,7 +249,7 @@ export default component$(() => {
         ws.disconnect();
         await showToast("error", "Sesi dihentikan otomatis karena batas pelanggaran tercapai.");
         await new Promise((resolve) => setTimeout(resolve, 1200));
-        await nav("/student/");
+        await nav("/student/?flashResult=force");
         return;
       }
 
@@ -287,7 +288,7 @@ export default component$(() => {
         `Ujian selesai. Nilai ${Math.round(result.result.score)} (${result.result.passed ? "Lulus" : "Belum Lulus"}).`
       );
       await new Promise((resolve) => setTimeout(resolve, 1200));
-      await nav("/student/");
+      await nav(`/student/?flashResult=submitted&score=${Math.round(result.result.score)}&passed=${result.result.passed ? "1" : "0"}`);
     } catch (e: any) {
       submitting.value = false;
       await showToast("error", "Gagal mengirim ujian: " + e.message);
@@ -310,19 +311,7 @@ export default component$(() => {
     }
     return (
       <div class="font-['Public_Sans',sans-serif] min-h-screen bg-[#f8fafd] text-slate-900 select-none flex flex-col">
-        {toast.value && (
-          <div class="fixed top-5 right-5 z-[120] max-w-sm w-[calc(100%-2rem)] sm:w-auto">
-            <div class={`rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-xl text-sm font-bold ${
-              toast.value.type === "success"
-                ? "bg-emerald-50/95 border-emerald-200 text-emerald-700"
-                : toast.value.type === "error"
-                  ? "bg-rose-50/95 border-rose-200 text-rose-700"
-                  : "bg-blue-50/95 border-blue-200 text-blue-700"
-            }`}>
-              {toast.value.message}
-            </div>
-          </div>
-        )}
+        <FlashToast toast={toast.value} />
         {/* Bilah atas ruang persiapan */}
         <header class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-white/70 backdrop-blur-xl border-b border-white/40 sticky top-0 z-50">
           <div class="flex items-center gap-4">
@@ -552,19 +541,7 @@ export default component$(() => {
 
   return (
     <div class="font-['Public_Sans',sans-serif] min-h-screen bg-slate-100 text-slate-800 flex flex-col h-screen overflow-hidden relative">
-      {toast.value && (
-        <div class="fixed top-5 right-5 z-[120] max-w-sm w-[calc(100%-2rem)] sm:w-auto">
-          <div class={`rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-xl text-sm font-bold ${
-            toast.value.type === "success"
-              ? "bg-emerald-50/95 border-emerald-200 text-emerald-700"
-              : toast.value.type === "error"
-                ? "bg-rose-50/95 border-rose-200 text-rose-700"
-                : "bg-blue-50/95 border-blue-200 text-blue-700"
-          }`}>
-            {toast.value.message}
-          </div>
-        </div>
-      )}
+      <FlashToast toast={toast.value} />
       <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.10),_transparent_38%),radial-gradient(circle_at_bottom_left,_rgba(16,185,129,0.08),_transparent_42%)]" />
 
       {/* Anti-cheat Overlay */}
