@@ -35,6 +35,15 @@ export default component$(() => {
       exams.value = examData.exams || [];
       attempts.value = attemptData.attempts || [];
 
+         const qsStatus = loc.url.searchParams.get("status");
+         const qsPeriod = loc.url.searchParams.get("period");
+         if (qsStatus === "SUBMITTED" || qsStatus === "TIMED_OUT" || qsStatus === "FORCE_SUBMITTED" || qsStatus === "ALL") {
+            statusFilter.value = qsStatus;
+         }
+         if (qsPeriod === "7" || qsPeriod === "30" || qsPeriod === "90" || qsPeriod === "ALL") {
+            periodFilter.value = qsPeriod;
+         }
+
          const flashResult = loc.url.searchParams.get("flashResult");
          if (flashResult === "submitted") {
             const score = loc.url.searchParams.get("score") || "-";
@@ -64,6 +73,18 @@ export default component$(() => {
       loading.value = false;
     }
   });
+
+   // eslint-disable-next-line qwik/no-use-visible-task
+   useVisibleTask$(({ track }) => {
+      track(() => statusFilter.value);
+      track(() => periodFilter.value);
+
+      const params = new URLSearchParams(window.location.search);
+      params.set("status", statusFilter.value);
+      params.set("period", periodFilter.value);
+      const next = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState(window.history.state, "", next);
+   });
 
   const getExamForAttempt = (examId: string) => {
     return exams.value.find((e: any) => e.id === examId) || {};
@@ -266,6 +287,31 @@ export default component$(() => {
               </div>
            </div>
 
+                <div class="mb-6 flex flex-wrap gap-2">
+                   {[
+                      { label: "Semua", status: "ALL" as const },
+                      { label: "Selesai", status: "SUBMITTED" as const },
+                      { label: "Force Submit", status: "FORCE_SUBMITTED" as const },
+                      { label: "7 Hari", period: "7" as const },
+                      { label: "30 Hari", period: "30" as const },
+                   ].map((chip, i) => {
+                      const active = (chip.status && statusFilter.value === chip.status) || (chip.period && periodFilter.value === chip.period);
+                      return (
+                         <button
+                            key={i}
+                            type="button"
+                            onClick$={() => {
+                               if (chip.status) statusFilter.value = chip.status;
+                               if (chip.period) periodFilter.value = chip.period;
+                            }}
+                            class={`h-9 px-4 rounded-full text-[11px] font-bold uppercase tracking-wider border transition-all ${active ? "bg-blue-600 text-white border-blue-700" : "bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-700"}`}
+                         >
+                            {chip.label}
+                         </button>
+                      );
+                   })}
+                </div>
+
            {filteredHistoryAttempts.value.length === 0 ? (
               <div class="bg-white rounded-[3rem] p-20 text-center border-4 border-dashed border-slate-100 flex flex-col items-center">
                  <div class="size-24 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-6">
@@ -280,8 +326,7 @@ export default component$(() => {
                  {filteredHistoryAttempts.value.map((attempt) => {
                     const exam = getExamForAttempt(attempt.examId);
                     const isPassed = attempt.score !== null && exam.passingScore !== undefined && attempt.score >= exam.passingScore;
-                              const isForced = attempt.status === "FORCE_SUBMITTED";
-                              const statusLabel = isForced ? "Force Submit" : (isPassed ? "Tuntas" : "Perlu Ulang");
+                    const statusMeta = getAttemptStatusMeta((attempt.status || "SUBMITTED") as AttemptStatus);
                     
                     return (
                          <div id={`attempt-card-${attempt.id}`} key={attempt.id} class="bg-white rounded-[2.5rem] p-6 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/30 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-10 group hover:border-blue-400/30 transition-all duration-500 hover:-translate-y-1 relative overflow-hidden">
@@ -297,8 +342,8 @@ export default component$(() => {
 
                            <div class="flex-1 space-y-2 relative z-10">
                               <div class="flex flex-wrap items-center gap-4 mb-2">
-                                 <span class={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] ${isForced ? 'bg-rose-600 text-white shadow-lg shadow-rose-500/20' : isPassed ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'}`}>
-                                    {statusLabel}
+                                 <span class={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] ${statusMeta.badgeClass}`}>
+                                    {statusMeta.label}
                                  </span>
                                  <span class="text-[11px] font-bold text-slate-300 uppercase tracking-widest italic flex items-center gap-2">
                                     <span class="size-1.5 bg-slate-200 rounded-full"></span>
