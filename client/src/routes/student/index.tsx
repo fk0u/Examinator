@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
+import { $, component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 import { Link, useLocation, useNavigate } from "@builder.io/qwik-city";
 import { examsApi, attemptsApi } from "~/lib/api";
@@ -30,6 +30,16 @@ export default component$(() => {
   const readinessStale = useSignal(false);
   const loading = useSignal(true);
   const nav = useNavigate();
+
+  const clearDeviceReadiness = $(() => {
+    try {
+      localStorage.removeItem("examinator_device_readiness");
+    } catch {
+      // Abaikan jika storage tidak tersedia
+    }
+    deviceReadiness.value = null;
+    readinessStale.value = false;
+  });
 
   // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(async () => {
@@ -197,6 +207,14 @@ export default component$(() => {
            <div class="space-y-2 animate-fade-in-up">
               <h1 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter mb-2 italic">Selamat Datang, <span class="text-blue-600">{user.value?.fullName?.split(' ')[0] || 'Siswa'}</span></h1>
             <p class="text-slate-500 font-semibold text-base sm:text-lg">Pantau progres dan bersiaplah untuk ujian hari ini.</p>
+            {deviceReadiness.value && (
+              <div class={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${readinessStale.value ? "bg-amber-50 text-amber-700 border-amber-200" : (deviceReadiness.value.isReady ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200")}`}>
+                <span class="material-symbols-outlined text-sm">
+                  {readinessStale.value ? "history" : (deviceReadiness.value.isReady ? "task_alt" : "pending_actions")}
+                </span>
+                {readinessStale.value ? "Status Perangkat Kedaluwarsa" : (deviceReadiness.value.isReady ? "Perangkat Siap" : "Perangkat Belum Siap")}
+              </div>
+            )}
            </div>
            
            <div class="grid grid-cols-2 sm:flex gap-3 sm:gap-4 animate-fade-in-right">
@@ -440,12 +458,23 @@ export default component$(() => {
                       )}
                     </div>
                  </div>
-                 <Link
-                   href={`/student/test-device/?reason=${deviceReadiness.value && deviceReadiness.value.networkOk === false ? "network" : "preflight"}`}
-                   class="px-5 py-2.5 bg-white text-blue-600 rounded-xl font-bold text-[10px] uppercase tracking-widest border border-blue-100 shadow-sm hover:shadow-md active:scale-95 transition-all"
-                 >
-                   {readinessStale.value ? "Refresh Check" : "Check Now"}
-                 </Link>
+                 <div class="flex flex-col gap-2">
+                   <Link
+                     href={`/student/test-device/?reason=${deviceReadiness.value && deviceReadiness.value.networkOk === false ? "network" : "preflight"}`}
+                     class="px-5 py-2.5 bg-white text-blue-600 rounded-xl font-bold text-[10px] uppercase tracking-widest border border-blue-100 shadow-sm hover:shadow-md active:scale-95 transition-all text-center"
+                   >
+                     {readinessStale.value ? "Refresh Check" : "Check Now"}
+                   </Link>
+                   {deviceReadiness.value && (
+                     <button
+                       type="button"
+                       onClick$={clearDeviceReadiness}
+                       class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold text-[10px] uppercase tracking-widest border border-slate-200 hover:bg-slate-200 active:scale-95 transition-all"
+                     >
+                       Reset Status
+                     </button>
+                   )}
+                 </div>
               </div>
            </div>
         </section>
