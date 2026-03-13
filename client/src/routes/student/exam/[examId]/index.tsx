@@ -68,6 +68,53 @@ export default component$(() => {
     };
   });
 
+  const prepFailureTips = useComputed$(() => {
+    const tips: Array<{ key: string; title: string; detail: string; action: "permission" | "device" | "none" }> = [];
+
+    if (!prepChecks.value.cameraOk || !prepChecks.value.micOk) {
+      tips.push({
+        key: "media",
+        title: "Aktifkan Kamera dan Mikrofon",
+        detail: "Klik aksi izin agar sistem dapat memvalidasi perangkat untuk sesi proctoring.",
+        action: "permission",
+      });
+    }
+
+    if (!prepChecks.value.networkOk) {
+      tips.push({
+        key: "network",
+        title: "Stabilkan Koneksi Internet",
+        detail: "Pastikan koneksi online stabil lalu jalankan ulang diagnostik perangkat.",
+        action: "device",
+      });
+    }
+
+    if (!prepChecks.value.tokenOk) {
+      tips.push({
+        key: "token",
+        title: "Lengkapi Token Ujian",
+        detail: "Token wajib sebelum mulai jika sesi ini diproteksi pengawas.",
+        action: "none",
+      });
+    }
+
+    if (!prepChecks.value.termsOk) {
+      tips.push({
+        key: "terms",
+        title: "Setujui Pakta Integritas",
+        detail: "Centang persetujuan agar tombol mulai ujian dapat diaktifkan.",
+        action: "none",
+      });
+    }
+
+    return tips;
+  });
+
+  const deviceCheckHref = useComputed$(() => {
+    const reason = prepChecks.value.networkOk ? "preflight" : "network";
+    return `/student/test-device/?reason=${reason}`;
+  });
+
   // Kaitkan stream kamera ke elemen pratinjau video
   // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(({ track }) => {
@@ -466,7 +513,48 @@ export default component$(() => {
                         </div>
                       ))}
                     </div>
+                    <div class="mt-4">
+                      <Link
+                        href={deviceCheckHref.value}
+                        class="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-white/10 border border-white/20 text-[10px] font-bold uppercase tracking-wider text-blue-100 hover:bg-white/20 transition-all"
+                      >
+                        <span class="material-symbols-outlined text-[16px]">on_device_training</span>
+                        Buka Diagnostik Perangkat
+                      </Link>
+                    </div>
                   </div>
+
+                  {prepFailureTips.value.length > 0 && (
+                    <div class="mb-5 bg-black/10 p-5 rounded-3xl border border-white/5 shadow-inner">
+                      <p class="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-3">Panduan Perbaikan Cepat</p>
+                      <div class="space-y-2">
+                        {prepFailureTips.value.map((tip) => (
+                          <div key={tip.key} class="rounded-xl bg-white/10 px-3 py-3 border border-white/10 flex items-start justify-between gap-3">
+                            <div>
+                              <p class="text-xs font-bold text-blue-50">{tip.title}</p>
+                              <p class="text-[11px] font-semibold text-blue-200/90 mt-1">{tip.detail}</p>
+                            </div>
+                            {tip.action === "permission" ? (
+                              <button
+                                type="button"
+                                onClick$={requestPermission}
+                                class="shrink-0 h-8 px-3 rounded-lg bg-yellow-400 text-slate-900 border-b-2 border-yellow-600 text-[10px] font-bold uppercase tracking-wider hover:bg-yellow-500 transition-all"
+                              >
+                                Beri Izin
+                              </button>
+                            ) : tip.action === "device" ? (
+                              <Link
+                                href={deviceCheckHref.value}
+                                class="shrink-0 h-8 px-3 rounded-lg bg-white/15 text-blue-50 border border-white/20 text-[10px] font-bold uppercase tracking-wider hover:bg-white/25 transition-all inline-flex items-center"
+                              >
+                                Diagnostik
+                              </Link>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div class="flex items-start gap-3 mb-8 bg-black/10 p-5 rounded-3xl border border-white/5 shadow-inner">
                     <input 
