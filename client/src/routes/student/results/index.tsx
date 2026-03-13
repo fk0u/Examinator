@@ -80,9 +80,20 @@ export default component$(() => {
       track(() => periodFilter.value);
 
       const params = new URLSearchParams(window.location.search);
-      params.set("status", statusFilter.value);
-      params.set("period", periodFilter.value);
-      const next = `${window.location.pathname}?${params.toString()}`;
+      if (statusFilter.value === "ALL") {
+         params.delete("status");
+      } else {
+         params.set("status", statusFilter.value);
+      }
+
+      if (periodFilter.value === "ALL") {
+         params.delete("period");
+      } else {
+         params.set("period", periodFilter.value);
+      }
+
+      const query = params.toString();
+      const next = query ? `${window.location.pathname}?${query}` : window.location.pathname;
       window.history.replaceState(window.history.state, "", next);
    });
 
@@ -291,9 +302,11 @@ export default component$(() => {
                    {[
                       { label: "Semua", status: "ALL" as const },
                       { label: "Selesai", status: "SUBMITTED" as const },
+                      { label: "Waktu Habis", status: "TIMED_OUT" as const },
                       { label: "Force Submit", status: "FORCE_SUBMITTED" as const },
                       { label: "7 Hari", period: "7" as const },
                       { label: "30 Hari", period: "30" as const },
+                      { label: "90 Hari", period: "90" as const },
                    ].map((chip, i) => {
                       const active = (chip.status && statusFilter.value === chip.status) || (chip.period && periodFilter.value === chip.period);
                       return (
@@ -310,6 +323,17 @@ export default component$(() => {
                          </button>
                       );
                    })}
+
+                   <button
+                      type="button"
+                      onClick$={() => {
+                         statusFilter.value = "ALL";
+                         periodFilter.value = "ALL";
+                      }}
+                      class="h-9 px-4 rounded-full text-[11px] font-bold uppercase tracking-wider border transition-all bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
+                   >
+                      Reset Filter
+                   </button>
                 </div>
 
            {filteredHistoryAttempts.value.length === 0 ? (
