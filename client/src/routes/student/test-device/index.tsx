@@ -2,6 +2,7 @@ import { component$, useSignal, $, useVisibleTask$, useComputed$ } from "@builde
 import type { DocumentHead } from "@builder.io/qwik-city";
 import { Link } from "@builder.io/qwik-city";
 import { useCamera } from "~/hooks/use-camera";
+import { StatusBanner } from "~/components/ui/status-banner";
 
 export default component$(() => {
   const dummyAttempt = useSignal({ id: null });
@@ -23,6 +24,8 @@ export default component$(() => {
   const hasCheckedDevices = useSignal(false);
   const testSoundPlaying = useSignal(false);
   const testSoundVerified = useSignal(false);
+  const autoRunning = useSignal(false);
+  const prevOnline = useSignal<boolean | null>(null);
 
   // 1. Detect OS and Browser
   // eslint-disable-next-line qwik/no-use-visible-task
@@ -49,6 +52,14 @@ export default component$(() => {
   useVisibleTask$(() => {
     const updateOnlineStatus = () => {
       isOnline.value = navigator.onLine;
+      if (prevOnline.value === null) {
+        prevOnline.value = navigator.onLine;
+        return;
+      }
+      if (prevOnline.value !== navigator.onLine) {
+        addLog(navigator.onLine ? "Jaringan kembali online." : "Peringatan: koneksi offline.");
+      }
+      prevOnline.value = navigator.onLine;
     };
 
     const measurePing = async () => {
@@ -129,6 +140,25 @@ export default component$(() => {
     });
   });
 
+  const runAllDiagnostics = $(async () => {
+    if (autoRunning.value) return;
+    autoRunning.value = true;
+    addLog("Menjalankan diagnostik otomatis...");
+
+    if (!cameraEnabled.value || !micEnabled.value) {
+      const granted = await requestPermission();
+      if (!granted) {
+        addLog("Diagnostik otomatis berhenti: izin media belum tersedia.");
+        autoRunning.value = false;
+        return;
+      }
+      addLog("Izin media berhasil diberikan.");
+    }
+
+    playTestSound();
+    autoRunning.value = false;
+  });
+
   const latencyColor = useComputed$(() => {
     if (latency.value === null) return "text-slate-400";
     if (latency.value < 100) return "text-emerald-500";
@@ -190,6 +220,14 @@ export default component$(() => {
         <div class="text-center space-y-4 animate-fade-in-up">
           <h2 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter mb-2 italic">Advanced <span class="text-blue-600">Diagnostics</span></h2>
           <p class="text-slate-500 font-semibold text-sm sm:text-lg max-w-2xl mx-auto px-4">Pemeriksaan integritas hardware dan optimasi jaringan untuk pengalaman ujian yang tanpa kendala.</p>
+        </div>
+
+        <div class="max-w-3xl mx-auto">
+          {readinessChecks.value.isReady ? (
+            <StatusBanner type="success" message="Perangkat siap. Kamu bisa lanjut ke simulasi dengan aman." />
+          ) : (
+            <StatusBanner type="info" message={`Checklist belum lengkap (${readinessChecks.value.checksPassed}/4). Jalankan tes otomatis lalu lengkapi izin perangkat.`} />
+          )}
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -371,11 +409,20 @@ export default component$(() => {
 
             <button 
               onClick$={playTestSound}
-              disabled={testSoundPlaying.value}
+              disabled={testSoundPlaying.value || autoRunning.value}
               class="w-full py-4 rounded-2xl font-bold bg-blue-600 text-yellow-400 shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-2 border-b-4 border-blue-800"
             >
               <span class="material-symbols-outlined">volume_up</span>
               Tes Audio Sistem
+            </button>
+
+            <button
+              onClick$={runAllDiagnostics}
+              disabled={autoRunning.value || testSoundPlaying.value}
+              class="w-full py-4 rounded-2xl font-bold bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-2 border-b-4 border-emerald-800 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+            >
+              <span class="material-symbols-outlined">bolt</span>
+              {autoRunning.value ? "Menjalankan Diagnostik..." : "Jalankan Semua Tes"}
             </button>
           </div>
         </div>
