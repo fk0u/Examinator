@@ -28,6 +28,7 @@ export default component$(() => {
   const isReady = useSignal(false);
   const termsAccepted = useSignal(false);
   const accessToken = useSignal("");
+  const hasInProgressAttempt = useSignal(false);
   
   const loading = useSignal(false);
   const submitting = useSignal(false);
@@ -41,7 +42,7 @@ export default component$(() => {
     const cameraOk = cameraEnabled.value;
     const micOk = micEnabled.value;
     const networkOk = isOnline.value;
-    const tokenOk = !examData.value?.requiresToken || Boolean(accessToken.value.trim());
+    const tokenOk = !examData.value?.requiresToken || hasInProgressAttempt.value || Boolean(accessToken.value.trim());
     const termsOk = termsAccepted.value;
     const passed = [cameraOk, micOk, networkOk, tokenOk, termsOk].filter(Boolean).length;
 
@@ -98,9 +99,17 @@ export default component$(() => {
 
     try {
       await requestPermission();
-      const data = await examsApi.get(examId);
+      const [data, attemptData] = await Promise.all([
+        examsApi.get(examId),
+        attemptsApi.my(),
+      ]);
       examData.value = data.exam;
       maxCheatViolations.value = data.exam?.maxCheatViolations ?? 5;
+
+      const inProgress = (attemptData?.attempts || []).find(
+        (item: any) => item.examId === examId && item.status === "IN_PROGRESS"
+      );
+      hasInProgressAttempt.value = Boolean(inProgress);
     } catch (e: any) {
       console.error("Gagal mengambil data ujian:", e);
       alert("Gagal memuat info ujian.");
@@ -111,7 +120,7 @@ export default component$(() => {
   // ── Mulai percobaan ujian ────────────────────────────
   const startActualExam = $(async () => {
     if (!termsAccepted.value) return;
-    if (examData.value?.requiresToken && !accessToken.value.trim()) {
+    if (examData.value?.requiresToken && !hasInProgressAttempt.value && !accessToken.value.trim()) {
       alert("Token ujian wajib diisi.");
       return;
     }
@@ -404,8 +413,13 @@ export default component$(() => {
                         onInput$={(e: any) => accessToken.value = e.target.value}
                         placeholder="Masukkan token dari pengawas"
                         class="w-full h-12 px-4 rounded-2xl bg-blue-700/50 border border-white/15 text-white placeholder:text-blue-200/70 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                        disabled={hasInProgressAttempt.value}
                       />
-                      <p class="mt-2 text-[10px] font-semibold text-blue-200/90">Ujian ini diproteksi token. Pastikan token sesuai sebelum memulai.</p>
+                      <p class="mt-2 text-[10px] font-semibold text-blue-200/90">
+                        {hasInProgressAttempt.value
+                          ? "Sesi ujian sedang berjalan. Token sebelumnya tetap digunakan."
+                          : "Ujian ini diproteksi token. Pastikan token sesuai sebelum memulai."}
+                      </p>
                     </div>
                   )}
 
@@ -422,7 +436,9 @@ export default component$(() => {
                         label: "Jaringan online",
                         ok: prepChecks.value.networkOk,
                       }, {
-                        label: examData.value?.requiresToken ? "Token valid terisi" : "Token tidak wajib",
+                        label: examData.value?.requiresToken
+                          ? (hasInProgressAttempt.value ? "Token sesi tersimpan" : "Token valid terisi")
+                          : "Token tidak wajib",
                         ok: prepChecks.value.tokenOk,
                       }, {
                         label: "Pakta integritas disetujui",
@@ -470,7 +486,7 @@ export default component$(() => {
                       </div>
                     ) : (
                       <>
-                        <span>Mulai Ujian Sekarang</span>
+                        <span>{hasInProgressAttempt.value ? "Lanjutkan Ujian Sekarang" : "Mulai Ujian Sekarang"}</span>
                         <span class="material-symbols-outlined font-bold">bolt</span>
                       </>
                     )}
@@ -499,6 +515,10 @@ export default component$(() => {
   // ──────────────────────────────────────────────────────
   const currentQ = questions.value[currentQuestion.value];
   const answeredCount = Object.keys(answers.value).length;
+  const doubtfulCount = Object.keys(doubtfulAnswers.value).filter((key) => doubtfulAnswers.value[key]).length;
+  const unansweredCount = Math.max(questions.value.length - answeredCount, 0);
+  const firstUnansweredIndex = questions.value.findIndex((q) => !answers.value[q.id]);
+  const firstDoubtfulIndex = questions.value.findIndex((q) => doubtfulAnswers.value[q.id]);
   const completionPercent = Math.round((answeredCount / (questions.value.length || 1)) * 100);
   const hoursLeft = Math.floor(timeLeft.value / 3600).toString().padStart(2, "0");
   const minutesLeft = Math.floor((timeLeft.value % 3600) / 60).toString().padStart(2, "0");
@@ -748,15 +768,42 @@ export default component$(() => {
                       class="h-full w-full [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-blue-600 [&::-moz-progress-bar]:bg-blue-600"
                     />
                   </div>
-                  <div class="grid grid-cols-2 gap-2 text-[11px]">
+                  <div class="grid grid-cols-3 gap-2 text-[11px]">
                     <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                       <p class="text-slate-400 font-bold uppercase">Dijawab</p>
                       <p class="text-slate-800 font-extrabold text-base">{answeredCount}</p>
                     </div>
                     <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                      <p class="text-slate-400 font-bold uppercase">Sisa</p>
-                      <p class="text-slate-800 font-extrabold text-base">{Math.max(questions.value.length - answeredCount, 0)}</p>
+                      <p class="text-slate-400 font-bold uppercase">Belum</p>
+                      <p class="text-slate-800 font-extrabold text-base">{unansweredCount}</p>
                     </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                      <p class="text-slate-400 font-bold uppercase">Ragu</p>
+                      <p class="text-slate-800 font-extrabold text-base">{doubtfulCount}</p>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      disabled={firstUnansweredIndex < 0}
+                      onClick$={() => {
+                        if (firstUnansweredIndex >= 0) currentQuestion.value = firstUnansweredIndex;
+                      }}
+                      class="h-9 rounded-xl border border-slate-200 bg-white text-[11px] font-bold text-slate-600 hover:border-blue-300 hover:text-blue-700 transition-all disabled:opacity-40"
+                    >
+                      Ke Belum Dijawab
+                    </button>
+                    <button
+                      type="button"
+                      disabled={firstDoubtfulIndex < 0}
+                      onClick$={() => {
+                        if (firstDoubtfulIndex >= 0) currentQuestion.value = firstDoubtfulIndex;
+                      }}
+                      class="h-9 rounded-xl border border-slate-200 bg-white text-[11px] font-bold text-slate-600 hover:border-amber-300 hover:text-amber-700 transition-all disabled:opacity-40"
+                    >
+                      Ke Soal Ragu
+                    </button>
                   </div>
                 </div>
               </div>
