@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$, $, useOnDocument } from "@builder.io/qwik";
+import { component$, useSignal, useVisibleTask$, $, useOnDocument, useComputed$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 import { useNavigate, useLocation, Link } from "@builder.io/qwik-city";
 import { attemptsApi, cheatLogsApi, examsApi } from "~/lib/api";
@@ -36,6 +36,26 @@ export default component$(() => {
   const warningMessage = useSignal("");
   const doubtfulAnswers = useSignal<Record<string, boolean>>({});
   const maxCheatViolations = useSignal(5);
+
+  const prepChecks = useComputed$(() => {
+    const cameraOk = cameraEnabled.value;
+    const micOk = micEnabled.value;
+    const networkOk = isOnline.value;
+    const tokenOk = !examData.value?.requiresToken || Boolean(accessToken.value.trim());
+    const termsOk = termsAccepted.value;
+    const passed = [cameraOk, micOk, networkOk, tokenOk, termsOk].filter(Boolean).length;
+
+    return {
+      cameraOk,
+      micOk,
+      networkOk,
+      tokenOk,
+      termsOk,
+      passed,
+      total: 5,
+      isReady: passed === 5,
+    };
+  });
 
   // Kaitkan stream kamera ke elemen pratinjau video
   // eslint-disable-next-line qwik/no-use-visible-task
@@ -389,6 +409,35 @@ export default component$(() => {
                     </div>
                   )}
 
+                  <div class="mb-5 bg-black/10 p-5 rounded-3xl border border-white/5 shadow-inner">
+                    <p class="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-3">Checklist Pra-Ujian ({prepChecks.value.passed}/{prepChecks.value.total})</p>
+                    <div class="space-y-2">
+                      {[{
+                        label: "Kamera aktif",
+                        ok: prepChecks.value.cameraOk,
+                      }, {
+                        label: "Mikrofon aktif",
+                        ok: prepChecks.value.micOk,
+                      }, {
+                        label: "Jaringan online",
+                        ok: prepChecks.value.networkOk,
+                      }, {
+                        label: examData.value?.requiresToken ? "Token valid terisi" : "Token tidak wajib",
+                        ok: prepChecks.value.tokenOk,
+                      }, {
+                        label: "Pakta integritas disetujui",
+                        ok: prepChecks.value.termsOk,
+                      }].map((check, i) => (
+                        <div key={i} class="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2">
+                          <span class="text-xs font-semibold text-blue-100">{check.label}</span>
+                          <span class={`text-[10px] font-bold uppercase tracking-wider ${check.ok ? 'text-emerald-300' : 'text-yellow-200'}`}>
+                            {check.ok ? 'Lulus' : 'Belum'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   <div class="flex items-start gap-3 mb-8 bg-black/10 p-5 rounded-3xl border border-white/5 shadow-inner">
                     <input 
                       id="terms" 
@@ -405,12 +454,11 @@ export default component$(() => {
                   <button 
                     onClick$={startActualExam}
                     disabled={
-                      !termsAccepted.value
-                      || loading.value
-                      || Boolean(examData.value?.requiresToken && !accessToken.value.trim())
+                      loading.value
+                      || !prepChecks.value.isReady
                     }
                     class={`w-full h-16 rounded-[1.75rem] font-bold text-lg shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 border-b-4 ${
-                      termsAccepted.value && !loading.value && (!examData.value?.requiresToken || !!accessToken.value.trim())
+                      prepChecks.value.isReady && !loading.value
                         ? "bg-yellow-400 text-slate-900 border-yellow-600 hover:bg-yellow-500 shadow-yellow-400/25"
                         : "bg-blue-700 text-blue-400 border-blue-800 opacity-50 grayscale"
                     }`}
