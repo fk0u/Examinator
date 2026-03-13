@@ -35,8 +35,16 @@ export default component$(() => {
   const cheatCount = useSignal(0);
   const showWarning = useSignal(false);
   const warningMessage = useSignal("");
+  const toast = useSignal<{ type: "success" | "error" | "info"; message: string } | null>(null);
   const doubtfulAnswers = useSignal<Record<string, boolean>>({});
   const maxCheatViolations = useSignal(5);
+
+  const showToast = $((type: "success" | "error" | "info", message: string, duration = 2600) => {
+    toast.value = { type, message };
+    setTimeout(() => {
+      toast.value = null;
+    }, duration);
+  });
 
   const prepChecks = useComputed$(() => {
     const cameraOk = cameraEnabled.value;
@@ -61,12 +69,9 @@ export default component$(() => {
   // Kaitkan stream kamera ke elemen pratinjau video
   // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(({ track }) => {
-    // eslint-disable-next-line qwik/valid-lexical-scope
     track(() => stream.value);
     track(() => videoPreviewRef.value);
-    // eslint-disable-next-line qwik/valid-lexical-scope
     if (stream.value && videoPreviewRef.value) {
-      // eslint-disable-next-line qwik/valid-lexical-scope
       videoPreviewRef.value.srcObject = stream.value;
     }
   });
@@ -112,7 +117,7 @@ export default component$(() => {
       hasInProgressAttempt.value = Boolean(inProgress);
     } catch (e: any) {
       console.error("Gagal mengambil data ujian:", e);
-      alert("Gagal memuat info ujian.");
+      await showToast("error", "Gagal memuat info ujian.");
       nav("/student/");
     }
   });
@@ -121,7 +126,7 @@ export default component$(() => {
   const startActualExam = $(async () => {
     if (!termsAccepted.value) return;
     if (examData.value?.requiresToken && !hasInProgressAttempt.value && !accessToken.value.trim()) {
-      alert("Token ujian wajib diisi.");
+      await showToast("error", "Token ujian wajib diisi.");
       return;
     }
     loading.value = true;
@@ -153,7 +158,7 @@ export default component$(() => {
 
       // Tangani perintah kirim paksa dari pengawas
       ws.on("force:submit", async () => {
-        alert("Sesi ujian dihentikan oleh pengawas. Jawaban Anda telah dikumpulkan.");
+        await showToast("error", "Sesi dihentikan oleh pengawas. Jawaban akan dikumpulkan.");
         await submitExam();
       });
 
@@ -174,10 +179,11 @@ export default component$(() => {
       }
 
       isReady.value = true;
+      await showToast("success", hasInProgressAttempt.value ? "Sesi ujian berhasil dilanjutkan." : "Ujian berhasil dimulai.");
       loading.value = false;
     } catch (e: any) {
       console.error("Gagal memulai ujian:", e);
-      alert("Gagal memulai ujian: " + e.message);
+      await showToast("error", "Gagal memulai ujian: " + e.message);
       loading.value = false;
     }
   });
@@ -240,7 +246,8 @@ export default component$(() => {
           await document.exitFullscreen();
         }
         ws.disconnect();
-        alert("Sesi dihentikan otomatis karena batas pelanggaran tercapai. Jawaban Anda telah dikumpulkan.");
+        await showToast("error", "Sesi dihentikan otomatis karena batas pelanggaran tercapai.");
+        await new Promise((resolve) => setTimeout(resolve, 1200));
         await nav("/student/");
         return;
       }
@@ -275,11 +282,15 @@ export default component$(() => {
       }
       ws.disconnect();
 
-      alert(`Ujian selesai!\nNilai: ${Math.round(result.result.score)}\nStatus: ${result.result.passed ? 'LULUS ✓' : 'BELUM LULUS ✗'}`);
+      await showToast(
+        "success",
+        `Ujian selesai. Nilai ${Math.round(result.result.score)} (${result.result.passed ? "Lulus" : "Belum Lulus"}).`
+      );
+      await new Promise((resolve) => setTimeout(resolve, 1200));
       await nav("/student/");
     } catch (e: any) {
       submitting.value = false;
-      alert("Gagal mengirim ujian: " + e.message);
+      await showToast("error", "Gagal mengirim ujian: " + e.message);
     }
   });
 
@@ -299,6 +310,19 @@ export default component$(() => {
     }
     return (
       <div class="font-['Public_Sans',sans-serif] min-h-screen bg-[#f8fafd] text-slate-900 select-none flex flex-col">
+        {toast.value && (
+          <div class="fixed top-5 right-5 z-[120] max-w-sm w-[calc(100%-2rem)] sm:w-auto">
+            <div class={`rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-xl text-sm font-bold ${
+              toast.value.type === "success"
+                ? "bg-emerald-50/95 border-emerald-200 text-emerald-700"
+                : toast.value.type === "error"
+                  ? "bg-rose-50/95 border-rose-200 text-rose-700"
+                  : "bg-blue-50/95 border-blue-200 text-blue-700"
+            }`}>
+              {toast.value.message}
+            </div>
+          </div>
+        )}
         {/* Bilah atas ruang persiapan */}
         <header class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-white/70 backdrop-blur-xl border-b border-white/40 sticky top-0 z-50">
           <div class="flex items-center gap-4">
@@ -528,6 +552,19 @@ export default component$(() => {
 
   return (
     <div class="font-['Public_Sans',sans-serif] min-h-screen bg-slate-100 text-slate-800 flex flex-col h-screen overflow-hidden relative">
+      {toast.value && (
+        <div class="fixed top-5 right-5 z-[120] max-w-sm w-[calc(100%-2rem)] sm:w-auto">
+          <div class={`rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-xl text-sm font-bold ${
+            toast.value.type === "success"
+              ? "bg-emerald-50/95 border-emerald-200 text-emerald-700"
+              : toast.value.type === "error"
+                ? "bg-rose-50/95 border-rose-200 text-rose-700"
+                : "bg-blue-50/95 border-blue-200 text-blue-700"
+          }`}>
+            {toast.value.message}
+          </div>
+        </div>
+      )}
       <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.10),_transparent_38%),radial-gradient(circle_at_bottom_left,_rgba(16,185,129,0.08),_transparent_42%)]" />
 
       {/* Anti-cheat Overlay */}
