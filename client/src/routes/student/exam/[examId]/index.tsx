@@ -131,6 +131,9 @@ export default component$(() => {
   useVisibleTask$(({ track }) => {
     track(() => stream.value);
     track(() => videoPreviewRef.value);
+    // eslint-disable-next-line qwik/valid-lexical-scope
+    track(() => videoPreviewRef.value);
+    // eslint-disable-next-line qwik/valid-lexical-scope
     if (stream.value && videoPreviewRef.value) {
       videoPreviewRef.value.srcObject = stream.value;
     }
@@ -161,6 +164,8 @@ export default component$(() => {
       return;
     }
     user.value = getUserData();
+
+    requestPermission();
 
     try {
       await requestPermission();

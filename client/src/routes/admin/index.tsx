@@ -517,7 +517,7 @@ export default component$(() => {
                             value={(newExam.value as any)[f.key]}
                             onInput$={(e) => {
                               const val = (e.target as HTMLInputElement).value;
-                              newExam.value = { ...newExam.value, [f.key]: f.type === "number" ? parseInt(val) : val };
+                              newExam.value = { ...newExam.value, [f.key]: f.type === "number" ? (parseInt(val, 10) || 0) : val };
                             }}
                           />
                         </div>

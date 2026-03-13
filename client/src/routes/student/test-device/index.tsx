@@ -29,6 +29,18 @@ export default component$(() => {
   const prevOnline = useSignal<boolean | null>(null);
   const entryMessage = useSignal<string | null>(null);
 
+  // 0. Keep isOnline reactive
+  useVisibleTask$(() => {
+    const setOnline = () => { isOnline.value = true; };
+    const setOffline = () => { isOnline.value = false; };
+    window.addEventListener('online', setOnline);
+    window.addEventListener('offline', setOffline);
+    return () => {
+      window.removeEventListener('online', setOnline);
+      window.removeEventListener('offline', setOffline);
+    };
+  });
+
   // 1. Detect OS and Browser
   // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
@@ -132,44 +144,17 @@ export default component$(() => {
     testSoundPlaying.value = true;
     testSoundVerified.value = false;
     addLog("Memulai tes suara...");
-
-    const audio = new Audio("/rizz-sound-effect.mp3");
-    audio.preload = "auto";
-
+    const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
     audio.onended = () => {
       testSoundPlaying.value = false;
       testSoundVerified.value = true;
       addLog("Tes suara selesai.");
     };
-
-    audio.onerror = () => {
+    audio.play().catch((e) => {
       testSoundPlaying.value = false;
-      addLog("Tes suara gagal: file audio tidak dapat diputar.");
-    };
-
-    void audio.play().catch((e: any) => {
-      testSoundPlaying.value = false;
-      addLog(`Tes suara gagal: ${e?.message || "Autoplay diblokir browser."}`);
+      addLog(`GAGAL memutar suara: ${e.message}`);
+      console.error("Audio play error:", e);
     });
-  });
-
-  const runAllDiagnostics = $(async () => {
-    if (autoRunning.value) return;
-    autoRunning.value = true;
-    addLog("Menjalankan diagnostik otomatis...");
-
-    if (!cameraEnabled.value || !micEnabled.value) {
-      const granted = await requestPermission();
-      if (!granted) {
-        addLog("Diagnostik otomatis berhenti: izin media belum tersedia.");
-        autoRunning.value = false;
-        return;
-      }
-      addLog("Izin media berhasil diberikan.");
-    }
-
-    playTestSound();
-    autoRunning.value = false;
   });
 
   const latencyColor = useComputed$(() => {

@@ -9,9 +9,10 @@ export const env = {
   UPLOAD_DIR: process.env.UPLOAD_DIR || "./uploads",
   NODE_ENV: process.env.NODE_ENV || "development",
   DATABASE_URL: process.env.DATABASE_URL || "",
-  CHEAT_AUTO_FORCE_THRESHOLD: Number.isFinite(parsedCheatThreshold) && parsedCheatThreshold > 0
-    ? parsedCheatThreshold
-    : 5,
+  CHEAT_AUTO_FORCE_THRESHOLD: (() => {
+    const parsed = parseInt(process.env.CHEAT_AUTO_FORCE_THRESHOLD || "5", 10);
+    return isNaN(parsed) ? 5 : parsed;
+  })(),
 };
 
 // Validate required env vars

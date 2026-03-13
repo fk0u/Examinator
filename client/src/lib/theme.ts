@@ -4,7 +4,8 @@ export const THEME_KEY = "examinator-theme";
 
 export function getTheme(): Theme {
   if (typeof window === "undefined") return "light";
-  return (localStorage.getItem(THEME_KEY) as Theme) || "light";
+  const stored = localStorage.getItem(THEME_KEY);
+  return stored === "light" || stored === "dark" ? stored : "light";
 }
 
 export function applyTheme(theme: Theme) {

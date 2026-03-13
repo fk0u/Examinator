@@ -20,7 +20,6 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.1",
-    "elysia": "^1.4.27",
-    "examinator": "."
+    "elysia": "^1.4.27"
   }
 }
