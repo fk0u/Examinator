@@ -25,7 +25,7 @@ export default component$(() => {
   const prepError = useSignal("");
   
   const dummyAttempt = useSignal({ id: null });
-  const { cameraEnabled, micEnabled, audioLevel, capturePhoto, stream, requestPermission, isRequesting, error: cameraError } = useCamera(dummyAttempt);
+  const { cameraEnabled, micEnabled, audioLevel, capturePhoto, stream, requestPermission, isRequesting } = useCamera(dummyAttempt);
   const videoRef = useSignal<HTMLVideoElement>();
   
   const isFullscreen = useSignal(false);
@@ -138,7 +138,7 @@ export default component$(() => {
 
   const score = useComputed$(() => {
     let correctCount = 0;
-    MOCK_QUESTIONS.forEach((q, idx) => {
+    MOCK_QUESTIONS.forEach((q) => {
       if (answers.value[q.id] === q.correct) correctCount++;
     });
     return Math.round((correctCount / MOCK_QUESTIONS.length) * 100);

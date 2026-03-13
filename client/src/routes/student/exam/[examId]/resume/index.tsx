@@ -5,6 +5,7 @@ import { attemptsApi, examsApi } from "~/lib/api";
 import { getUserData, isAuthenticated } from "~/lib/auth";
 
 export default component$(() => {
+  const DEVICE_READINESS_MAX_AGE_MS = 24 * 60 * 60 * 1000;
   const loc = useLocation();
   const nav = useNavigate();
   const examId = loc.params.examId;
@@ -12,6 +13,16 @@ export default component$(() => {
   const user = useSignal<any>(null);
   const exam = useSignal<any>(null);
   const activeAttempt = useSignal<any>(null);
+  const deviceReadinessSnapshot = useSignal<{
+    isReady: boolean;
+    score: number;
+    checksPassed: number;
+    totalChecks: number;
+    networkOk: boolean;
+    latency: number | null;
+    updatedAt: string;
+  } | null>(null);
+  const deviceReadinessStale = useSignal(false);
   const loading = useSignal(true);
 
   // eslint-disable-next-line qwik/no-use-visible-task
@@ -33,6 +44,19 @@ export default component$(() => {
       activeAttempt.value = (attemptData.attempts || []).find(
         (item: any) => item.examId === examId && item.status === "IN_PROGRESS"
       );
+
+      try {
+        const storedReadiness = localStorage.getItem("examinator_device_readiness");
+        if (storedReadiness) {
+          const parsed = JSON.parse(storedReadiness);
+          deviceReadinessSnapshot.value = parsed;
+          const updatedAtTs = new Date(parsed?.updatedAt || "").getTime();
+          deviceReadinessStale.value = !Number.isFinite(updatedAtTs) || (Date.now() - updatedAtTs > DEVICE_READINESS_MAX_AGE_MS);
+        }
+      } catch {
+        deviceReadinessSnapshot.value = null;
+        deviceReadinessStale.value = false;
+      }
     } catch {
       activeAttempt.value = null;
     } finally {
@@ -75,6 +99,13 @@ export default component$(() => {
         <h1 class="mt-4 text-2xl sm:text-3xl font-bold tracking-tight">Lanjutkan Ujian</h1>
         <p class="mt-2 text-slate-500 font-medium leading-relaxed">Halo {user.value?.fullName || "Siswa"}, kamu masih memiliki sesi ujian aktif. Pastikan perangkat dan koneksi tetap stabil, lalu lanjutkan sesi di bawah ini.</p>
 
+        {deviceReadinessSnapshot.value && (
+          <div class={`mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${deviceReadinessStale.value ? "bg-amber-50 text-amber-700 border-amber-200" : (deviceReadinessSnapshot.value.isReady ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200")}`}>
+            <span class="material-symbols-outlined text-sm">{deviceReadinessStale.value ? "history" : (deviceReadinessSnapshot.value.isReady ? "task_alt" : "pending_actions")}</span>
+            {deviceReadinessStale.value ? "Status Diagnostik Kedaluwarsa" : `Snapshot Diagnostik • ${deviceReadinessSnapshot.value.score}%`}
+          </div>
+        )}
+
         <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
             <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Mata Ujian</p>
@@ -93,6 +124,14 @@ export default component$(() => {
         <div class="mt-8 p-5 rounded-2xl border border-blue-100 bg-blue-50/70">
           <p class="text-sm font-semibold text-slate-700">Catatan:</p>
           <p class="text-sm text-slate-600 mt-1">Timer tetap berjalan selama sesi aktif. Klik tombol lanjutkan untuk kembali ke antarmuka ujian aktif.</p>
+          <div class="mt-3">
+            <Link
+              href={`/student/test-device/?reason=${deviceReadinessSnapshot.value && deviceReadinessSnapshot.value.networkOk === false ? "network" : "preflight"}`}
+              class="inline-flex h-9 items-center px-4 rounded-xl bg-white text-blue-700 border border-blue-200 text-[10px] font-bold uppercase tracking-wider hover:border-blue-400 transition-all"
+            >
+              {deviceReadinessStale.value ? "Perbarui Diagnostik" : "Buka Diagnostik Perangkat"}
+            </Link>
+          </div>
         </div>
 
         <div class="mt-8 flex flex-col sm:flex-row gap-3">

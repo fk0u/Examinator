@@ -230,7 +230,7 @@ export default component$(() => {
             </div>
           ) : (
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {students.value.map((st, i) => (
+              {students.value.map((st) => (
                 <div
                   key={st.id}
                   class={`bg-white rounded-2xl border p-4 transition-all hover:shadow-md hover:-translate-y-0.5 ${
