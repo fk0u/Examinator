@@ -1,15 +1,18 @@
 import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
-import { Link, useNavigate } from "@builder.io/qwik-city";
+import { Link, useLocation, useNavigate } from "@builder.io/qwik-city";
 import { examsApi, attemptsApi } from "~/lib/api";
 import { getUserData, isAuthenticated } from "~/lib/auth";
+import { StatusBanner } from "~/components/ui/status-banner";
 
 // ─── Hasil & Riwayat Siswa ─────────────────────────────
 
 export default component$(() => {
+   const loc = useLocation();
   const user = useSignal<any>(null);
   const exams = useSignal<any[]>([]);
   const attempts = useSignal<any[]>([]);
+   const flash = useSignal<{ type: "success" | "info"; message: string } | null>(null);
   const loading = useSignal(true);
   const nav = useNavigate();
 
@@ -28,6 +31,29 @@ export default component$(() => {
       ]);
       exams.value = examData.exams || [];
       attempts.value = attemptData.attempts || [];
+
+         const flashResult = loc.url.searchParams.get("flashResult");
+         if (flashResult === "submitted") {
+            const score = loc.url.searchParams.get("score") || "-";
+            const passed = loc.url.searchParams.get("passed") === "1";
+            flash.value = {
+               type: "success",
+               message: `Ujian berhasil dikumpulkan. Nilai ${score} (${passed ? "Lulus" : "Belum Lulus"}).`,
+            };
+         }
+
+         if (flashResult === "force") {
+            flash.value = {
+               type: "info",
+               message: "Sesi ujian dihentikan otomatis oleh sistem keamanan.",
+            };
+         }
+
+         if (flash.value) {
+            setTimeout(() => {
+               flash.value = null;
+            }, 3800);
+         }
     } catch (err) {
       console.error(err);
       // Optional: handle error state
@@ -117,6 +143,7 @@ export default component$(() => {
       </header>
 
       <main class="max-w-7xl mx-auto px-6 space-y-12">
+            {flash.value && <StatusBanner type={flash.value.type} message={flash.value.message} />}
         <header class="animate-fade-in-up">
             <h1 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter mb-2 italic">Hasil & <span class="text-blue-600">Progres</span></h1>
               <p class="text-slate-500 font-semibold text-base sm:text-lg">Catatan pencapaian akademik dan riwayat evaluasimu.</p>
@@ -142,6 +169,9 @@ export default component$(() => {
                         <span class={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider ${latestAttempt.status === "FORCE_SUBMITTED" ? "bg-rose-50 text-rose-700 border border-rose-200" : latestIsPassed ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-blue-50 text-blue-700 border border-blue-200"}`}>
                            {latestAttempt.status === "FORCE_SUBMITTED" ? "Force Submit" : latestIsPassed ? "Lulus" : "Belum Lulus"}
                         </span>
+                        <a href={`#attempt-card-${latestAttempt.id}`} class="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200 hover:border-blue-200 hover:text-blue-700 transition-all">
+                          Lihat Detail
+                        </a>
                      </div>
                   </div>
                </section>
@@ -210,7 +240,7 @@ export default component$(() => {
                               const statusLabel = isForced ? "Force Submit" : (isPassed ? "Tuntas" : "Perlu Ulang");
                     
                     return (
-                         <div key={attempt.id} class="bg-white rounded-[2.5rem] p-6 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/30 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-10 group hover:border-blue-400/30 transition-all duration-500 hover:-translate-y-1 relative overflow-hidden">
+                         <div id={`attempt-card-${attempt.id}`} key={attempt.id} class="bg-white rounded-[2.5rem] p-6 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/30 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-10 group hover:border-blue-400/30 transition-all duration-500 hover:-translate-y-1 relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-bl-[4rem] -mr-10 -mt-10 group-hover:bg-blue-100/50 transition-colors duration-500"></div>
                             
                             <div class={`size-20 sm:size-24 rounded-[2rem] flex items-center justify-center text-3xl sm:text-4xl font-bold shrink-0 shadow-lg italic relative z-10 transition-transform duration-500 group-hover:scale-110 ${

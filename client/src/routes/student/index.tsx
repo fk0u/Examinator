@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "@builder.io/qwik-city";
 import { examsApi, attemptsApi } from "~/lib/api";
 import { getUserData, isAuthenticated, logout } from "~/lib/auth";
 import { Clock } from "~/components/ui/clock";
+import { StatusBanner } from "~/components/ui/status-banner";
 
 // Tata visual modern untuk dashboard siswa
 
@@ -192,9 +193,7 @@ export default component$(() => {
 
       <main class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-8 sm:space-y-12">
         {flash.value && (
-          <div class={`rounded-2xl border px-4 py-3 text-sm font-bold shadow-lg ${flash.value.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-blue-50 border-blue-200 text-blue-700"}`}>
-            {flash.value.message}
-          </div>
+          <StatusBanner type={flash.value.type} message={flash.value.message} />
         )}
         
       {/* ═══ Bagian Header ═══ */}
