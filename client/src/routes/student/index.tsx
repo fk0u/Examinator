@@ -208,7 +208,14 @@ export default component$(() => {
               <h1 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter mb-2 italic">Selamat Datang, <span class="text-blue-600">{user.value?.fullName?.split(' ')[0] || 'Siswa'}</span></h1>
             <p class="text-slate-500 font-semibold text-base sm:text-lg">Pantau progres dan bersiaplah untuk ujian hari ini.</p>
             {deviceReadiness.value && (
-              <div class={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${readinessStale.value ? "bg-amber-50 text-amber-700 border-amber-200" : (deviceReadiness.value.isReady ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200")}`}>
+              <div
+                title={
+                  deviceReadiness.value
+                    ? `Skor ${deviceReadiness.value.score}% • ${deviceReadiness.value.checksPassed}/${deviceReadiness.value.totalChecks} checklist • Update ${new Date(deviceReadiness.value.updatedAt).toLocaleString("id-ID")}`
+                    : ""
+                }
+                class={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${readinessStale.value ? "bg-amber-50 text-amber-700 border-amber-200" : (deviceReadiness.value.isReady ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200")}`}
+              >
                 <span class="material-symbols-outlined text-sm">
                   {readinessStale.value ? "history" : (deviceReadiness.value.isReady ? "task_alt" : "pending_actions")}
                 </span>
@@ -463,7 +470,7 @@ export default component$(() => {
                      href={`/student/test-device/?reason=${deviceReadiness.value && deviceReadiness.value.networkOk === false ? "network" : "preflight"}`}
                      class="px-5 py-2.5 bg-white text-blue-600 rounded-xl font-bold text-[10px] uppercase tracking-widest border border-blue-100 shadow-sm hover:shadow-md active:scale-95 transition-all text-center"
                    >
-                     {readinessStale.value ? "Refresh Check" : "Check Now"}
+                       {readinessStale.value ? "Perbarui Cek" : "Cek Sekarang"}
                    </Link>
                    {deviceReadiness.value && (
                      <button
@@ -494,11 +501,11 @@ export default component$(() => {
            </div>
            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-blue-600 transition-colors">Portfolio</span>
         </Link>
-          <Link href="/student/test-device/?reason=preflight" class="flex flex-col items-center gap-1.5 group">
+            <Link href="/student/test-device/?reason=preflight" class="flex flex-col items-center gap-1.5 group">
            <div class="size-11 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-amber-500 group-hover:bg-amber-50 transition-all duration-300">
               <span class="material-symbols-outlined font-bold text-2xl">on_device_training</span>
            </div>
-           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-amber-500 transition-colors">Device</span>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-amber-500 transition-colors">Perangkat</span>
         </Link>
       </div>
 

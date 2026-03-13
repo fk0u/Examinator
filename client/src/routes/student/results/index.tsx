@@ -232,7 +232,7 @@ export default component$(() => {
                           Lihat Detail
                         </a>
                                     <Link href={`/student/test-device/?reason=${latestDeviceReason}`} class="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white text-blue-700 border border-blue-200 hover:border-blue-400 transition-all">
-                                       Cek Perangkat
+                                       Diagnostik Perangkat
                                     </Link>
                      </div>
                   </div>
