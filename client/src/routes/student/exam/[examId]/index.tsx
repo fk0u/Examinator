@@ -6,6 +6,7 @@ import { getUserData, isAuthenticated } from "~/lib/auth";
 import { getWsClient } from "~/lib/ws";
 import { useCamera } from "~/hooks/use-camera";
 import { FlashToast } from "~/components/ui/flash-toast";
+import { AntiCheatWarning } from "~/components/ui/anti-cheat-warning";
 
 export default component$(() => {
   const loc = useLocation();
@@ -544,18 +545,7 @@ export default component$(() => {
       <FlashToast toast={toast.value} />
       <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.10),_transparent_38%),radial-gradient(circle_at_bottom_left,_rgba(16,185,129,0.08),_transparent_42%)]" />
 
-      {/* Anti-cheat Overlay */}
-      {showWarning.value && (
-        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-red-950/40 backdrop-blur-sm animate-fade-in px-4">
-           <div class="bg-white border border-red-100 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl shadow-red-500/20">
-              <div class="size-16 mx-auto mb-4 rounded-2xl bg-red-100 flex items-center justify-center text-red-600">
-                <span class="material-symbols-outlined text-4xl font-bold">warning</span>
-              </div>
-              <p class="text-red-700 font-extrabold text-2xl mb-2 tracking-tight">Pelanggaran Terdeteksi</p>
-              <p class="text-slate-600 font-semibold leading-relaxed">{warningMessage.value}</p>
-           </div>
-        </div>
-      )}
+      <AntiCheatWarning show={showWarning.value} title="Pelanggaran Terdeteksi" message={warningMessage.value} />
 
       <header class="shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
         <div class="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-8 h-[74px] flex items-center justify-between gap-3">

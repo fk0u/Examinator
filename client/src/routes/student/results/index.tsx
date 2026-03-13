@@ -58,6 +58,15 @@ export default component$(() => {
       return typeof a.score === "number" && typeof exam.passingScore === "number" && a.score >= exam.passingScore;
   }).length;
 
+   const latestAttempt = historyAttempts[0];
+   const latestExam = latestAttempt ? getExamForAttempt(latestAttempt.examId) : null;
+   const latestIsPassed = Boolean(
+      latestAttempt
+      && typeof latestAttempt.score === "number"
+      && typeof latestExam?.passingScore === "number"
+      && latestAttempt.score >= latestExam.passingScore
+   );
+
 
   if (loading.value) {
     return (
@@ -112,6 +121,31 @@ export default component$(() => {
             <h1 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter mb-2 italic">Hasil & <span class="text-blue-600">Progres</span></h1>
               <p class="text-slate-500 font-semibold text-base sm:text-lg">Catatan pencapaian akademik dan riwayat evaluasimu.</p>
         </header>
+
+            {latestAttempt && (
+               <section class="bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-slate-100 p-5 sm:p-7 shadow-lg shadow-slate-200/30 animate-fade-in [animation-delay:50ms]">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                     <div>
+                        <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Attempt Terakhir</p>
+                        <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">{latestExam?.title || "Ujian"}</h3>
+                        <p class="text-sm text-slate-500 font-semibold mt-1">
+                           {new Date(latestAttempt.startedAt).toLocaleString("id-ID")}
+                        </p>
+                     </div>
+                     <div class="flex items-center gap-5">
+                        <div class="text-right">
+                           <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Skor</p>
+                           <p class={`text-3xl font-bold ${latestIsPassed ? "text-emerald-600" : "text-blue-600"}`}>
+                              {typeof latestAttempt.score === "number" ? Math.round(latestAttempt.score) : "--"}
+                           </p>
+                        </div>
+                        <span class={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider ${latestAttempt.status === "FORCE_SUBMITTED" ? "bg-rose-50 text-rose-700 border border-rose-200" : latestIsPassed ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-blue-50 text-blue-700 border border-blue-200"}`}>
+                           {latestAttempt.status === "FORCE_SUBMITTED" ? "Force Submit" : latestIsPassed ? "Lulus" : "Belum Lulus"}
+                        </span>
+                     </div>
+                  </div>
+               </section>
+            )}
 
       <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in [animation-delay:100ms]">
            <div class="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden group hover:border-blue-200 transition-all duration-500">

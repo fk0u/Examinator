@@ -2,6 +2,7 @@ import { component$, useSignal, $, useVisibleTask$, useComputed$ } from "@builde
 import type { DocumentHead } from "@builder.io/qwik-city";
 import { Link } from "@builder.io/qwik-city";
 import { useCamera } from "~/hooks/use-camera";
+import { AntiCheatWarning } from "~/components/ui/anti-cheat-warning";
 
 // Data contoh untuk simulasi
 const MOCK_QUESTIONS = [
@@ -374,18 +375,7 @@ export default component$(() => {
 
   return (
     <div class="min-h-screen bg-[#f8fafc] text-slate-900 font-sans select-none flex flex-col">
-      {/* Anti-cheat Overlay */}
-      {showWarning.value && (
-        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-red-500/10 backdrop-blur-md animate-fade-in">
-           <div class="bg-white border-2 border-red-500 rounded-[2rem] p-8 max-w-md text-center animate-shake shadow-2xl shadow-red-500/20">
-              <div class="size-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                <span class="material-symbols-outlined text-4xl font-bold">warning</span>
-              </div>
-              <p class="text-red-600 font-bold text-2xl mb-2">Simulasi: Pelanggaran!</p>
-              <p class="text-slate-600 font-bold">{warningMessage.value}</p>
-           </div>
-        </div>
-      )}
+      <AntiCheatWarning show={showWarning.value} title="Simulasi: Pelanggaran!" message={warningMessage.value} />
 
       {/* Bilah navigasi atas tetap */}
       <header class="sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-4 sm:px-6 py-2 sm:py-3 flex items-center justify-between shadow-sm">
