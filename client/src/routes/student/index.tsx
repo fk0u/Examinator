@@ -43,6 +43,65 @@ export default component$(() => {
     return attempts.value.find((a: any) => a.examId === examId);
   };
 
+  const getExamStatus = (examId: string) => {
+    const attempt = getAttemptForExam(examId);
+    if (!attempt) return "NOT_STARTED";
+    return attempt.status;
+  };
+
+  const getStatusMeta = (status: string) => {
+    if (status === "IN_PROGRESS") {
+      return {
+        label: "Sedang Berjalan",
+        badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
+        icon: "pending_actions",
+      };
+    }
+    if (status === "SUBMITTED") {
+      return {
+        label: "Selesai",
+        badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        icon: "task_alt",
+      };
+    }
+    if (status === "TIMED_OUT") {
+      return {
+        label: "Waktu Habis",
+        badgeClass: "bg-orange-50 text-orange-700 border-orange-200",
+        icon: "timer_off",
+      };
+    }
+    if (status === "FORCE_SUBMITTED") {
+      return {
+        label: "Dihentikan Sistem",
+        badgeClass: "bg-rose-50 text-rose-700 border-rose-200",
+        icon: "gpp_bad",
+      };
+    }
+    return {
+      label: "Belum Dimulai",
+      badgeClass: "bg-blue-50 text-blue-700 border-blue-200",
+      icon: "play_circle",
+    };
+  };
+
+  const getStatusPriority = (status: string) => {
+    if (status === "IN_PROGRESS") return 0;
+    if (status === "NOT_STARTED") return 1;
+    if (status === "SUBMITTED") return 2;
+    if (status === "TIMED_OUT") return 3;
+    if (status === "FORCE_SUBMITTED") return 4;
+    return 5;
+  };
+
+  const examStatusList = exams.value
+    .map((exam) => {
+      const attempt = getAttemptForExam(exam.id);
+      const status = getExamStatus(exam.id);
+      return { exam, attempt, status, statusMeta: getStatusMeta(status) };
+    })
+    .sort((a, b) => getStatusPriority(a.status) - getStatusPriority(b.status));
+
   const availableExams = exams.value.filter(exam => {
     const attempt = getAttemptForExam(exam.id);
     return !attempt || attempt.status === "IN_PROGRESS";
@@ -138,6 +197,69 @@ export default component$(() => {
         </header>
 
       {/* ═══ Daftar Ujian Aktif ═══ */}
+        <section class="space-y-6">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-3">
+              <span class="material-symbols-outlined text-blue-600 font-bold">rule</span>
+              Status Ujian Saya
+            </h3>
+            <div class="h-px flex-1 bg-slate-200 mx-6 hidden sm:block"></div>
+            <span class="px-5 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-full border border-slate-200 uppercase tracking-widest">
+              Alur Sistematis
+            </span>
+          </div>
+
+          {examStatusList.length === 0 ? (
+            <div class="bg-white border border-slate-100 rounded-[2rem] p-8 text-center text-slate-400 font-medium">
+              Belum ada ujian yang terdaftar.
+            </div>
+          ) : (
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {examStatusList.map(({ exam, attempt, status, statusMeta }) => (
+                <div key={exam.id} class="bg-white rounded-[2rem] border border-slate-100 p-5 sm:p-6 shadow-lg shadow-slate-200/40 flex items-center justify-between gap-4">
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{exam.subject || "Ujian"}</p>
+                    <h4 class="text-lg font-bold text-slate-900 truncate">{exam.title}</h4>
+                    <div class={`mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${statusMeta.badgeClass}`}>
+                      <span class="material-symbols-outlined text-sm">{statusMeta.icon}</span>
+                      {statusMeta.label}
+                    </div>
+                    {attempt?.submittedAt && (
+                      <p class="mt-2 text-[11px] text-slate-500 font-semibold">
+                        Selesai: {new Date(attempt.submittedAt).toLocaleString("id-ID")}
+                      </p>
+                    )}
+                  </div>
+
+                  <div class="shrink-0 flex flex-col gap-2 w-[150px]">
+                    {status === "IN_PROGRESS" || status === "NOT_STARTED" ? (
+                      <button
+                        onClick$={() => nav(`/student/exam/${exam.id}/`)}
+                        class={`h-11 rounded-xl font-bold text-sm border-b-4 transition-all active:scale-95 ${status === "IN_PROGRESS" ? "bg-amber-500 text-white border-amber-700 hover:bg-amber-600" : "bg-blue-600 text-white border-blue-800 hover:bg-blue-700"}`}
+                      >
+                        {status === "IN_PROGRESS" ? "Lanjutkan" : "Mulai"}
+                      </button>
+                    ) : (
+                      <button
+                        onClick$={() => nav("/student/results/")}
+                        class="h-11 rounded-xl font-bold text-sm border-b-4 transition-all active:scale-95 bg-emerald-600 text-white border-emerald-800 hover:bg-emerald-700"
+                      >
+                        Lihat Hasil
+                      </button>
+                    )}
+                    <button
+                      onClick$={() => nav("/student/test-device/")}
+                      class="h-10 rounded-xl font-bold text-[11px] uppercase tracking-wider border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-700 transition-all active:scale-95"
+                    >
+                      Cek Perangkat
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
         <section class="space-y-8">
            <div class="flex items-center justify-between">
               <h3 class="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-3">
