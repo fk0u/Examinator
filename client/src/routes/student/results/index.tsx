@@ -148,6 +148,9 @@ export default component$(() => {
       && typeof latestExam?.passingScore === "number"
       && latestAttempt.score >= latestExam.passingScore
    );
+   const latestDeviceReason = latestAttempt && (latestAttempt.status === "FORCE_SUBMITTED" || latestAttempt.status === "TIMED_OUT")
+      ? "network"
+      : "preflight";
 
 
   if (loading.value) {
@@ -225,9 +228,12 @@ export default component$(() => {
                         <span class={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider ${latestStatusMeta?.badgeClass || "bg-slate-50 text-slate-700 border border-slate-200"}`}>
                            {latestStatusMeta?.label || (latestIsPassed ? "Lulus" : "Belum Lulus")}
                         </span>
-                        <a href={`#attempt-card-${latestAttempt.id}`} class="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200 hover:border-blue-200 hover:text-blue-700 transition-all">
+                                    <a href={`#attempt-card-${latestAttempt.id}`} class="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200 hover:border-blue-200 hover:text-blue-700 transition-all">
                           Lihat Detail
                         </a>
+                                    <Link href={`/student/test-device/?reason=${latestDeviceReason}`} class="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white text-blue-700 border border-blue-200 hover:border-blue-400 transition-all">
+                                       Cek Perangkat
+                                    </Link>
                      </div>
                   </div>
                </section>
@@ -431,7 +437,7 @@ export default component$(() => {
            </div>
            <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Portofolio</span>
         </div>
-        <Link href="/student/test-device/" class="flex flex-col items-center gap-1.5 group">
+        <Link href="/student/test-device/?reason=preflight" class="flex flex-col items-center gap-1.5 group">
            <div class="size-11 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-amber-500 group-hover:bg-amber-50 transition-all duration-300">
               <span class="material-symbols-outlined font-bold text-2xl">on_device_training</span>
            </div>

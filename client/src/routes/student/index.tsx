@@ -17,6 +17,15 @@ export default component$(() => {
   const exams = useSignal<any[]>([]);
   const attempts = useSignal<any[]>([]);
   const flash = useSignal<{ type: "success" | "info"; message: string } | null>(null);
+  const deviceReadiness = useSignal<{
+    isReady: boolean;
+    score: number;
+    checksPassed: number;
+    totalChecks: number;
+    networkOk: boolean;
+    latency: number | null;
+    updatedAt: string;
+  } | null>(null);
   const loading = useSignal(true);
   const nav = useNavigate();
 
@@ -57,6 +66,15 @@ export default component$(() => {
         setTimeout(() => {
           flash.value = null;
         }, 3800);
+      }
+
+      try {
+        const storedReadiness = localStorage.getItem("examinator_device_readiness");
+        if (storedReadiness) {
+          deviceReadiness.value = JSON.parse(storedReadiness);
+        }
+      } catch {
+        deviceReadiness.value = null;
       }
     } catch {
       exams.value = [];
@@ -395,9 +413,26 @@ export default component$(() => {
                     <div class="size-10 bg-white rounded-xl flex items-center justify-center text-blue-600 shadow-sm">
                        <span class="material-symbols-outlined font-bold">devices</span>
                     </div>
-                    <p class="text-xs font-bold text-slate-700">Kesiapan Perangkat</p>
+                    <div>
+                      <p class="text-xs font-bold text-slate-700">Kesiapan Perangkat</p>
+                      <p class="text-[10px] font-semibold text-slate-500 mt-0.5">
+                        {deviceReadiness.value
+                          ? `${deviceReadiness.value.isReady ? "Siap" : "Belum Siap"} • ${deviceReadiness.value.checksPassed}/${deviceReadiness.value.totalChecks} • Skor ${deviceReadiness.value.score}%`
+                          : "Belum ada hasil diagnostik tersimpan"}
+                      </p>
+                      {deviceReadiness.value?.updatedAt && (
+                        <p class="text-[10px] font-semibold text-slate-400 mt-0.5">
+                          Update: {new Date(deviceReadiness.value.updatedAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      )}
+                    </div>
                  </div>
-                 <Link href="/student/test-device/?reason=preflight" class="px-5 py-2.5 bg-white text-blue-600 rounded-xl font-bold text-[10px] uppercase tracking-widest border border-blue-100 shadow-sm hover:shadow-md active:scale-95 transition-all">Check Now</Link>
+                 <Link
+                   href={`/student/test-device/?reason=${deviceReadiness.value && deviceReadiness.value.networkOk === false ? "network" : "preflight"}`}
+                   class="px-5 py-2.5 bg-white text-blue-600 rounded-xl font-bold text-[10px] uppercase tracking-widest border border-blue-100 shadow-sm hover:shadow-md active:scale-95 transition-all"
+                 >
+                   Check Now
+                 </Link>
               </div>
            </div>
         </section>

@@ -248,6 +248,32 @@ export default component$(() => {
     return tips;
   });
 
+  // eslint-disable-next-line qwik/no-use-visible-task
+  useVisibleTask$(({ track }) => {
+    track(() => readinessChecks.value.isReady);
+    track(() => readinessChecks.value.score);
+    track(() => readinessChecks.value.checksPassed);
+    track(() => readinessChecks.value.networkOk);
+    track(() => latency.value);
+
+    try {
+      localStorage.setItem(
+        "examinator_device_readiness",
+        JSON.stringify({
+          isReady: readinessChecks.value.isReady,
+          score: readinessChecks.value.score,
+          checksPassed: readinessChecks.value.checksPassed,
+          totalChecks: 4,
+          networkOk: readinessChecks.value.networkOk,
+          latency: latency.value,
+          updatedAt: new Date().toISOString(),
+        })
+      );
+    } catch {
+      // Abaikan jika storage tidak tersedia
+    }
+  });
+
   return (
     <div class="font-['Public_Sans',sans-serif] min-h-screen bg-[#f8fafd] text-slate-900 pb-20">
       {/* ═══ iOS 27 Inspired Top Navigation ═══ */}
