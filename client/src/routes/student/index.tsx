@@ -12,6 +12,7 @@ import { getAttemptStatusMeta, type AttemptStatus } from "~/lib/attempt-status";
 // ─── Dashboard Siswa ────────────────────────────────────
 
 export default component$(() => {
+  const DEVICE_READINESS_MAX_AGE_MS = 24 * 60 * 60 * 1000;
   const loc = useLocation();
   const user = useSignal<any>(null);
   const exams = useSignal<any[]>([]);
@@ -26,6 +27,7 @@ export default component$(() => {
     latency: number | null;
     updatedAt: string;
   } | null>(null);
+  const readinessStale = useSignal(false);
   const loading = useSignal(true);
   const nav = useNavigate();
 
@@ -71,10 +73,15 @@ export default component$(() => {
       try {
         const storedReadiness = localStorage.getItem("examinator_device_readiness");
         if (storedReadiness) {
-          deviceReadiness.value = JSON.parse(storedReadiness);
+          const parsed = JSON.parse(storedReadiness);
+          deviceReadiness.value = parsed;
+
+          const updatedAtTs = new Date(parsed?.updatedAt || "").getTime();
+          readinessStale.value = !Number.isFinite(updatedAtTs) || (Date.now() - updatedAtTs > DEVICE_READINESS_MAX_AGE_MS);
         }
       } catch {
         deviceReadiness.value = null;
+        readinessStale.value = false;
       }
     } catch {
       exams.value = [];
@@ -177,6 +184,12 @@ export default component$(() => {
       <main class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-8 sm:space-y-12">
         {flash.value && (
           <StatusBanner type={flash.value.type} message={flash.value.message} />
+        )}
+        {deviceReadiness.value && readinessStale.value && (
+          <StatusBanner
+            type="info"
+            message="Status perangkat terakhir sudah lebih dari 24 jam. Jalankan diagnostik ulang sebelum mulai ujian."
+          />
         )}
         
       {/* ═══ Bagian Header ═══ */}
@@ -417,7 +430,7 @@ export default component$(() => {
                       <p class="text-xs font-bold text-slate-700">Kesiapan Perangkat</p>
                       <p class="text-[10px] font-semibold text-slate-500 mt-0.5">
                         {deviceReadiness.value
-                          ? `${deviceReadiness.value.isReady ? "Siap" : "Belum Siap"} • ${deviceReadiness.value.checksPassed}/${deviceReadiness.value.totalChecks} • Skor ${deviceReadiness.value.score}%`
+                          ? `${readinessStale.value ? "Data Lama" : (deviceReadiness.value.isReady ? "Siap" : "Belum Siap")} • ${deviceReadiness.value.checksPassed}/${deviceReadiness.value.totalChecks} • Skor ${deviceReadiness.value.score}%`
                           : "Belum ada hasil diagnostik tersimpan"}
                       </p>
                       {deviceReadiness.value?.updatedAt && (
@@ -431,7 +444,7 @@ export default component$(() => {
                    href={`/student/test-device/?reason=${deviceReadiness.value && deviceReadiness.value.networkOk === false ? "network" : "preflight"}`}
                    class="px-5 py-2.5 bg-white text-blue-600 rounded-xl font-bold text-[10px] uppercase tracking-widest border border-blue-100 shadow-sm hover:shadow-md active:scale-95 transition-all"
                  >
-                   Check Now
+                   {readinessStale.value ? "Refresh Check" : "Check Now"}
                  </Link>
               </div>
            </div>
