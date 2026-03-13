@@ -25,6 +25,7 @@ export default component$(() => {
   const testSoundVerified = useSignal(false);
 
   // 1. Detect OS and Browser
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
     const ua = navigator.userAgent;
     let os = "Terdeteksi (Unknown)";
@@ -44,6 +45,7 @@ export default component$(() => {
   });
 
   // 2. Measure Latency (Ping)
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
     const updateOnlineStatus = () => {
       isOnline.value = navigator.onLine;
@@ -72,6 +74,7 @@ export default component$(() => {
   });
 
   // 3. Enumerate Hardware
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(async ({ track }) => {
     track(() => cameraEnabled.value);
     track(() => micEnabled.value);
@@ -98,20 +101,6 @@ export default component$(() => {
       addLog("Akses media diberikan.");
     } else {
       addLog(`GAGAL: ${cameraError.value || 'Izin ditolak atau hardware sibuk'}`);
-    }
-  });
-
-  useVisibleTask$(({ track }) => {
-    track(() => cameraEnabled.value);
-    track(() => micEnabled.value);
-    const s = stream.value;
-    if (s && videoRef.value) {
-      addLog("Menghubungkan aliran video ke layar...");
-      videoRef.value.srcObject = s;
-      videoRef.value.play().catch(e => {
-        addLog(`Error playback: ${e.message}`);
-        console.error("Video play error:", e);
-      });
     }
   });
 
@@ -223,7 +212,21 @@ export default component$(() => {
               
               <div class="relative aspect-video bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border border-white/20 shadow-2xl">
                 {stream.value ? (
-                  <video autoplay playsInline muted ref={videoRef} class="w-full h-full object-cover scale-x-[-1]" />
+                  <video
+                    autoplay
+                    playsInline
+                    muted
+                    ref={(el) => {
+                      videoRef.value = el;
+                      if (el && stream.value) {
+                        el.srcObject = stream.value as MediaStream;
+                        el.play().catch((e) => {
+                          console.error("Video play error:", e);
+                        });
+                      }
+                    }}
+                    class="w-full h-full object-cover scale-x-[-1]"
+                  />
                 ) : (
                   <div class="w-full h-full flex flex-col items-center justify-center text-slate-300 relative group">
                     <div class="absolute inset-0 bg-slate-800/50 backdrop-blur-sm z-10 flex flex-col items-center justify-center space-y-4">
