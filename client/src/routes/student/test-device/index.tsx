@@ -1,10 +1,11 @@
 import { component$, useSignal, $, useVisibleTask$, useComputed$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
-import { Link } from "@builder.io/qwik-city";
+import { Link, useLocation } from "@builder.io/qwik-city";
 import { useCamera } from "~/hooks/use-camera";
 import { StatusBanner } from "~/components/ui/status-banner";
 
 export default component$(() => {
+  const loc = useLocation();
   const dummyAttempt = useSignal({ id: null });
   const { cameraEnabled, micEnabled, audioLevel, stream, requestPermission, isRequesting, error: cameraError } = useCamera(dummyAttempt);
   const videoRef = useSignal<HTMLVideoElement>();
@@ -26,6 +27,18 @@ export default component$(() => {
   const testSoundVerified = useSignal(false);
   const autoRunning = useSignal(false);
   const prevOnline = useSignal<boolean | null>(null);
+  const entryMessage = useSignal<string | null>(null);
+
+  // 1. Detect OS and Browser
+  // eslint-disable-next-line qwik/no-use-visible-task
+  useVisibleTask$(() => {
+    const reason = loc.url.searchParams.get("reason");
+    if (reason === "preflight") {
+      entryMessage.value = "Sebelum mulai ujian, pastikan perangkat sudah lolos seluruh checklist diagnostik.";
+    } else if (reason === "network") {
+      entryMessage.value = "Sistem mendeteksi sesi sebelumnya kurang stabil. Jalankan tes jaringan dan audio terlebih dahulu.";
+    }
+  });
 
   // 1. Detect OS and Browser
   // eslint-disable-next-line qwik/no-use-visible-task
@@ -193,6 +206,48 @@ export default component$(() => {
     return "w-full";
   });
 
+  const failedTips = useComputed$(() => {
+    const tips: Array<{ key: string; title: string; detail: string; action: "permission" | "audio" | "reload" }> = [];
+
+    if (!readinessChecks.value.permissionOk) {
+      tips.push({
+        key: "permission",
+        title: "Izin Kamera dan Mikrofon",
+        detail: "Klik Beri Izin Sekarang agar sistem dapat memantau ujian.",
+        action: "permission",
+      });
+    }
+
+    if (!readinessChecks.value.devicesOk) {
+      tips.push({
+        key: "devices",
+        title: "Perangkat Belum Terdeteksi",
+        detail: "Pastikan webcam atau mikrofon tidak dipakai aplikasi lain lalu refresh diagnostik.",
+        action: "reload",
+      });
+    }
+
+    if (!readinessChecks.value.networkOk) {
+      tips.push({
+        key: "network",
+        title: "Koneksi Kurang Stabil",
+        detail: "Gunakan jaringan yang lebih stabil dan lakukan refresh untuk ukur ulang latensi.",
+        action: "reload",
+      });
+    }
+
+    if (!readinessChecks.value.audioOk) {
+      tips.push({
+        key: "audio",
+        title: "Tes Audio Belum Lulus",
+        detail: "Jalankan ulang tes audio, lalu pastikan suara benar-benar terdengar.",
+        action: "audio",
+      });
+    }
+
+    return tips;
+  });
+
   return (
     <div class="font-['Public_Sans',sans-serif] min-h-screen bg-[#f8fafd] text-slate-900 pb-20">
       {/* ═══ iOS 27 Inspired Top Navigation ═══ */}
@@ -223,6 +278,7 @@ export default component$(() => {
         </div>
 
         <div class="max-w-3xl mx-auto">
+          {entryMessage.value && <StatusBanner type="info" message={entryMessage.value} />}
           {readinessChecks.value.isReady ? (
             <StatusBanner type="success" message="Perangkat siap. Kamu bisa lanjut ke simulasi dengan aman." />
           ) : (
@@ -368,6 +424,45 @@ export default component$(() => {
                   <span class={`font-bold ${readinessChecks.value.audioOk ? 'text-emerald-600' : 'text-red-600'}`}>{readinessChecks.value.audioOk ? 'LULUS' : 'BELUM'}</span>
                 </div>
               </div>
+
+              {failedTips.value.length > 0 && (
+                <div class="pt-2 space-y-2">
+                  <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Panduan Perbaikan Cepat</p>
+                  {failedTips.value.map((tip) => (
+                    <div key={tip.key} class="p-3 rounded-xl bg-white/60 border border-white/70 flex items-start justify-between gap-3">
+                      <div>
+                        <p class="text-sm font-bold text-slate-800">{tip.title}</p>
+                        <p class="text-xs font-medium text-slate-500 mt-1">{tip.detail}</p>
+                      </div>
+                      {tip.action === "permission" ? (
+                        <button
+                          type="button"
+                          onClick$={handleStartDiagnostics}
+                          class="shrink-0 h-9 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-600 text-white border-b-2 border-blue-800 hover:bg-blue-700 transition-all"
+                        >
+                          Beri Izin
+                        </button>
+                      ) : tip.action === "audio" ? (
+                        <button
+                          type="button"
+                          onClick$={playTestSound}
+                          class="shrink-0 h-9 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-600 text-white border-b-2 border-blue-800 hover:bg-blue-700 transition-all"
+                        >
+                          Tes Audio
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick$={() => window.location.reload()}
+                          class="shrink-0 h-9 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-slate-200 text-slate-700 border-b-2 border-slate-300 hover:bg-slate-300 transition-all"
+                        >
+                          Refresh
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div class="glass-darker rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-xl space-y-6">

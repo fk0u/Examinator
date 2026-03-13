@@ -242,7 +242,7 @@ export default component$(() => {
                       </button>
                     )}
                     <button
-                      onClick$={() => nav("/student/test-device/")}
+                      onClick$={() => nav("/student/test-device/?reason=preflight")}
                       class="h-10 rounded-xl font-bold text-[11px] uppercase tracking-wider border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-700 transition-all active:scale-95"
                     >
                       Cek Perangkat
@@ -397,7 +397,7 @@ export default component$(() => {
                     </div>
                     <p class="text-xs font-bold text-slate-700">Kesiapan Perangkat</p>
                  </div>
-                 <Link href="/student/test-device/" class="px-5 py-2.5 bg-white text-blue-600 rounded-xl font-bold text-[10px] uppercase tracking-widest border border-blue-100 shadow-sm hover:shadow-md active:scale-95 transition-all">Check Now</Link>
+                 <Link href="/student/test-device/?reason=preflight" class="px-5 py-2.5 bg-white text-blue-600 rounded-xl font-bold text-[10px] uppercase tracking-widest border border-blue-100 shadow-sm hover:shadow-md active:scale-95 transition-all">Check Now</Link>
               </div>
            </div>
         </section>
@@ -417,7 +417,7 @@ export default component$(() => {
            </div>
            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-blue-600 transition-colors">Portfolio</span>
         </Link>
-        <Link href="/student/test-device/" class="flex flex-col items-center gap-1.5 group">
+          <Link href="/student/test-device/?reason=preflight" class="flex flex-col items-center gap-1.5 group">
            <div class="size-11 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-amber-500 group-hover:bg-amber-50 transition-all duration-300">
               <span class="material-symbols-outlined font-bold text-2xl">on_device_training</span>
            </div>
