@@ -9,6 +9,7 @@ import { FlashToast } from "~/components/ui/flash-toast";
 import { AntiCheatWarning } from "~/components/ui/anti-cheat-warning";
 
 export default component$(() => {
+  const DEVICE_READINESS_MAX_AGE_MS = 24 * 60 * 60 * 1000;
   const loc = useLocation();
   const nav = useNavigate();
   const examId = loc.params.examId;
@@ -40,6 +41,16 @@ export default component$(() => {
   const toast = useSignal<{ type: "success" | "error" | "info"; message: string } | null>(null);
   const doubtfulAnswers = useSignal<Record<string, boolean>>({});
   const maxCheatViolations = useSignal(5);
+  const deviceReadinessSnapshot = useSignal<{
+    isReady: boolean;
+    score: number;
+    checksPassed: number;
+    totalChecks: number;
+    networkOk: boolean;
+    latency: number | null;
+    updatedAt: string;
+  } | null>(null);
+  const deviceReadinessStale = useSignal(false);
 
   const showToast = $((type: "success" | "error" | "info", message: string, duration = 2600) => {
     toast.value = { type, message };
@@ -164,6 +175,19 @@ export default component$(() => {
         (item: any) => item.examId === examId && item.status === "IN_PROGRESS"
       );
       hasInProgressAttempt.value = Boolean(inProgress);
+
+      try {
+        const storedReadiness = localStorage.getItem("examinator_device_readiness");
+        if (storedReadiness) {
+          const parsed = JSON.parse(storedReadiness);
+          deviceReadinessSnapshot.value = parsed;
+          const updatedAtTs = new Date(parsed?.updatedAt || "").getTime();
+          deviceReadinessStale.value = !Number.isFinite(updatedAtTs) || (Date.now() - updatedAtTs > DEVICE_READINESS_MAX_AGE_MS);
+        }
+      } catch {
+        deviceReadinessSnapshot.value = null;
+        deviceReadinessStale.value = false;
+      }
     } catch (e: any) {
       console.error("Gagal mengambil data ujian:", e);
       await showToast("error", "Gagal memuat info ujian.");
@@ -383,6 +407,12 @@ export default component$(() => {
           <div class="w-full text-center mb-8 sm:mb-10 animate-fade-in-up">
             <h2 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter mb-2 italic">Siap untuk <span class="text-blue-600">Ujian?</span></h2>
           <p class="text-slate-500 font-semibold text-sm sm:text-lg max-w-2xl mx-auto px-4">Pastikan koneksi stabil dan lingkungan tenang sebelum memulai sesi.</p>
+          {deviceReadinessSnapshot.value && (
+            <div class={`inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-wider ${deviceReadinessStale.value ? "bg-amber-50 text-amber-700 border-amber-200" : (deviceReadinessSnapshot.value.isReady ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200")}`}>
+              <span class="material-symbols-outlined text-sm">{deviceReadinessStale.value ? "history" : (deviceReadinessSnapshot.value.isReady ? "task_alt" : "pending_actions")}</span>
+              {deviceReadinessStale.value ? "Status Diagnostik Kedaluwarsa" : `Snapshot Diagnostik • ${deviceReadinessSnapshot.value.score}%`}
+            </div>
+          )}
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full animate-fade-in [animation-delay:100ms]">
@@ -486,6 +516,16 @@ export default component$(() => {
 
                   <div class="mb-5 bg-black/10 p-5 rounded-3xl border border-white/5 shadow-inner">
                     <p class="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-3">Checklist Pra-Ujian ({prepChecks.value.passed}/{prepChecks.value.total})</p>
+                    {deviceReadinessSnapshot.value ? (
+                      <p class="mb-3 text-[10px] font-semibold text-blue-100/80">
+                        Snapshot terakhir: {deviceReadinessSnapshot.value.checksPassed}/{deviceReadinessSnapshot.value.totalChecks} • skor {deviceReadinessSnapshot.value.score}%
+                        {deviceReadinessStale.value ? " (perlu cek ulang)" : ""}
+                      </p>
+                    ) : (
+                      <p class="mb-3 text-[10px] font-semibold text-blue-100/80">
+                        Belum ada snapshot diagnostik. Jalankan cek perangkat untuk memastikan sesi tetap aman.
+                      </p>
+                    )}
                     <div class="space-y-2">
                       {[{
                         label: "Kamera aktif",
