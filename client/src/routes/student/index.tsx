@@ -5,6 +5,7 @@ import { examsApi, attemptsApi } from "~/lib/api";
 import { getUserData, isAuthenticated, logout } from "~/lib/auth";
 import { Clock } from "~/components/ui/clock";
 import { StatusBanner } from "~/components/ui/status-banner";
+import { getAttemptStatusMeta, type AttemptStatus } from "~/lib/attempt-status";
 
 // Tata visual modern untuk dashboard siswa
 
@@ -75,42 +76,6 @@ export default component$(() => {
     return attempt.status;
   };
 
-  const getStatusMeta = (status: string) => {
-    if (status === "IN_PROGRESS") {
-      return {
-        label: "Sedang Berjalan",
-        badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
-        icon: "pending_actions",
-      };
-    }
-    if (status === "SUBMITTED") {
-      return {
-        label: "Selesai",
-        badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
-        icon: "task_alt",
-      };
-    }
-    if (status === "TIMED_OUT") {
-      return {
-        label: "Waktu Habis",
-        badgeClass: "bg-orange-50 text-orange-700 border-orange-200",
-        icon: "timer_off",
-      };
-    }
-    if (status === "FORCE_SUBMITTED") {
-      return {
-        label: "Dihentikan Sistem",
-        badgeClass: "bg-rose-50 text-rose-700 border-rose-200",
-        icon: "gpp_bad",
-      };
-    }
-    return {
-      label: "Belum Dimulai",
-      badgeClass: "bg-blue-50 text-blue-700 border-blue-200",
-      icon: "play_circle",
-    };
-  };
-
   const getStatusPriority = (status: string) => {
     if (status === "IN_PROGRESS") return 0;
     if (status === "NOT_STARTED") return 1;
@@ -124,7 +89,7 @@ export default component$(() => {
     .map((exam) => {
       const attempt = getAttemptForExam(exam.id);
       const status = getExamStatus(exam.id);
-      return { exam, attempt, status, statusMeta: getStatusMeta(status) };
+      return { exam, attempt, status, statusMeta: getAttemptStatusMeta(status as AttemptStatus) };
     })
     .sort((a, b) => getStatusPriority(a.status) - getStatusPriority(b.status));
 

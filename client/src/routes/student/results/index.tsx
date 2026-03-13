@@ -1,9 +1,10 @@
-import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
+import { component$, useComputed$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 import { Link, useLocation, useNavigate } from "@builder.io/qwik-city";
 import { examsApi, attemptsApi } from "~/lib/api";
 import { getUserData, isAuthenticated } from "~/lib/auth";
 import { StatusBanner } from "~/components/ui/status-banner";
+import { getAttemptStatusMeta, type AttemptStatus } from "~/lib/attempt-status";
 
 // ─── Hasil & Riwayat Siswa ─────────────────────────────
 
@@ -13,6 +14,8 @@ export default component$(() => {
   const exams = useSignal<any[]>([]);
   const attempts = useSignal<any[]>([]);
    const flash = useSignal<{ type: "success" | "info"; message: string } | null>(null);
+   const statusFilter = useSignal<"ALL" | "SUBMITTED" | "TIMED_OUT" | "FORCE_SUBMITTED">("ALL");
+   const periodFilter = useSignal<"ALL" | "7" | "30" | "90">("ALL");
   const loading = useSignal(true);
   const nav = useNavigate();
 
@@ -70,6 +73,26 @@ export default component$(() => {
       (a) => a.status === "SUBMITTED" || a.status === "TIMED_OUT" || a.status === "FORCE_SUBMITTED"
   ).sort((a, b) => new Date(b.endedAt || b.createdAt).getTime() - new Date(a.endedAt || a.createdAt).getTime());
 
+   const filteredHistoryAttempts = useComputed$(() => {
+      const now = Date.now();
+      let filtered = [...historyAttempts];
+
+      if (statusFilter.value !== "ALL") {
+         filtered = filtered.filter((a) => a.status === statusFilter.value);
+      }
+
+      if (periodFilter.value !== "ALL") {
+         const days = Number(periodFilter.value);
+         const minDate = now - days * 24 * 60 * 60 * 1000;
+         filtered = filtered.filter((a) => {
+            const ts = new Date(a.endedAt || a.startedAt || a.createdAt).getTime();
+            return Number.isFinite(ts) && ts >= minDate;
+         });
+      }
+
+      return filtered;
+   });
+
    const scoredAttempts = historyAttempts.filter((a) => typeof a.score === "number");
 
    const averageScore = scoredAttempts.length > 0
@@ -84,8 +107,9 @@ export default component$(() => {
       return typeof a.score === "number" && typeof exam.passingScore === "number" && a.score >= exam.passingScore;
   }).length;
 
-   const latestAttempt = historyAttempts[0];
+   const latestAttempt = filteredHistoryAttempts.value[0];
    const latestExam = latestAttempt ? getExamForAttempt(latestAttempt.examId) : null;
+   const latestStatusMeta = latestAttempt ? getAttemptStatusMeta((latestAttempt.status || "SUBMITTED") as AttemptStatus) : null;
    const latestIsPassed = Boolean(
       latestAttempt
       && typeof latestAttempt.score === "number"
@@ -166,8 +190,8 @@ export default component$(() => {
                               {typeof latestAttempt.score === "number" ? Math.round(latestAttempt.score) : "--"}
                            </p>
                         </div>
-                        <span class={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider ${latestAttempt.status === "FORCE_SUBMITTED" ? "bg-rose-50 text-rose-700 border border-rose-200" : latestIsPassed ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-blue-50 text-blue-700 border border-blue-200"}`}>
-                           {latestAttempt.status === "FORCE_SUBMITTED" ? "Force Submit" : latestIsPassed ? "Lulus" : "Belum Lulus"}
+                        <span class={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider ${latestStatusMeta?.badgeClass || "bg-slate-50 text-slate-700 border border-slate-200"}`}>
+                           {latestStatusMeta?.label || (latestIsPassed ? "Lulus" : "Belum Lulus")}
                         </span>
                         <a href={`#attempt-card-${latestAttempt.id}`} class="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200 hover:border-blue-200 hover:text-blue-700 transition-all">
                           Lihat Detail
@@ -216,13 +240,33 @@ export default component$(() => {
       <section class="animate-fade-in [animation-delay:200ms]">
            <div class="flex items-center justify-between mb-8">
               <h3 class="text-2xl font-bold text-slate-900 italic">Jurnal <span class="text-blue-600">Akademik</span></h3>
-              <div class="flex gap-2">
-                 <button class="size-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm hover:text-blue-600"><span class="material-symbols-outlined font-bold">filter_list</span></button>
-                 <button class="size-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm hover:text-blue-600"><span class="material-symbols-outlined font-bold">file_download</span></button>
+              <div class="flex gap-2 items-center">
+                 <select
+                   value={statusFilter.value}
+                   onChange$={(e: any) => statusFilter.value = e.target.value}
+                            title="Filter status hasil ujian"
+                   class="h-10 rounded-xl bg-white border border-slate-200 px-3 text-xs font-bold text-slate-600"
+                 >
+                   <option value="ALL">Semua Status</option>
+                   <option value="SUBMITTED">Selesai</option>
+                   <option value="TIMED_OUT">Waktu Habis</option>
+                   <option value="FORCE_SUBMITTED">Force Submit</option>
+                 </select>
+                 <select
+                   value={periodFilter.value}
+                   onChange$={(e: any) => periodFilter.value = e.target.value}
+                            title="Filter periode hasil ujian"
+                   class="h-10 rounded-xl bg-white border border-slate-200 px-3 text-xs font-bold text-slate-600"
+                 >
+                   <option value="ALL">Semua Periode</option>
+                   <option value="7">7 Hari</option>
+                   <option value="30">30 Hari</option>
+                   <option value="90">90 Hari</option>
+                 </select>
               </div>
            </div>
 
-           {historyAttempts.length === 0 ? (
+           {filteredHistoryAttempts.value.length === 0 ? (
               <div class="bg-white rounded-[3rem] p-20 text-center border-4 border-dashed border-slate-100 flex flex-col items-center">
                  <div class="size-24 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-6">
                     <span class="material-symbols-outlined text-5xl font-bold">article</span>
@@ -233,7 +277,7 @@ export default component$(() => {
               </div>
            ) : (
               <div class="grid grid-cols-1 gap-8">
-                  {historyAttempts.map((attempt) => {
+                 {filteredHistoryAttempts.value.map((attempt) => {
                     const exam = getExamForAttempt(attempt.examId);
                     const isPassed = attempt.score !== null && exam.passingScore !== undefined && attempt.score >= exam.passingScore;
                               const isForced = attempt.status === "FORCE_SUBMITTED";
