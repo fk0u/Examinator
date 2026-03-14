@@ -1,12 +1,15 @@
-import { component$, useSignal, useVisibleTask$, $, useOnDocument } from "@builder.io/qwik";
+import { component$, useSignal, useVisibleTask$, $, useOnDocument, useComputed$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 import { useNavigate, useLocation, Link } from "@builder.io/qwik-city";
 import { attemptsApi, cheatLogsApi, examsApi } from "~/lib/api";
 import { getUserData, isAuthenticated } from "~/lib/auth";
 import { getWsClient } from "~/lib/ws";
 import { useCamera } from "~/hooks/use-camera";
+import { FlashToast } from "~/components/ui/flash-toast";
+import { AntiCheatWarning } from "~/components/ui/anti-cheat-warning";
 
 export default component$(() => {
+  const DEVICE_READINESS_MAX_AGE_MS = 24 * 60 * 60 * 1000;
   const loc = useLocation();
   const nav = useNavigate();
   const examId = loc.params.examId;
@@ -28,26 +31,110 @@ export default component$(() => {
   const isReady = useSignal(false);
   const termsAccepted = useSignal(false);
   const accessToken = useSignal("");
+  const hasInProgressAttempt = useSignal(false);
   
   const loading = useSignal(false);
   const submitting = useSignal(false);
   const cheatCount = useSignal(0);
   const showWarning = useSignal(false);
   const warningMessage = useSignal("");
+  const toast = useSignal<{ type: "success" | "error" | "info"; message: string } | null>(null);
   const doubtfulAnswers = useSignal<Record<string, boolean>>({});
   const maxCheatViolations = useSignal(5);
+  const deviceReadinessSnapshot = useSignal<{
+    isReady: boolean;
+    score: number;
+    checksPassed: number;
+    totalChecks: number;
+    networkOk: boolean;
+    latency: number | null;
+    updatedAt: string;
+  } | null>(null);
+  const deviceReadinessStale = useSignal(false);
+
+  const showToast = $((type: "success" | "error" | "info", message: string, duration = 2600) => {
+    toast.value = { type, message };
+    setTimeout(() => {
+      toast.value = null;
+    }, duration);
+  });
+
+  const prepChecks = useComputed$(() => {
+    const cameraOk = cameraEnabled.value;
+    const micOk = micEnabled.value;
+    const networkOk = isOnline.value;
+    const tokenOk = !examData.value?.requiresToken || hasInProgressAttempt.value || Boolean(accessToken.value.trim());
+    const termsOk = termsAccepted.value;
+    const passed = [cameraOk, micOk, networkOk, tokenOk, termsOk].filter(Boolean).length;
+
+    return {
+      cameraOk,
+      micOk,
+      networkOk,
+      tokenOk,
+      termsOk,
+      passed,
+      total: 5,
+      isReady: passed === 5,
+    };
+  });
+
+  const prepFailureTips = useComputed$(() => {
+    const tips: Array<{ key: string; title: string; detail: string; action: "permission" | "device" | "none" }> = [];
+
+    if (!prepChecks.value.cameraOk || !prepChecks.value.micOk) {
+      tips.push({
+        key: "media",
+        title: "Aktifkan Kamera dan Mikrofon",
+        detail: "Klik aksi izin agar sistem dapat memvalidasi perangkat untuk sesi proctoring.",
+        action: "permission",
+      });
+    }
+
+    if (!prepChecks.value.networkOk) {
+      tips.push({
+        key: "network",
+        title: "Stabilkan Koneksi Internet",
+        detail: "Pastikan koneksi online stabil lalu jalankan ulang diagnostik perangkat.",
+        action: "device",
+      });
+    }
+
+    if (!prepChecks.value.tokenOk) {
+      tips.push({
+        key: "token",
+        title: "Lengkapi Token Ujian",
+        detail: "Token wajib sebelum mulai jika sesi ini diproteksi pengawas.",
+        action: "none",
+      });
+    }
+
+    if (!prepChecks.value.termsOk) {
+      tips.push({
+        key: "terms",
+        title: "Setujui Pakta Integritas",
+        detail: "Centang persetujuan agar tombol mulai ujian dapat diaktifkan.",
+        action: "none",
+      });
+    }
+
+    return tips;
+  });
+
+  const deviceCheckHref = useComputed$(() => {
+    const reason = prepChecks.value.networkOk ? "preflight" : "network";
+    return `/student/test-device/?reason=${reason}`;
+  });
 
   // Kaitkan stream kamera ke elemen pratinjau video
   // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(({ track }) => {
-    // eslint-disable-next-line qwik/valid-lexical-scope
     track(() => stream.value);
     track(() => videoPreviewRef.value);
     // eslint-disable-next-line qwik/valid-lexical-scope
     track(() => videoPreviewRef.value);
     // eslint-disable-next-line qwik/valid-lexical-scope
     if (stream.value && videoPreviewRef.value) {
-      // eslint-disable-next-line qwik/valid-lexical-scope
       videoPreviewRef.value.srcObject = stream.value;
     }
   });
@@ -82,12 +169,33 @@ export default component$(() => {
 
     try {
       await requestPermission();
-      const data = await examsApi.get(examId);
+      const [data, attemptData] = await Promise.all([
+        examsApi.get(examId),
+        attemptsApi.my(),
+      ]);
       examData.value = data.exam;
       maxCheatViolations.value = data.exam?.maxCheatViolations ?? 5;
+
+      const inProgress = (attemptData?.attempts || []).find(
+        (item: any) => item.examId === examId && item.status === "IN_PROGRESS"
+      );
+      hasInProgressAttempt.value = Boolean(inProgress);
+
+      try {
+        const storedReadiness = localStorage.getItem("examinator_device_readiness");
+        if (storedReadiness) {
+          const parsed = JSON.parse(storedReadiness);
+          deviceReadinessSnapshot.value = parsed;
+          const updatedAtTs = new Date(parsed?.updatedAt || "").getTime();
+          deviceReadinessStale.value = !Number.isFinite(updatedAtTs) || (Date.now() - updatedAtTs > DEVICE_READINESS_MAX_AGE_MS);
+        }
+      } catch {
+        deviceReadinessSnapshot.value = null;
+        deviceReadinessStale.value = false;
+      }
     } catch (e: any) {
       console.error("Gagal mengambil data ujian:", e);
-      alert("Gagal memuat info ujian.");
+      await showToast("error", "Gagal memuat info ujian.");
       nav("/student/");
     }
   });
@@ -95,8 +203,8 @@ export default component$(() => {
   // ── Mulai percobaan ujian ────────────────────────────
   const startActualExam = $(async () => {
     if (!termsAccepted.value) return;
-    if (examData.value?.requiresToken && !accessToken.value.trim()) {
-      alert("Token ujian wajib diisi.");
+    if (examData.value?.requiresToken && !hasInProgressAttempt.value && !accessToken.value.trim()) {
+      await showToast("error", "Token ujian wajib diisi.");
       return;
     }
     loading.value = true;
@@ -128,7 +236,7 @@ export default component$(() => {
 
       // Tangani perintah kirim paksa dari pengawas
       ws.on("force:submit", async () => {
-        alert("Sesi ujian dihentikan oleh pengawas. Jawaban Anda telah dikumpulkan.");
+        await showToast("error", "Sesi dihentikan oleh pengawas. Jawaban akan dikumpulkan.");
         await submitExam();
       });
 
@@ -149,10 +257,11 @@ export default component$(() => {
       }
 
       isReady.value = true;
+      await showToast("success", hasInProgressAttempt.value ? "Sesi ujian berhasil dilanjutkan." : "Ujian berhasil dimulai.");
       loading.value = false;
     } catch (e: any) {
       console.error("Gagal memulai ujian:", e);
-      alert("Gagal memulai ujian: " + e.message);
+      await showToast("error", "Gagal memulai ujian: " + e.message);
       loading.value = false;
     }
   });
@@ -215,8 +324,9 @@ export default component$(() => {
           await document.exitFullscreen();
         }
         ws.disconnect();
-        alert("Sesi dihentikan otomatis karena batas pelanggaran tercapai. Jawaban Anda telah dikumpulkan.");
-        await nav("/student/");
+        await showToast("error", "Sesi dihentikan otomatis karena batas pelanggaran tercapai.");
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        await nav("/student/?flashResult=force");
         return;
       }
 
@@ -250,11 +360,15 @@ export default component$(() => {
       }
       ws.disconnect();
 
-      alert(`Ujian selesai!\nNilai: ${Math.round(result.result.score)}\nStatus: ${result.result.passed ? 'LULUS ✓' : 'BELUM LULUS ✗'}`);
-      await nav("/student/");
+      await showToast(
+        "success",
+        `Ujian selesai. Nilai ${Math.round(result.result.score)} (${result.result.passed ? "Lulus" : "Belum Lulus"}).`
+      );
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      await nav(`/student/?flashResult=submitted&score=${Math.round(result.result.score)}&passed=${result.result.passed ? "1" : "0"}`);
     } catch (e: any) {
       submitting.value = false;
-      alert("Gagal mengirim ujian: " + e.message);
+      await showToast("error", "Gagal mengirim ujian: " + e.message);
     }
   });
 
@@ -274,6 +388,7 @@ export default component$(() => {
     }
     return (
       <div class="font-['Public_Sans',sans-serif] min-h-screen bg-[#f8fafd] text-slate-900 select-none flex flex-col">
+        <FlashToast toast={toast.value} />
         {/* Bilah atas ruang persiapan */}
         <header class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-white/70 backdrop-blur-xl border-b border-white/40 sticky top-0 z-50">
           <div class="flex items-center gap-4">
@@ -297,6 +412,12 @@ export default component$(() => {
           <div class="w-full text-center mb-8 sm:mb-10 animate-fade-in-up">
             <h2 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter mb-2 italic">Siap untuk <span class="text-blue-600">Ujian?</span></h2>
           <p class="text-slate-500 font-semibold text-sm sm:text-lg max-w-2xl mx-auto px-4">Pastikan koneksi stabil dan lingkungan tenang sebelum memulai sesi.</p>
+          {deviceReadinessSnapshot.value && (
+            <div class={`inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-wider ${deviceReadinessStale.value ? "bg-amber-50 text-amber-700 border-amber-200" : (deviceReadinessSnapshot.value.isReady ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200")}`}>
+              <span class="material-symbols-outlined text-sm">{deviceReadinessStale.value ? "history" : (deviceReadinessSnapshot.value.isReady ? "task_alt" : "pending_actions")}</span>
+              {deviceReadinessStale.value ? "Status Diagnostik Kedaluwarsa" : `Snapshot Diagnostik • ${deviceReadinessSnapshot.value.score}%`}
+            </div>
+          )}
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full animate-fade-in [animation-delay:100ms]">
@@ -388,8 +509,95 @@ export default component$(() => {
                         onInput$={(e: any) => accessToken.value = e.target.value}
                         placeholder="Masukkan token dari pengawas"
                         class="w-full h-12 px-4 rounded-2xl bg-blue-700/50 border border-white/15 text-white placeholder:text-blue-200/70 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                        disabled={hasInProgressAttempt.value}
                       />
-                      <p class="mt-2 text-[10px] font-semibold text-blue-200/90">Ujian ini diproteksi token. Pastikan token sesuai sebelum memulai.</p>
+                      <p class="mt-2 text-[10px] font-semibold text-blue-200/90">
+                        {hasInProgressAttempt.value
+                          ? "Sesi ujian sedang berjalan. Token sebelumnya tetap digunakan."
+                          : "Ujian ini diproteksi token. Pastikan token sesuai sebelum memulai."}
+                      </p>
+                    </div>
+                  )}
+
+                  <div class="mb-5 bg-black/10 p-5 rounded-3xl border border-white/5 shadow-inner">
+                    <p class="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-3">Checklist Pra-Ujian ({prepChecks.value.passed}/{prepChecks.value.total})</p>
+                    {deviceReadinessSnapshot.value ? (
+                      <p class="mb-3 text-[10px] font-semibold text-blue-100/80">
+                        Snapshot terakhir: {deviceReadinessSnapshot.value.checksPassed}/{deviceReadinessSnapshot.value.totalChecks} • skor {deviceReadinessSnapshot.value.score}%
+                        {deviceReadinessStale.value ? " (perlu cek ulang)" : ""}
+                      </p>
+                    ) : (
+                      <p class="mb-3 text-[10px] font-semibold text-blue-100/80">
+                        Belum ada snapshot diagnostik. Jalankan cek perangkat untuk memastikan sesi tetap aman.
+                      </p>
+                    )}
+                    <div class="space-y-2">
+                      {[{
+                        label: "Kamera aktif",
+                        ok: prepChecks.value.cameraOk,
+                      }, {
+                        label: "Mikrofon aktif",
+                        ok: prepChecks.value.micOk,
+                      }, {
+                        label: "Jaringan online",
+                        ok: prepChecks.value.networkOk,
+                      }, {
+                        label: examData.value?.requiresToken
+                          ? (hasInProgressAttempt.value ? "Token sesi tersimpan" : "Token valid terisi")
+                          : "Token tidak wajib",
+                        ok: prepChecks.value.tokenOk,
+                      }, {
+                        label: "Pakta integritas disetujui",
+                        ok: prepChecks.value.termsOk,
+                      }].map((check, i) => (
+                        <div key={i} class="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2">
+                          <span class="text-xs font-semibold text-blue-100">{check.label}</span>
+                          <span class={`text-[10px] font-bold uppercase tracking-wider ${check.ok ? 'text-emerald-300' : 'text-yellow-200'}`}>
+                            {check.ok ? 'Lulus' : 'Belum'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div class="mt-4">
+                      <Link
+                        href={deviceCheckHref.value}
+                        class="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-white/10 border border-white/20 text-[10px] font-bold uppercase tracking-wider text-blue-100 hover:bg-white/20 transition-all"
+                      >
+                        <span class="material-symbols-outlined text-[16px]">on_device_training</span>
+                        Buka Diagnostik Perangkat
+                      </Link>
+                    </div>
+                  </div>
+
+                  {prepFailureTips.value.length > 0 && (
+                    <div class="mb-5 bg-black/10 p-5 rounded-3xl border border-white/5 shadow-inner">
+                      <p class="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-3">Panduan Perbaikan Cepat</p>
+                      <div class="space-y-2">
+                        {prepFailureTips.value.map((tip) => (
+                          <div key={tip.key} class="rounded-xl bg-white/10 px-3 py-3 border border-white/10 flex items-start justify-between gap-3">
+                            <div>
+                              <p class="text-xs font-bold text-blue-50">{tip.title}</p>
+                              <p class="text-[11px] font-semibold text-blue-200/90 mt-1">{tip.detail}</p>
+                            </div>
+                            {tip.action === "permission" ? (
+                              <button
+                                type="button"
+                                onClick$={requestPermission}
+                                class="shrink-0 h-8 px-3 rounded-lg bg-yellow-400 text-slate-900 border-b-2 border-yellow-600 text-[10px] font-bold uppercase tracking-wider hover:bg-yellow-500 transition-all"
+                              >
+                                Beri Izin
+                              </button>
+                            ) : tip.action === "device" ? (
+                              <Link
+                                href={deviceCheckHref.value}
+                                class="shrink-0 h-8 px-3 rounded-lg bg-white/15 text-blue-50 border border-white/20 text-[10px] font-bold uppercase tracking-wider hover:bg-white/25 transition-all inline-flex items-center"
+                              >
+                                Diagnostik
+                              </Link>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -409,12 +617,11 @@ export default component$(() => {
                   <button 
                     onClick$={startActualExam}
                     disabled={
-                      !termsAccepted.value
-                      || loading.value
-                      || Boolean(examData.value?.requiresToken && !accessToken.value.trim())
+                      loading.value
+                      || !prepChecks.value.isReady
                     }
                     class={`w-full h-16 rounded-[1.75rem] font-bold text-lg shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 border-b-4 ${
-                      termsAccepted.value && !loading.value && (!examData.value?.requiresToken || !!accessToken.value.trim())
+                      prepChecks.value.isReady && !loading.value
                         ? "bg-yellow-400 text-slate-900 border-yellow-600 hover:bg-yellow-500 shadow-yellow-400/25"
                         : "bg-blue-700 text-blue-400 border-blue-800 opacity-50 grayscale"
                     }`}
@@ -426,7 +633,7 @@ export default component$(() => {
                       </div>
                     ) : (
                       <>
-                        <span>Mulai Ujian Sekarang</span>
+                        <span>{hasInProgressAttempt.value ? "Lanjutkan Ujian Sekarang" : "Mulai Ujian Sekarang"}</span>
                         <span class="material-symbols-outlined font-bold">bolt</span>
                       </>
                     )}
@@ -455,6 +662,10 @@ export default component$(() => {
   // ──────────────────────────────────────────────────────
   const currentQ = questions.value[currentQuestion.value];
   const answeredCount = Object.keys(answers.value).length;
+  const doubtfulCount = Object.keys(doubtfulAnswers.value).filter((key) => doubtfulAnswers.value[key]).length;
+  const unansweredCount = Math.max(questions.value.length - answeredCount, 0);
+  const firstUnansweredIndex = questions.value.findIndex((q) => !answers.value[q.id]);
+  const firstDoubtfulIndex = questions.value.findIndex((q) => doubtfulAnswers.value[q.id]);
   const completionPercent = Math.round((answeredCount / (questions.value.length || 1)) * 100);
   const hoursLeft = Math.floor(timeLeft.value / 3600).toString().padStart(2, "0");
   const minutesLeft = Math.floor((timeLeft.value % 3600) / 60).toString().padStart(2, "0");
@@ -464,20 +675,10 @@ export default component$(() => {
 
   return (
     <div class="font-['Public_Sans',sans-serif] min-h-screen bg-slate-100 text-slate-800 flex flex-col h-screen overflow-hidden relative">
+      <FlashToast toast={toast.value} />
       <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.10),_transparent_38%),radial-gradient(circle_at_bottom_left,_rgba(16,185,129,0.08),_transparent_42%)]" />
 
-      {/* Anti-cheat Overlay */}
-      {showWarning.value && (
-        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-red-950/40 backdrop-blur-sm animate-fade-in px-4">
-           <div class="bg-white border border-red-100 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl shadow-red-500/20">
-              <div class="size-16 mx-auto mb-4 rounded-2xl bg-red-100 flex items-center justify-center text-red-600">
-                <span class="material-symbols-outlined text-4xl font-bold">warning</span>
-              </div>
-              <p class="text-red-700 font-extrabold text-2xl mb-2 tracking-tight">Pelanggaran Terdeteksi</p>
-              <p class="text-slate-600 font-semibold leading-relaxed">{warningMessage.value}</p>
-           </div>
-        </div>
-      )}
+      <AntiCheatWarning show={showWarning.value} title="Pelanggaran Terdeteksi" message={warningMessage.value} />
 
       <header class="shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
         <div class="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-8 h-[74px] flex items-center justify-between gap-3">
@@ -704,15 +905,42 @@ export default component$(() => {
                       class="h-full w-full [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-blue-600 [&::-moz-progress-bar]:bg-blue-600"
                     />
                   </div>
-                  <div class="grid grid-cols-2 gap-2 text-[11px]">
+                  <div class="grid grid-cols-3 gap-2 text-[11px]">
                     <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                       <p class="text-slate-400 font-bold uppercase">Dijawab</p>
                       <p class="text-slate-800 font-extrabold text-base">{answeredCount}</p>
                     </div>
                     <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                      <p class="text-slate-400 font-bold uppercase">Sisa</p>
-                      <p class="text-slate-800 font-extrabold text-base">{Math.max(questions.value.length - answeredCount, 0)}</p>
+                      <p class="text-slate-400 font-bold uppercase">Belum</p>
+                      <p class="text-slate-800 font-extrabold text-base">{unansweredCount}</p>
                     </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                      <p class="text-slate-400 font-bold uppercase">Ragu</p>
+                      <p class="text-slate-800 font-extrabold text-base">{doubtfulCount}</p>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      disabled={firstUnansweredIndex < 0}
+                      onClick$={() => {
+                        if (firstUnansweredIndex >= 0) currentQuestion.value = firstUnansweredIndex;
+                      }}
+                      class="h-9 rounded-xl border border-slate-200 bg-white text-[11px] font-bold text-slate-600 hover:border-blue-300 hover:text-blue-700 transition-all disabled:opacity-40"
+                    >
+                      Ke Belum Dijawab
+                    </button>
+                    <button
+                      type="button"
+                      disabled={firstDoubtfulIndex < 0}
+                      onClick$={() => {
+                        if (firstDoubtfulIndex >= 0) currentQuestion.value = firstDoubtfulIndex;
+                      }}
+                      class="h-9 rounded-xl border border-slate-200 bg-white text-[11px] font-bold text-slate-600 hover:border-amber-300 hover:text-amber-700 transition-all disabled:opacity-40"
+                    >
+                      Ke Soal Ragu
+                    </button>
                   </div>
                 </div>
               </div>

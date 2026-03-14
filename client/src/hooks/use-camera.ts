@@ -1,8 +1,8 @@
-import { $, useSignal, useVisibleTask$ } from "@builder.io/qwik";
+import { $, noSerialize, type NoSerialize, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import { cheatLogsApi } from "~/lib/api";
 
 export function useCamera(attemptIdSignal: any) {
-  const stream = useSignal<MediaStream | null>(null);
+  const stream = useSignal<NoSerialize<MediaStream> | null>(null);
   const videoRef = useSignal<HTMLVideoElement | null>(null);
   const cameraEnabled = useSignal(false);
   const micEnabled = useSignal(false);
@@ -12,13 +12,7 @@ export function useCamera(attemptIdSignal: any) {
   const audioContextRef = useSignal<AudioContext | null>(null);
   const animationIdRef = useSignal<number | null>(null);
 
-  useVisibleTask$(({ cleanup }) => {
-    cleanup(() => {
-      disposeMediaResources();
-    });
-  });
-
-  const disposeMediaResources = () => {
+  const disposeMediaResources = $(() => {
     if (animationIdRef.value) {
       cancelAnimationFrame(animationIdRef.value);
       animationIdRef.value = null;
@@ -43,7 +37,13 @@ export function useCamera(attemptIdSignal: any) {
     audioLevel.value = 0;
     cameraEnabled.value = false;
     micEnabled.value = false;
-  };
+  });
+
+  useVisibleTask$(({ cleanup }) => {
+    cleanup(() => {
+      void disposeMediaResources();
+    });
+  });
 
   const requestPermission = $(async () => {
     if (isRequesting.value) return;
@@ -51,7 +51,7 @@ export function useCamera(attemptIdSignal: any) {
     error.value = null;
 
     // Dispose older stream/analyser loops before creating new media resources.
-    disposeMediaResources();
+    await disposeMediaResources();
     
     console.log("[useCamera] Requesting getUserMedia...");
     
@@ -73,7 +73,7 @@ export function useCamera(attemptIdSignal: any) {
       
       cameraEnabled.value = hasVideo;
       micEnabled.value = hasAudio;
-      stream.value = mediaStream;
+      stream.value = noSerialize(mediaStream);
 
       // Internal video for capturePhoto (hidden)
       const internalVideo = document.createElement("video");
@@ -111,7 +111,7 @@ export function useCamera(attemptIdSignal: any) {
     } catch (e: any) {
       console.error("[useCamera] Error:", e);
       error.value = e.message || String(e);
-      disposeMediaResources();
+      await disposeMediaResources();
       return false;
     } finally {
       isRequesting.value = false;

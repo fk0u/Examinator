@@ -1,15 +1,21 @@
-import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
+import { component$, useComputed$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
-import { Link, useNavigate } from "@builder.io/qwik-city";
+import { Link, useLocation, useNavigate } from "@builder.io/qwik-city";
 import { examsApi, attemptsApi } from "~/lib/api";
 import { getUserData, isAuthenticated } from "~/lib/auth";
+import { StatusBanner } from "~/components/ui/status-banner";
+import { getAttemptStatusMeta, type AttemptStatus } from "~/lib/attempt-status";
 
 // ─── Hasil & Riwayat Siswa ─────────────────────────────
 
 export default component$(() => {
+   const loc = useLocation();
   const user = useSignal<any>(null);
   const exams = useSignal<any[]>([]);
   const attempts = useSignal<any[]>([]);
+   const flash = useSignal<{ type: "success" | "info"; message: string } | null>(null);
+   const statusFilter = useSignal<"ALL" | "SUBMITTED" | "TIMED_OUT" | "FORCE_SUBMITTED">("ALL");
+   const periodFilter = useSignal<"ALL" | "7" | "30" | "90">("ALL");
   const loading = useSignal(true);
   const nav = useNavigate();
 
@@ -28,6 +34,38 @@ export default component$(() => {
       ]);
       exams.value = examData.exams || [];
       attempts.value = attemptData.attempts || [];
+
+         const qsStatus = loc.url.searchParams.get("status");
+         const qsPeriod = loc.url.searchParams.get("period");
+         if (qsStatus === "SUBMITTED" || qsStatus === "TIMED_OUT" || qsStatus === "FORCE_SUBMITTED" || qsStatus === "ALL") {
+            statusFilter.value = qsStatus;
+         }
+         if (qsPeriod === "7" || qsPeriod === "30" || qsPeriod === "90" || qsPeriod === "ALL") {
+            periodFilter.value = qsPeriod;
+         }
+
+         const flashResult = loc.url.searchParams.get("flashResult");
+         if (flashResult === "submitted") {
+            const score = loc.url.searchParams.get("score") || "-";
+            const passed = loc.url.searchParams.get("passed") === "1";
+            flash.value = {
+               type: "success",
+               message: `Ujian berhasil dikumpulkan. Nilai ${score} (${passed ? "Lulus" : "Belum Lulus"}).`,
+            };
+         }
+
+         if (flashResult === "force") {
+            flash.value = {
+               type: "info",
+               message: "Sesi ujian dihentikan otomatis oleh sistem keamanan.",
+            };
+         }
+
+         if (flash.value) {
+            setTimeout(() => {
+               flash.value = null;
+            }, 3800);
+         }
     } catch (err) {
       console.error(err);
       // Optional: handle error state
@@ -36,6 +74,29 @@ export default component$(() => {
     }
   });
 
+   // eslint-disable-next-line qwik/no-use-visible-task
+   useVisibleTask$(({ track }) => {
+      track(() => statusFilter.value);
+      track(() => periodFilter.value);
+
+      const params = new URLSearchParams(window.location.search);
+      if (statusFilter.value === "ALL") {
+         params.delete("status");
+      } else {
+         params.set("status", statusFilter.value);
+      }
+
+      if (periodFilter.value === "ALL") {
+         params.delete("period");
+      } else {
+         params.set("period", periodFilter.value);
+      }
+
+      const query = params.toString();
+      const next = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+      window.history.replaceState(window.history.state, "", next);
+   });
+
   const getExamForAttempt = (examId: string) => {
     return exams.value.find((e: any) => e.id === examId) || {};
   };
@@ -43,6 +104,26 @@ export default component$(() => {
   const historyAttempts = attempts.value.filter(
       (a) => a.status === "SUBMITTED" || a.status === "TIMED_OUT" || a.status === "FORCE_SUBMITTED"
   ).sort((a, b) => new Date(b.endedAt || b.createdAt).getTime() - new Date(a.endedAt || a.createdAt).getTime());
+
+   const filteredHistoryAttempts = useComputed$(() => {
+      const now = Date.now();
+      let filtered = [...historyAttempts];
+
+      if (statusFilter.value !== "ALL") {
+         filtered = filtered.filter((a) => a.status === statusFilter.value);
+      }
+
+      if (periodFilter.value !== "ALL") {
+         const days = Number(periodFilter.value);
+         const minDate = now - days * 24 * 60 * 60 * 1000;
+         filtered = filtered.filter((a) => {
+            const ts = new Date(a.endedAt || a.startedAt || a.createdAt).getTime();
+            return Number.isFinite(ts) && ts >= minDate;
+         });
+      }
+
+      return filtered;
+   });
 
    const scoredAttempts = historyAttempts.filter((a) => typeof a.score === "number");
 
@@ -57,6 +138,19 @@ export default component$(() => {
     const exam = getExamForAttempt(a.examId);
       return typeof a.score === "number" && typeof exam.passingScore === "number" && a.score >= exam.passingScore;
   }).length;
+
+   const latestAttempt = filteredHistoryAttempts.value[0];
+   const latestExam = latestAttempt ? getExamForAttempt(latestAttempt.examId) : null;
+   const latestStatusMeta = latestAttempt ? getAttemptStatusMeta((latestAttempt.status || "SUBMITTED") as AttemptStatus) : null;
+   const latestIsPassed = Boolean(
+      latestAttempt
+      && typeof latestAttempt.score === "number"
+      && typeof latestExam?.passingScore === "number"
+      && latestAttempt.score >= latestExam.passingScore
+   );
+   const latestDeviceReason = latestAttempt && (latestAttempt.status === "FORCE_SUBMITTED" || latestAttempt.status === "TIMED_OUT")
+      ? "network"
+      : "preflight";
 
 
   if (loading.value) {
@@ -108,10 +202,42 @@ export default component$(() => {
       </header>
 
       <main class="max-w-7xl mx-auto px-6 space-y-12">
+            {flash.value && <StatusBanner type={flash.value.type} message={flash.value.message} />}
         <header class="animate-fade-in-up">
             <h1 class="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tighter mb-2 italic">Hasil & <span class="text-blue-600">Progres</span></h1>
               <p class="text-slate-500 font-semibold text-base sm:text-lg">Catatan pencapaian akademik dan riwayat evaluasimu.</p>
         </header>
+
+            {latestAttempt && (
+               <section class="bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-slate-100 p-5 sm:p-7 shadow-lg shadow-slate-200/30 animate-fade-in [animation-delay:50ms]">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                     <div>
+                        <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Attempt Terakhir</p>
+                        <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">{latestExam?.title || "Ujian"}</h3>
+                        <p class="text-sm text-slate-500 font-semibold mt-1">
+                           {new Date(latestAttempt.startedAt).toLocaleString("id-ID")}
+                        </p>
+                     </div>
+                     <div class="flex items-center gap-5">
+                        <div class="text-right">
+                           <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Skor</p>
+                           <p class={`text-3xl font-bold ${latestIsPassed ? "text-emerald-600" : "text-blue-600"}`}>
+                              {typeof latestAttempt.score === "number" ? Math.round(latestAttempt.score) : "--"}
+                           </p>
+                        </div>
+                        <span class={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider ${latestStatusMeta?.badgeClass || "bg-slate-50 text-slate-700 border border-slate-200"}`}>
+                           {latestStatusMeta?.label || (latestIsPassed ? "Lulus" : "Belum Lulus")}
+                        </span>
+                                    <a href={`#attempt-card-${latestAttempt.id}`} class="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200 hover:border-blue-200 hover:text-blue-700 transition-all">
+                          Lihat Detail
+                        </a>
+                                    <Link href={`/student/test-device/?reason=${latestDeviceReason}`} class="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white text-blue-700 border border-blue-200 hover:border-blue-400 transition-all">
+                                       Diagnostik Perangkat
+                                    </Link>
+                     </div>
+                  </div>
+               </section>
+            )}
 
       <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in [animation-delay:100ms]">
            <div class="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden group hover:border-blue-200 transition-all duration-500">
@@ -152,13 +278,71 @@ export default component$(() => {
       <section class="animate-fade-in [animation-delay:200ms]">
            <div class="flex items-center justify-between mb-8">
               <h3 class="text-2xl font-bold text-slate-900 italic">Jurnal <span class="text-blue-600">Akademik</span></h3>
-              <div class="flex gap-2">
-                 <button class="size-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm hover:text-blue-600"><span class="material-symbols-outlined font-bold">filter_list</span></button>
-                 <button class="size-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm hover:text-blue-600"><span class="material-symbols-outlined font-bold">file_download</span></button>
+              <div class="flex gap-2 items-center">
+                 <select
+                   value={statusFilter.value}
+                   onChange$={(e: any) => statusFilter.value = e.target.value}
+                            title="Filter status hasil ujian"
+                   class="h-10 rounded-xl bg-white border border-slate-200 px-3 text-xs font-bold text-slate-600"
+                 >
+                   <option value="ALL">Semua Status</option>
+                   <option value="SUBMITTED">Selesai</option>
+                   <option value="TIMED_OUT">Waktu Habis</option>
+                   <option value="FORCE_SUBMITTED">Force Submit</option>
+                 </select>
+                 <select
+                   value={periodFilter.value}
+                   onChange$={(e: any) => periodFilter.value = e.target.value}
+                            title="Filter periode hasil ujian"
+                   class="h-10 rounded-xl bg-white border border-slate-200 px-3 text-xs font-bold text-slate-600"
+                 >
+                   <option value="ALL">Semua Periode</option>
+                   <option value="7">7 Hari</option>
+                   <option value="30">30 Hari</option>
+                   <option value="90">90 Hari</option>
+                 </select>
               </div>
            </div>
 
-           {historyAttempts.length === 0 ? (
+                <div class="mb-6 flex flex-wrap gap-2">
+                   {[
+                      { label: "Semua", status: "ALL" as const },
+                      { label: "Selesai", status: "SUBMITTED" as const },
+                      { label: "Waktu Habis", status: "TIMED_OUT" as const },
+                      { label: "Force Submit", status: "FORCE_SUBMITTED" as const },
+                      { label: "7 Hari", period: "7" as const },
+                      { label: "30 Hari", period: "30" as const },
+                      { label: "90 Hari", period: "90" as const },
+                   ].map((chip, i) => {
+                      const active = (chip.status && statusFilter.value === chip.status) || (chip.period && periodFilter.value === chip.period);
+                      return (
+                         <button
+                            key={i}
+                            type="button"
+                            onClick$={() => {
+                               if (chip.status) statusFilter.value = chip.status;
+                               if (chip.period) periodFilter.value = chip.period;
+                            }}
+                            class={`h-9 px-4 rounded-full text-[11px] font-bold uppercase tracking-wider border transition-all ${active ? "bg-blue-600 text-white border-blue-700" : "bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-700"}`}
+                         >
+                            {chip.label}
+                         </button>
+                      );
+                   })}
+
+                   <button
+                      type="button"
+                      onClick$={() => {
+                         statusFilter.value = "ALL";
+                         periodFilter.value = "ALL";
+                      }}
+                      class="h-9 px-4 rounded-full text-[11px] font-bold uppercase tracking-wider border transition-all bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
+                   >
+                      Reset Filter
+                   </button>
+                </div>
+
+           {filteredHistoryAttempts.value.length === 0 ? (
               <div class="bg-white rounded-[3rem] p-20 text-center border-4 border-dashed border-slate-100 flex flex-col items-center">
                  <div class="size-24 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-6">
                     <span class="material-symbols-outlined text-5xl font-bold">article</span>
@@ -169,14 +353,13 @@ export default component$(() => {
               </div>
            ) : (
               <div class="grid grid-cols-1 gap-8">
-                  {historyAttempts.map((attempt) => {
+                 {filteredHistoryAttempts.value.map((attempt) => {
                     const exam = getExamForAttempt(attempt.examId);
                     const isPassed = attempt.score !== null && exam.passingScore !== undefined && attempt.score >= exam.passingScore;
-                              const isForced = attempt.status === "FORCE_SUBMITTED";
-                              const statusLabel = isForced ? "Force Submit" : (isPassed ? "Tuntas" : "Perlu Ulang");
+                    const statusMeta = getAttemptStatusMeta((attempt.status || "SUBMITTED") as AttemptStatus);
                     
                     return (
-                         <div key={attempt.id} class="bg-white rounded-[2.5rem] p-6 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/30 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-10 group hover:border-blue-400/30 transition-all duration-500 hover:-translate-y-1 relative overflow-hidden">
+                         <div id={`attempt-card-${attempt.id}`} key={attempt.id} class="bg-white rounded-[2.5rem] p-6 sm:p-10 border border-slate-100 shadow-xl shadow-slate-200/30 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-10 group hover:border-blue-400/30 transition-all duration-500 hover:-translate-y-1 relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-bl-[4rem] -mr-10 -mt-10 group-hover:bg-blue-100/50 transition-colors duration-500"></div>
                             
                             <div class={`size-20 sm:size-24 rounded-[2rem] flex items-center justify-center text-3xl sm:text-4xl font-bold shrink-0 shadow-lg italic relative z-10 transition-transform duration-500 group-hover:scale-110 ${
@@ -189,8 +372,8 @@ export default component$(() => {
 
                            <div class="flex-1 space-y-2 relative z-10">
                               <div class="flex flex-wrap items-center gap-4 mb-2">
-                                 <span class={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] ${isForced ? 'bg-rose-600 text-white shadow-lg shadow-rose-500/20' : isPassed ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'}`}>
-                                    {statusLabel}
+                                 <span class={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] ${statusMeta.badgeClass}`}>
+                                    {statusMeta.label}
                                  </span>
                                  <span class="text-[11px] font-bold text-slate-300 uppercase tracking-widest italic flex items-center gap-2">
                                     <span class="size-1.5 bg-slate-200 rounded-full"></span>
@@ -254,7 +437,7 @@ export default component$(() => {
            </div>
            <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Portofolio</span>
         </div>
-        <Link href="/student/test-device/" class="flex flex-col items-center gap-1.5 group">
+        <Link href="/student/test-device/?reason=preflight" class="flex flex-col items-center gap-1.5 group">
            <div class="size-11 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-amber-500 group-hover:bg-amber-50 transition-all duration-300">
               <span class="material-symbols-outlined font-bold text-2xl">on_device_training</span>
            </div>

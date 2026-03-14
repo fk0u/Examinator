@@ -1,9 +1,11 @@
 import { component$, useSignal, $, useVisibleTask$, useComputed$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
-import { Link } from "@builder.io/qwik-city";
+import { Link, useLocation } from "@builder.io/qwik-city";
 import { useCamera } from "~/hooks/use-camera";
+import { StatusBanner } from "~/components/ui/status-banner";
 
 export default component$(() => {
+  const loc = useLocation();
   const dummyAttempt = useSignal({ id: null });
   const { cameraEnabled, micEnabled, audioLevel, stream, requestPermission, isRequesting, error: cameraError } = useCamera(dummyAttempt);
   const videoRef = useSignal<HTMLVideoElement>();
@@ -22,6 +24,10 @@ export default component$(() => {
   const devices = useSignal<{ cameras: string[], mics: string[] }>({ cameras: [], mics: [] });
   const hasCheckedDevices = useSignal(false);
   const testSoundPlaying = useSignal(false);
+  const testSoundVerified = useSignal(false);
+  const autoRunning = useSignal(false);
+  const prevOnline = useSignal<boolean | null>(null);
+  const entryMessage = useSignal<string | null>(null);
 
   // 0. Keep isOnline reactive
   useVisibleTask$(() => {
@@ -36,6 +42,18 @@ export default component$(() => {
   });
 
   // 1. Detect OS and Browser
+  // eslint-disable-next-line qwik/no-use-visible-task
+  useVisibleTask$(() => {
+    const reason = loc.url.searchParams.get("reason");
+    if (reason === "preflight") {
+      entryMessage.value = "Sebelum mulai ujian, pastikan perangkat sudah lolos seluruh checklist diagnostik.";
+    } else if (reason === "network") {
+      entryMessage.value = "Sistem mendeteksi sesi sebelumnya kurang stabil. Jalankan tes jaringan dan audio terlebih dahulu.";
+    }
+  });
+
+  // 1. Detect OS and Browser
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
     const ua = navigator.userAgent;
     let os = "Terdeteksi (Unknown)";
@@ -55,9 +73,18 @@ export default component$(() => {
   });
 
   // 2. Measure Latency (Ping)
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
     const updateOnlineStatus = () => {
       isOnline.value = navigator.onLine;
+      if (prevOnline.value === null) {
+        prevOnline.value = navigator.onLine;
+        return;
+      }
+      if (prevOnline.value !== navigator.onLine) {
+        addLog(navigator.onLine ? "Jaringan kembali online." : "Peringatan: koneksi offline.");
+      }
+      prevOnline.value = navigator.onLine;
     };
 
     const measurePing = async () => {
@@ -83,6 +110,7 @@ export default component$(() => {
   });
 
   // 3. Enumerate Hardware
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(async ({ track }) => {
     track(() => cameraEnabled.value);
     track(() => micEnabled.value);
@@ -112,26 +140,15 @@ export default component$(() => {
     }
   });
 
-  useVisibleTask$(({ track }) => {
-    const s = track(() => stream.value);
-    if (s && videoRef.value) {
-      addLog("Menghubungkan aliran video ke layar...");
-      videoRef.value.srcObject = s;
-      videoRef.value.play().catch(e => {
-        addLog(`Error playback: ${e.message}`);
-        console.error("Video play error:", e);
-      });
-    }
-  });
-
   const playTestSound = $(() => {
     testSoundPlaying.value = true;
+    testSoundVerified.value = false;
     addLog("Memulai tes suara...");
     const audio = new Audio("https://www.soundjay.com/buttons/beep-01a.mp3");
     audio.onended = () => {
       testSoundPlaying.value = false;
+      testSoundVerified.value = true;
       addLog("Tes suara selesai.");
-      audioContext.close().catch(() => undefined);
     };
     audio.play().catch((e) => {
       testSoundPlaying.value = false;
@@ -145,6 +162,101 @@ export default component$(() => {
     if (latency.value < 100) return "text-emerald-500";
     if (latency.value < 300) return "text-yellow-500";
     return "text-red-500";
+  });
+
+  const readinessChecks = useComputed$(() => {
+    const permissionOk = cameraEnabled.value && micEnabled.value;
+    const devicesOk = hasCheckedDevices.value && devices.value.cameras.length > 0 && devices.value.mics.length > 0;
+    const networkOk = isOnline.value && latency.value !== null && latency.value < 400;
+    const audioOk = testSoundVerified.value;
+    const checksPassed = [permissionOk, devicesOk, networkOk, audioOk].filter(Boolean).length;
+    const score = Math.round((checksPassed / 4) * 100);
+
+    return {
+      permissionOk,
+      devicesOk,
+      networkOk,
+      audioOk,
+      checksPassed,
+      score,
+      isReady: checksPassed === 4,
+    };
+  });
+
+  const readinessWidthClass = useComputed$(() => {
+    if (readinessChecks.value.checksPassed <= 0) return "w-0";
+    if (readinessChecks.value.checksPassed === 1) return "w-1/4";
+    if (readinessChecks.value.checksPassed === 2) return "w-2/4";
+    if (readinessChecks.value.checksPassed === 3) return "w-3/4";
+    return "w-full";
+  });
+
+  const failedTips = useComputed$(() => {
+    const tips: Array<{ key: string; title: string; detail: string; action: "permission" | "audio" | "reload" }> = [];
+
+    if (!readinessChecks.value.permissionOk) {
+      tips.push({
+        key: "permission",
+        title: "Izin Kamera dan Mikrofon",
+        detail: "Klik Beri Izin Sekarang agar sistem dapat memantau ujian.",
+        action: "permission",
+      });
+    }
+
+    if (!readinessChecks.value.devicesOk) {
+      tips.push({
+        key: "devices",
+        title: "Perangkat Belum Terdeteksi",
+        detail: "Pastikan webcam atau mikrofon tidak dipakai aplikasi lain lalu refresh diagnostik.",
+        action: "reload",
+      });
+    }
+
+    if (!readinessChecks.value.networkOk) {
+      tips.push({
+        key: "network",
+        title: "Koneksi Kurang Stabil",
+        detail: "Gunakan jaringan yang lebih stabil dan lakukan refresh untuk ukur ulang latensi.",
+        action: "reload",
+      });
+    }
+
+    if (!readinessChecks.value.audioOk) {
+      tips.push({
+        key: "audio",
+        title: "Tes Audio Belum Lulus",
+        detail: "Jalankan ulang tes audio, lalu pastikan suara benar-benar terdengar.",
+        action: "audio",
+      });
+    }
+
+    return tips;
+  });
+
+  // eslint-disable-next-line qwik/no-use-visible-task
+  useVisibleTask$(({ track }) => {
+    track(() => readinessChecks.value.isReady);
+    track(() => readinessChecks.value.score);
+    track(() => readinessChecks.value.checksPassed);
+    track(() => readinessChecks.value.networkOk);
+    track(() => latency.value);
+
+    try {
+      localStorage.setItem(
+        "examinator_device_readiness",
+        JSON.stringify({
+          isReady: readinessChecks.value.isReady,
+          score: readinessChecks.value.score,
+          checksPassed: readinessChecks.value.checksPassed,
+          totalChecks: 4,
+          networkOk: readinessChecks.value.networkOk,
+          latency: latency.value,
+          updatedAt: new Date().toISOString(),
+        })
+      );
+    } catch {
+      // Abaikan jika storage tidak tersedia
+    }
   });
 
   return (
@@ -176,6 +288,15 @@ export default component$(() => {
           <p class="text-slate-500 font-semibold text-sm sm:text-lg max-w-2xl mx-auto px-4">Pemeriksaan integritas hardware dan optimasi jaringan untuk pengalaman ujian yang tanpa kendala.</p>
         </div>
 
+        <div class="max-w-3xl mx-auto">
+          {entryMessage.value && <StatusBanner type="info" message={entryMessage.value} />}
+          {readinessChecks.value.isReady ? (
+            <StatusBanner type="success" message="Perangkat siap. Kamu bisa lanjut ke simulasi dengan aman." />
+          ) : (
+            <StatusBanner type="info" message={`Checklist belum lengkap (${readinessChecks.value.checksPassed}/4). Jalankan tes otomatis lalu lengkapi izin perangkat.`} />
+          )}
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div class="lg:col-span-2 space-y-8 animate-fade-in-left">
             <div class="glass-darker rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-xl flex flex-col space-y-6">
@@ -196,7 +317,21 @@ export default component$(() => {
               
               <div class="relative aspect-video bg-slate-900 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border border-white/20 shadow-2xl">
                 {stream.value ? (
-                  <video autoplay playsInline muted ref={videoRef} class="w-full h-full object-cover scale-x-[-1]" />
+                  <video
+                    autoplay
+                    playsInline
+                    muted
+                    ref={(el) => {
+                      videoRef.value = el;
+                      if (el && stream.value) {
+                        el.srcObject = stream.value as MediaStream;
+                        el.play().catch((e) => {
+                          console.error("Video play error:", e);
+                        });
+                      }
+                    }}
+                    class="w-full h-full object-cover scale-x-[-1]"
+                  />
                 ) : (
                   <div class="w-full h-full flex flex-col items-center justify-center text-slate-300 relative group">
                     <div class="absolute inset-0 bg-slate-800/50 backdrop-blur-sm z-10 flex flex-col items-center justify-center space-y-4">
@@ -262,6 +397,85 @@ export default component$(() => {
           </div>
 
           <div class="space-y-8 animate-fade-in-right">
+            <div class="glass-darker rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-xl space-y-5 border-l-4 border-emerald-500">
+              <div class="flex items-center justify-between gap-4">
+                <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-emerald-600">task_alt</span>
+                  Checklist Kesiapan
+                </h3>
+                <span class={`text-xs font-bold px-3 py-1 rounded-full ${readinessChecks.value.isReady ? 'bg-emerald-100 text-emerald-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                  {readinessChecks.value.checksPassed}/4
+                </span>
+              </div>
+
+              <div class="space-y-2">
+                <div class="h-2.5 w-full rounded-full bg-slate-200 overflow-hidden">
+                  <div
+                    class={`h-full transition-all duration-500 ${readinessChecks.value.isReady ? 'bg-emerald-500' : 'bg-blue-500'} ${readinessWidthClass.value}`}
+                  />
+                </div>
+                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Skor kesiapan: {readinessChecks.value.score}%</p>
+              </div>
+
+              <div class="space-y-2 text-sm">
+                <div class="flex items-center justify-between p-3 rounded-xl bg-white/50 border border-white/60">
+                  <span class="font-semibold text-slate-700">Izin kamera & mic</span>
+                  <span class={`font-bold ${readinessChecks.value.permissionOk ? 'text-emerald-600' : 'text-red-600'}`}>{readinessChecks.value.permissionOk ? 'LULUS' : 'BELUM'}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-xl bg-white/50 border border-white/60">
+                  <span class="font-semibold text-slate-700">Perangkat terdeteksi</span>
+                  <span class={`font-bold ${readinessChecks.value.devicesOk ? 'text-emerald-600' : 'text-red-600'}`}>{readinessChecks.value.devicesOk ? 'LULUS' : 'BELUM'}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-xl bg-white/50 border border-white/60">
+                  <span class="font-semibold text-slate-700">Jaringan stabil (&lt;400ms)</span>
+                  <span class={`font-bold ${readinessChecks.value.networkOk ? 'text-emerald-600' : 'text-red-600'}`}>{readinessChecks.value.networkOk ? 'LULUS' : 'BELUM'}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-xl bg-white/50 border border-white/60">
+                  <span class="font-semibold text-slate-700">Tes audio</span>
+                  <span class={`font-bold ${readinessChecks.value.audioOk ? 'text-emerald-600' : 'text-red-600'}`}>{readinessChecks.value.audioOk ? 'LULUS' : 'BELUM'}</span>
+                </div>
+              </div>
+
+              {failedTips.value.length > 0 && (
+                <div class="pt-2 space-y-2">
+                  <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Panduan Perbaikan Cepat</p>
+                  {failedTips.value.map((tip) => (
+                    <div key={tip.key} class="p-3 rounded-xl bg-white/60 border border-white/70 flex items-start justify-between gap-3">
+                      <div>
+                        <p class="text-sm font-bold text-slate-800">{tip.title}</p>
+                        <p class="text-xs font-medium text-slate-500 mt-1">{tip.detail}</p>
+                      </div>
+                      {tip.action === "permission" ? (
+                        <button
+                          type="button"
+                          onClick$={handleStartDiagnostics}
+                          class="shrink-0 h-9 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-600 text-white border-b-2 border-blue-800 hover:bg-blue-700 transition-all"
+                        >
+                          Beri Izin
+                        </button>
+                      ) : tip.action === "audio" ? (
+                        <button
+                          type="button"
+                          onClick$={playTestSound}
+                          class="shrink-0 h-9 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-600 text-white border-b-2 border-blue-800 hover:bg-blue-700 transition-all"
+                        >
+                          Tes Audio
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick$={() => window.location.reload()}
+                          class="shrink-0 h-9 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-slate-200 text-slate-700 border-b-2 border-slate-300 hover:bg-slate-300 transition-all"
+                        >
+                          Refresh
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div class="glass-darker rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-xl space-y-6">
                <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
                  <span class="material-symbols-outlined text-blue-600">terminal</span>
@@ -301,11 +515,20 @@ export default component$(() => {
 
             <button 
               onClick$={playTestSound}
-              disabled={testSoundPlaying.value}
+              disabled={testSoundPlaying.value || autoRunning.value}
               class="w-full py-4 rounded-2xl font-bold bg-blue-600 text-yellow-400 shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-2 border-b-4 border-blue-800"
             >
               <span class="material-symbols-outlined">volume_up</span>
               Tes Audio Sistem
+            </button>
+
+            <button
+              onClick$={runAllDiagnostics}
+              disabled={autoRunning.value || testSoundPlaying.value}
+              class="w-full py-4 rounded-2xl font-bold bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-2 border-b-4 border-emerald-800 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+            >
+              <span class="material-symbols-outlined">bolt</span>
+              {autoRunning.value ? "Menjalankan Diagnostik..." : "Jalankan Semua Tes"}
             </button>
           </div>
         </div>
@@ -328,13 +551,13 @@ export default component$(() => {
                label: 'Latensi',
                value: latency.value !== null ? `${latency.value}ms` : '---',
                borderClass: 'border-blue-500',
-               textClass: 'text-blue-600',
+               textClass: latencyColor.value,
              },
              {
-               label: 'Status Jaringan',
-               value: isOnline.value ? 'Online' : 'Offline',
-               borderClass: isOnline.value ? 'border-emerald-500' : 'border-red-500',
-               textClass: isOnline.value ? 'text-emerald-600' : 'text-red-600',
+               label: 'Level Mic',
+               value: `${Math.min(100, Math.max(0, Math.round(audioLevel.value || 0)))}%`,
+               borderClass: audioLevel.value > 10 ? 'border-emerald-500' : 'border-yellow-500',
+               textClass: audioLevel.value > 10 ? 'text-emerald-600' : 'text-yellow-600',
              }
            ].map((stat, i) => (
              <div key={i} class={`glass-darker p-5 rounded-3xl text-center border-b-4 shadow-sm ${stat.borderClass}`}>
@@ -356,6 +579,21 @@ export default component$(() => {
               <span class="material-symbols-outlined">refresh</span>
               Ulangi Diagnostik
            </button>
+           {readinessChecks.value.isReady ? (
+             <Link href="/student/simulation/" class="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 bg-emerald-600 text-white font-bold rounded-xl sm:rounded-2xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20 border-b-4 border-emerald-800">
+               <span class="material-symbols-outlined">play_circle</span>
+               Lanjut Simulasi
+             </Link>
+           ) : (
+             <button
+               type="button"
+               disabled
+               class="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 bg-slate-200 text-slate-500 font-bold rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 border-b-4 border-slate-300 cursor-not-allowed"
+             >
+               <span class="material-symbols-outlined">lock</span>
+               Lengkapi Checklist Dulu
+             </button>
+           )}
         </div>
       </main>
 

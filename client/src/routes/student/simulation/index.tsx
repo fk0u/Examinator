@@ -2,6 +2,7 @@ import { component$, useSignal, $, useVisibleTask$, useComputed$ } from "@builde
 import type { DocumentHead } from "@builder.io/qwik-city";
 import { Link } from "@builder.io/qwik-city";
 import { useCamera } from "~/hooks/use-camera";
+import { AntiCheatWarning } from "~/components/ui/anti-cheat-warning";
 
 // Data contoh untuk simulasi
 const MOCK_QUESTIONS = [
@@ -21,6 +22,7 @@ export default component$(() => {
   const cheatCount = useSignal(0);
   const showWarning = useSignal(false);
   const warningMessage = useSignal("");
+  const prepError = useSignal("");
   
   const dummyAttempt = useSignal({ id: null });
   const { cameraEnabled, micEnabled, audioLevel, capturePhoto, stream, requestPermission } = useCamera(dummyAttempt);
@@ -37,6 +39,15 @@ export default component$(() => {
   });
 
   // ─── Verifikasi & pelacakan ───
+  useVisibleTask$(async () => {
+    try {
+      await requestPermission();
+      prepError.value = "";
+    } catch {
+      prepError.value = "Izin perangkat belum diberikan. Aktifkan kamera dan mikrofon untuk simulasi.";
+    }
+  });
+
   useVisibleTask$(({ track }) => {
     track(() => stream.value);
     track(() => videoRef.value);
@@ -89,6 +100,12 @@ export default component$(() => {
 
   // ─── Aksi ───
   const startSimulation = $(() => {
+    if (!prepChecks.value.isReady) {
+      showWarning.value = true;
+      warningMessage.value = "Lengkapi checklist kesiapan sebelum memulai simulasi.";
+      setTimeout(() => showWarning.value = false, 2200);
+      return;
+    }
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(e => console.error(e));
     }
@@ -106,7 +123,7 @@ export default component$(() => {
 
   const score = useComputed$(() => {
     let correctCount = 0;
-    MOCK_QUESTIONS.forEach((q, idx) => {
+    MOCK_QUESTIONS.forEach((q) => {
       if (answers.value[q.id] === q.correct) correctCount++;
     });
     return Math.round((correctCount / MOCK_QUESTIONS.length) * 100);
@@ -233,7 +250,7 @@ export default component$(() => {
                     { label: 'Kamera Aktif', ok: cameraEnabled.value, icon: 'videocam' },
                     { label: 'Mikrofon Aktif', ok: micEnabled.value, icon: 'mic' },
                     { label: 'Koneksi Stabil', ok: isOnline.value, icon: 'wifi' },
-                    { label: 'Layar Penuh Siap', ok: isFullscreen.value, icon: 'fullscreen' }
+                    { label: 'Audio Input Terdeteksi', ok: audioLevel.value > 8, icon: 'graphic_eq' }
                   ].map((sys, i) => (
                     <div key={i} class="flex items-center justify-between p-4 bg-white/50 rounded-2xl border border-slate-100">
                       <div class="flex items-center gap-3">
@@ -248,6 +265,24 @@ export default component$(() => {
                     </div>
                   ))}
                 </div>
+                <div class="mt-5 rounded-2xl border border-slate-100 bg-white/60 p-4">
+                  <div class="flex items-center justify-between mb-3">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Checklist Simulasi</p>
+                    <span class={`text-[10px] font-bold px-2 py-1 rounded-full ${prepChecks.value.isReady ? 'bg-emerald-100 text-emerald-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                      {prepChecks.value.passed}/{prepChecks.value.total}
+                    </span>
+                  </div>
+                  <div class="space-y-1.5 text-xs font-semibold">
+                    <div class="flex items-center justify-between"><span>Kamera</span><span class={prepChecks.value.cameraOk ? 'text-emerald-600' : 'text-red-500'}>{prepChecks.value.cameraOk ? 'Lulus' : 'Belum'}</span></div>
+                    <div class="flex items-center justify-between"><span>Mikrofon</span><span class={prepChecks.value.micOk ? 'text-emerald-600' : 'text-red-500'}>{prepChecks.value.micOk ? 'Lulus' : 'Belum'}</span></div>
+                    <div class="flex items-center justify-between"><span>Jaringan</span><span class={prepChecks.value.networkOk ? 'text-emerald-600' : 'text-red-500'}>{prepChecks.value.networkOk ? 'Lulus' : 'Belum'}</span></div>
+                    <div class="flex items-center justify-between"><span>Audio Input</span><span class={prepChecks.value.audioOk ? 'text-emerald-600' : 'text-red-500'}>{prepChecks.value.audioOk ? 'Lulus' : 'Belum'}</span></div>
+                    <div class="flex items-center justify-between"><span>Persetujuan</span><span class={prepChecks.value.termsOk ? 'text-emerald-600' : 'text-red-500'}>{prepChecks.value.termsOk ? 'Lulus' : 'Belum'}</span></div>
+                  </div>
+                </div>
+                {prepError.value && (
+                  <p class="mt-3 text-xs font-semibold text-red-500">{prepError.value}</p>
+                )}
               </div>
             </div>
 
@@ -289,11 +324,20 @@ export default component$(() => {
                   </div>
                   <button 
                     onClick$={startSimulation}
-                    disabled={!agreedToTerms.value}
+                    disabled={!prepChecks.value.isReady || isRequesting.value}
                     class="w-full flex items-center justify-center gap-2 rounded-2xl h-16 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:grayscale text-white font-bold text-lg transition-all shadow-xl shadow-blue-600/20 border-b-4 border-blue-800 active:scale-[0.98]"
                   >
-                    <span>Mulai Ujian Simulasi</span>
+                    <span>{isRequesting.value ? 'Menyiapkan Perangkat...' : 'Mulai Ujian Simulasi'}</span>
                     <span class="material-symbols-outlined font-bold">arrow_forward</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick$={async () => {
+                      await requestPermission();
+                    }}
+                    class="w-full mt-3 flex items-center justify-center gap-2 rounded-xl h-11 bg-white border border-slate-200 text-slate-700 font-bold text-sm hover:border-blue-200 hover:text-blue-700 transition-all"
+                  >
+                    Coba Ulang Izin Perangkat
                   </button>
                 </div>
               </div>
@@ -316,18 +360,7 @@ export default component$(() => {
 
   return (
     <div class="min-h-screen bg-[#f8fafc] text-slate-900 font-sans select-none flex flex-col">
-      {/* Anti-cheat Overlay */}
-      {showWarning.value && (
-        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-red-500/10 backdrop-blur-md animate-fade-in">
-           <div class="bg-white border-2 border-red-500 rounded-[2rem] p-8 max-w-md text-center animate-shake shadow-2xl shadow-red-500/20">
-              <div class="size-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                <span class="material-symbols-outlined text-4xl font-bold">warning</span>
-              </div>
-              <p class="text-red-600 font-bold text-2xl mb-2">Simulasi: Pelanggaran!</p>
-              <p class="text-slate-600 font-bold">{warningMessage.value}</p>
-           </div>
-        </div>
-      )}
+      <AntiCheatWarning show={showWarning.value} title="Simulasi: Pelanggaran!" message={warningMessage.value} />
 
       {/* Bilah navigasi atas tetap */}
       <header class="sticky top-0 z-50 w-full bg-white border-b border-slate-200 px-4 sm:px-6 py-2 sm:py-3 flex items-center justify-between shadow-sm">

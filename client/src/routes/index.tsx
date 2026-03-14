@@ -112,11 +112,11 @@ export default component$(() => {
           if (entry.isIntersecting) {
             const children = entry.target.querySelectorAll(".reveal-item");
             animate(children as any, { opacity: [0, 1], y: [40, 0] }, { duration: 0.7, delay: stagger(0.1), ease: [0.16, 1, 0.3, 1] } as any);
-            observer.unobserve(entry.target);
+            observer?.unobserve(entry.target);
           }
         });
       }, { threshold: 0.15 });
-      sections.forEach((s) => observer.observe(s));
+      sections.forEach((s) => observer?.observe(s));
     }, 800);
 
     return () => {
