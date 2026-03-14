@@ -126,6 +126,12 @@ export default component$(() => {
     return `/student/test-device/?reason=${reason}`;
   });
 
+  const deviceCheckLabel = useComputed$(() => {
+    if (!deviceReadinessSnapshot.value) return "Jalankan Diagnostik Perangkat";
+    if (deviceReadinessStale.value) return "Perbarui Diagnostik Perangkat";
+    return "Buka Diagnostik Perangkat";
+  });
+
   // Kaitkan stream kamera ke elemen pratinjau video
   // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(({ track }) => {
@@ -564,7 +570,7 @@ export default component$(() => {
                         class="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-white/10 border border-white/20 text-[10px] font-bold uppercase tracking-wider text-blue-100 hover:bg-white/20 transition-all"
                       >
                         <span class="material-symbols-outlined text-[16px]">on_device_training</span>
-                        Buka Diagnostik Perangkat
+                        {deviceCheckLabel.value}
                       </Link>
                     </div>
                   </div>
