@@ -283,26 +283,26 @@ export default component$(() => {
 
                   <div class="shrink-0 flex flex-col gap-2 w-[150px]">
                     {status === "IN_PROGRESS" || status === "NOT_STARTED" ? (
-                      <button
-                        onClick$={() => nav(status === "IN_PROGRESS" ? `/student/exam/${exam.id}/resume/` : `/student/exam/${exam.id}/`)}
+                      <Link
+                        href={status === "IN_PROGRESS" ? `/student/exam/${exam.id}/resume/` : `/student/exam/${exam.id}/`}
                         class={`h-11 rounded-xl font-bold text-sm border-b-4 transition-all active:scale-95 ${status === "IN_PROGRESS" ? "bg-amber-500 text-white border-amber-700 hover:bg-amber-600" : "bg-blue-600 text-white border-blue-800 hover:bg-blue-700"}`}
                       >
                         {status === "IN_PROGRESS" ? "Lanjutkan" : "Mulai"}
-                      </button>
+                      </Link>
                     ) : (
-                      <button
-                        onClick$={() => nav("/student/results/")}
+                      <Link
+                        href="/student/results/"
                         class="h-11 rounded-xl font-bold text-sm border-b-4 transition-all active:scale-95 bg-emerald-600 text-white border-emerald-800 hover:bg-emerald-700"
                       >
                         Lihat Hasil
-                      </button>
+                      </Link>
                     )}
-                    <button
-                      onClick$={() => nav("/student/test-device/?reason=preflight")}
+                    <Link
+                      href="/student/test-device/?reason=preflight"
                       class="h-10 rounded-xl font-bold text-[11px] uppercase tracking-wider border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-700 transition-all active:scale-95"
                     >
                       Cek Perangkat
-                    </button>
+                    </Link>
                   </div>
                 </div>
               ))}
@@ -369,13 +369,13 @@ export default component$(() => {
                       </div>
 
                       <div class="p-4">
-                        <button 
-                          onClick$={() => nav(isInProgress ? `/student/exam/${exam.id}/resume/` : `/student/exam/${exam.id}/`)}
+                        <Link 
+                          href={isInProgress ? `/student/exam/${exam.id}/resume/` : `/student/exam/${exam.id}/`}
                           class={`w-full h-16 rounded-[1.75rem] font-bold text-lg flex items-center justify-center gap-3 transition-all active:scale-[0.98] border-b-4 ${isInProgress ? 'bg-amber-500 text-white border-amber-700 shadow-lg shadow-amber-500/20 hover:bg-amber-600' : 'bg-blue-600 text-white border-blue-800 shadow-lg shadow-blue-500/20 hover:bg-blue-700'}`}
                         >
                           {isInProgress ? 'Lanjutkan Ujian' : 'Mulai Sekarang'}
                           <span class="material-symbols-outlined font-bold">{isInProgress ? 'resume' : 'arrow_forward'}</span>
-                        </button>
+                        </Link>
                       </div>
                    </div>
                  );
