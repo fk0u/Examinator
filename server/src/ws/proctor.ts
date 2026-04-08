@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { Elysia } from "elysia";
 import { db } from "../lib/db";
 import { env } from "../config/env";
@@ -388,3 +389,307 @@ export function getActiveStudents(examId?: string) {
 export function getActiveStudentCount() {
   return connectedStudents.size;
 }
+=======
+import { Elysia } from "elysia";
+import { db } from "../lib/db";
+
+// ─── WebSocket Proctor Module ───────────────────────────
+// Handles realtime communication between students and proctors
+
+// Track connected clients
+interface ConnectedStudent {
+  id: string;
+  userId: string;
+  fullName: string;
+  attemptId: string;
+  examId: string;
+  cameraEnabled: boolean;
+  status: "active" | "idle" | "flagged" | "submitted";
+  cheatCount: number;
+  lastActivity: number;
+}
+
+type ConnectionRole = "student" | "proctor";
+
+const connectedStudents = new Map<string, ConnectedStudent>();
+const proctorSockets = new Set<string>();
+const connectionRoles = new Map<string, ConnectionRole>();
+
+export const proctorWs = new Elysia({ prefix: "/ws" }).ws("/proctor", {
+  // ── Connection opened ─────────────────────────────────
+  open(ws) {
+    console.log(`🔌 WebSocket connected: ${ws.id}`);
+  },
+
+  // ── Message received ──────────────────────────────────
+  async message(ws, message: any) {
+    let data: any;
+
+    try {
+      data = typeof message === "string" ? JSON.parse(message) : message;
+    } catch {
+      ws.send(
+        JSON.stringify({
+          type: "error",
+          message: "Invalid message payload",
+        })
+      );
+      return;
+    }
+
+    switch (data.type) {
+      // ── Student joins exam ──────────────────────────────
+      case "student:join": {
+        const attempt = await db.attempt.findUnique({
+          where: { id: data.attemptId },
+          select: {
+            id: true,
+            userId: true,
+            examId: true,
+            status: true,
+            cameraEnabled: true,
+            user: {
+              select: {
+                fullName: true,
+              },
+            },
+          },
+        });
+
+        if (
+          !attempt ||
+          attempt.status !== "IN_PROGRESS" ||
+          attempt.userId !== data.userId ||
+          attempt.examId !== data.examId
+        ) {
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: "Invalid exam session",
+            })
+          );
+          ws.close();
+          break;
+        }
+
+        const student: ConnectedStudent = {
+          id: ws.id,
+          userId: attempt.userId,
+          fullName: attempt.user.fullName,
+          attemptId: attempt.id,
+          examId: attempt.examId,
+          cameraEnabled: Boolean(data.cameraEnabled ?? attempt.cameraEnabled),
+          status: "active",
+          cheatCount: 0,
+          lastActivity: Date.now(),
+        };
+
+        connectedStudents.set(ws.id, student);
+        connectionRoles.set(ws.id, "student");
+
+        // Subscribe to exam room
+        ws.subscribe(`exam:${attempt.examId}`);
+        ws.subscribe(`student:${ws.id}`);
+
+        // Notify proctors
+        ws.publish(
+          "proctors",
+          JSON.stringify({
+            type: "student:joined",
+            student,
+            totalStudents: connectedStudents.size,
+          })
+        );
+
+        // Send back confirmation
+        ws.send(
+          JSON.stringify({
+            type: "joined",
+            message: "Connected to exam session",
+          })
+        );
+        break;
+      }
+
+      // ── Proctor joins monitoring ────────────────────────
+      case "proctor:join": {
+        proctorSockets.add(ws.id);
+        connectionRoles.set(ws.id, "proctor");
+        ws.subscribe("proctors");
+
+        // Send current state
+        ws.send(
+          JSON.stringify({
+            type: "proctor:state",
+            students: Array.from(connectedStudents.values()),
+            totalStudents: connectedStudents.size,
+          })
+        );
+        break;
+      }
+
+      // ── Cheat event detected ────────────────────────────
+      case "cheat:detected": {
+        if (connectionRoles.get(ws.id) !== "student") {
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: "Only active student sessions can report cheat events",
+            })
+          );
+          break;
+        }
+
+        const cheatStudent = connectedStudents.get(ws.id);
+        if (cheatStudent) {
+          cheatStudent.cheatCount++;
+          cheatStudent.status = "flagged";
+          cheatStudent.lastActivity = Date.now();
+
+          // Broadcast to proctors
+          ws.publish(
+            "proctors",
+            JSON.stringify({
+              type: "cheat:alert",
+              student: cheatStudent,
+              cheatType: data.cheatType,
+              description: data.description,
+              timestamp: new Date().toISOString(),
+              capturePath: data.capturePath,
+            })
+          );
+        }
+        break;
+      }
+
+      // ── Student activity heartbeat ──────────────────────
+      case "student:heartbeat": {
+        if (connectionRoles.get(ws.id) !== "student") {
+          break;
+        }
+
+        const heartbeatStudent = connectedStudents.get(ws.id);
+        if (heartbeatStudent) {
+          heartbeatStudent.lastActivity = Date.now();
+          heartbeatStudent.status = data.status || "active";
+          heartbeatStudent.cameraEnabled = data.cameraEnabled ?? heartbeatStudent.cameraEnabled;
+        }
+        break;
+      }
+
+      // ── Student submits exam ────────────────────────────
+      case "student:submit": {
+        if (connectionRoles.get(ws.id) !== "student") {
+          break;
+        }
+
+        const submitStudent = connectedStudents.get(ws.id);
+        if (submitStudent) {
+          submitStudent.status = "submitted";
+
+          ws.publish(
+            "proctors",
+            JSON.stringify({
+              type: "student:submitted",
+              student: submitStudent,
+              timestamp: new Date().toISOString(),
+            })
+          );
+        }
+        break;
+      }
+
+      // ── Proctor sends message to student ────────────────
+      case "proctor:message": {
+        if (connectionRoles.get(ws.id) !== "proctor") {
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: "Only proctor sessions can send warnings",
+            })
+          );
+          break;
+        }
+
+        // Find student socket by userId
+        const targetId = data.targetStudentWsId;
+        if (targetId && connectedStudents.has(targetId)) {
+          ws.publish(
+            `student:${targetId}`,
+            JSON.stringify({
+              type: "proctor:warning",
+              message: data.message,
+            })
+          );
+        }
+        break;
+      }
+
+      // ── Proctor force-submits student exam ──────────────
+      case "proctor:force-submit": {
+        if (connectionRoles.get(ws.id) !== "proctor") {
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: "Only proctor sessions can force-submit",
+            })
+          );
+          break;
+        }
+
+        const targetSocketId = data.targetStudentWsId;
+        if (targetSocketId && connectedStudents.has(targetSocketId)) {
+          ws.publish(
+            `student:${targetSocketId}`,
+            JSON.stringify({
+              type: "force:submit",
+              reason: data.reason || "Force submitted by proctor",
+            })
+          );
+
+          const forceStudent = connectedStudents.get(targetSocketId);
+          if (forceStudent) {
+            forceStudent.status = "submitted";
+          }
+        }
+        break;
+      }
+    }
+  },
+
+  // ── Connection closed ─────────────────────────────────
+  close(ws) {
+    const student = connectedStudents.get(ws.id);
+
+    if (student) {
+      // Notify proctors that student disconnected
+      ws.publish(
+        "proctors",
+        JSON.stringify({
+          type: "student:disconnected",
+          student,
+          totalStudents: connectedStudents.size - 1,
+        })
+      );
+
+      connectedStudents.delete(ws.id);
+    }
+
+    proctorSockets.delete(ws.id);
+    connectionRoles.delete(ws.id);
+
+    console.log(`🔌 WebSocket disconnected: ${ws.id}`);
+  },
+});
+
+// ─── Export helpers for REST routes ─────────────────────
+export function getActiveStudents(examId?: string) {
+  const students = Array.from(connectedStudents.values());
+  if (examId) return students.filter((s) => s.examId === examId);
+  return students;
+}
+
+export function getActiveStudentCount() {
+  return connectedStudents.size;
+}
+>>>>>>> Stashed changes

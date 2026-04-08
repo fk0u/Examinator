@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 generator client {
   provider = "prisma-client-js"
 }
@@ -170,3 +171,175 @@ model CheatLog {
   @@index([timestamp])
   @@map("cheat_logs")
 }
+=======
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── User Model ───────────────────────────────────────
+enum Role {
+  ADMIN
+  OPERATOR
+  STUDENT
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String?  @unique
+  password  String
+  fullName  String
+  role      Role     @default(STUDENT)
+  nisn      String?  // Nomor Induk Siswa Nasional
+  kelas     String?  // Class/Grade (e.g., "XII RPL 1")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attempts  Attempt[]
+  cheatLogs CheatLog[]
+
+  @@map("users")
+}
+
+// ─── Exam Model ───────────────────────────────────────
+model Exam {
+  id          String    @id @default(cuid())
+  title       String
+  description String?   @db.Text
+  subject     String    // Mata Pelajaran
+  duration    Int       // Duration in minutes
+  startTime   DateTime? // Scheduled start
+  endTime     DateTime? // Scheduled end
+  shuffle     Boolean   @default(true) // Shuffle questions
+  active      Boolean   @default(false)
+  passingScore Int      @default(70)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  questions Question[]
+  attempts  Attempt[]
+
+  @@map("exams")
+}
+
+// ─── Question Model ───────────────────────────────────
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  ESSAY
+}
+
+model Question {
+  id       String       @id @default(cuid())
+  examId   String
+  text     String       @db.Text
+  type     QuestionType @default(MULTIPLE_CHOICE)
+  points   Int          @default(1)
+  imageUrl String?
+  order    Int          @default(0)
+
+  exam    Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  options Option[]
+  answers Answer[]
+
+  @@map("questions")
+}
+
+// ─── Option Model (for multiple choice) ───────────────
+model Option {
+  id         String  @id @default(cuid())
+  questionId String
+  text       String  @db.Text
+  isCorrect  Boolean @default(false)
+  order      Int     @default(0)
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("options")
+}
+
+// ─── Attempt Model ────────────────────────────────────
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  TIMED_OUT
+  FORCE_SUBMITTED
+}
+
+model Attempt {
+  id            String        @id @default(cuid())
+  userId        String
+  examId        String
+  status        AttemptStatus @default(IN_PROGRESS)
+  score         Float?
+  totalPoints   Int?
+  startedAt     DateTime      @default(now())
+  submittedAt   DateTime?
+  cameraEnabled Boolean       @default(false)
+  ipAddress     String?
+  userAgent     String?       @db.Text
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam      Exam       @relation(fields: [examId], references: [id], onDelete: Cascade)
+  answers   Answer[]
+  cheatLogs CheatLog[]
+
+  @@unique([userId, examId])
+  @@map("attempts")
+}
+
+// ─── Answer Model ─────────────────────────────────────
+model Answer {
+  id         String  @id @default(cuid())
+  attemptId  String
+  questionId String
+  optionId   String? // For multiple choice
+  textAnswer String? @db.Text // For essay
+  isCorrect  Boolean @default(false)
+  points     Int     @default(0)
+
+  attempt  Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+  @@map("answers")
+}
+
+// ─── Cheat Log Model ─────────────────────────────────
+enum CheatType {
+  TAB_SWITCH
+  FULLSCREEN_EXIT
+  WINDOW_BLUR
+  COPY_PASTE
+  RIGHT_CLICK
+  DEVTOOLS
+  CAMERA_OFF
+  MULTIPLE_FACE
+  NO_FACE
+}
+
+model CheatLog {
+  id          String    @id @default(cuid())
+  userId      String
+  attemptId   String
+  cheatType   CheatType
+  description String?   @db.Text
+  capturePath String?   // Path to captured photo/video
+  captureType String?   // "photo" or "video"
+  timestamp   DateTime  @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attempt Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@index([attemptId])
+  @@index([userId])
+  @@index([timestamp])
+  @@map("cheat_logs")
+}
+>>>>>>> Stashed changes

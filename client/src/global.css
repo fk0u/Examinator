@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -191,3 +192,191 @@ body {
     0 12px 30px -8px rgba(99, 102, 241, 0.15),
     0 4px 12px -4px rgba(0, 0, 0, 0.05);
 }
+=======
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Examinator Light UI Design System ─────────────────────────── */
+
+/* ─── Base Styles ──────────────────────────────────────── */
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-surface-100);
+  color: var(--color-surface-800);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Animations ───────────────────────────────────────── */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 25px 6px rgba(79, 70, 229, 0.2);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-right {
+  animation: slide-in-right 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2.5s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.animate-float {
+  animation: float 3.5s ease-in-out infinite;
+}
+
+/* ─── Glassmorphism Light ────────────────────────────────────── */
+
+.glass {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+.glass-darker {
+  background: rgba(248, 250, 252, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Scrollbar ────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-300);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-surface-400);
+}
+
+/* ─── Utility Classes ──────────────────────────────────── */
+
+.text-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--color-secondary-600),
+    var(--color-primary-500)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(
+    135deg,
+    var(--color-secondary-500),
+    var(--color-primary-500)
+  );
+}
+
+.bg-gradient-mesh {
+  background:
+    radial-gradient(at 10% 10%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+    radial-gradient(at 90% 10%, rgba(20, 184, 166, 0.1) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
+    radial-gradient(at 10% 90%, rgba(14, 165, 233, 0.1) 0px, transparent 50%),
+    radial-gradient(at 90% 90%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+    linear-gradient(to bottom, var(--color-surface-50), var(--color-surface-100));
+}
+
+/* ─── Card Hover Effect ────────────────────────────────── */
+
+.card-hover {
+  transition:
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 12px 30px -8px rgba(99, 102, 241, 0.15),
+    0 4px 12px -4px rgba(0, 0, 0, 0.05);
+}
+>>>>>>> Stashed changes
